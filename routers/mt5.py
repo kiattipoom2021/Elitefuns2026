@@ -139,8 +139,29 @@ async def create_account(
     db.commit()
     db.refresh(account)
 
-    # 3. verify กับ VPS (ใช้ plaintext ใน memory เท่านั้น — ห้าม log)
-    await _verify_and_update(db, account, body.password)
+    # 3. Best-effort verify กับ VPS (ใช้ plaintext ใน memory เท่านั้น — ห้าม log)
+    #    - VPS unreachable (503)   → log warning, ปล่อย verified=False, return account
+    #    - credentials wrong (400) → re-raise ตามเดิม (user ป้อนผิด)
+    #    - error อื่น              → 500
+    try:
+        await _verify_and_update(db, account, body.password)
+    except HTTPException as exc:
+        if exc.status_code == 503:
+            logger.warning(
+                "VPS unreachable on create_account mt5_account=%s — "
+                "account saved with verified=False (verify later)",
+                account.id,
+            )
+            # _verify_and_update raise ก่อน commit ของ success path → refresh
+            # ให้ได้ค่า verified=False จาก insert ตอน step 2
+            db.refresh(account)
+            return account
+        # 400 credentials wrong → re-raise (user เห็น error ที่ถูกต้อง)
+        raise
+    except Exception:
+        logger.exception("unexpected verify error mt5_account=%s", account.id)
+        raise HTTPException(500, "verify error — ตรวจ logs")
+
     return account
 
 
@@ -178,13 +199,30 @@ async def update_password(
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user),
 ):
-    """แก้ password MT5 ของบัญชีเดิม + verify ทันที (ห้าม log password)"""
+    """แก้ password MT5 ของบัญชีเดิม + best-effort verify (ห้าม log password)"""
     account = _get_owned_account(db, account_id, current_user.id)
     enc_pw = encryption.encrypt(body.password)
     account.encrypted_password = enc_pw
     account.verified = False
     db.commit()
-    await _verify_and_update(db, account, body.password)
+    # Best-effort verify (เหมือน create_account):
+    # VPS down → ปล่อย verified=False; creds wrong → 400; อื่นๆ → 500
+    try:
+        await _verify_and_update(db, account, body.password)
+    except HTTPException as exc:
+        if exc.status_code == 503:
+            logger.warning(
+                "VPS unreachable on update_password mt5_account=%s — "
+                "password updated but verified=False (verify later)",
+                account.id,
+            )
+            db.refresh(account)
+            return account
+        raise
+    except Exception:
+        logger.exception("unexpected verify error mt5_account=%s", account.id)
+        raise HTTPException(500, "verify error — ตรวจ logs")
+
     return account
 
 
