@@ -109,6 +109,48 @@
       <p class="text-fg-muted text-sm mt-1">ทริกเกอร์ backtest ใหม่และดูรายการล่าสุด</p>
     </header>
 
+    <!-- ═════════ Section 0 — Add MT5 Account ═════════ -->
+    <section class="bg-bg-card border border-border-subtle rounded-xl p-5 mb-6">
+      <div class="flex items-center justify-between mb-4">
+        <div>
+          <h2 class="text-fg font-semibold text-sm">เพิ่ม MT5 Account ใหม่</h2>
+          <p class="text-fg-subtle text-xs mt-0.5">สร้างบัญชี MT5 ของ admin (จะถูก verify ผ่าน VPS อัตโนมัติ)</p>
+        </div>
+        <span class="text-fg-subtle text-[11px] font-mono">POST /api/mt5/accounts</span>
+      </div>
+
+      <form id="add-account-form" class="grid grid-cols-1 sm:grid-cols-2 gap-4" autocomplete="off">
+        <div class="sm:col-span-2">
+          <label class="field-label" for="acc-name">ชื่อบัญชี (display)</label>
+          <input id="acc-name" type="text" class="field-input" placeholder="เช่น Connext Demo 1" maxlength="64" required>
+        </div>
+        <div>
+          <label class="field-label" for="acc-login">Login</label>
+          <input id="acc-login" type="number" min="1" step="1" class="field-input font-mono" placeholder="12345678" required>
+        </div>
+        <div>
+          <label class="field-label" for="acc-server">Server</label>
+          <input id="acc-server" type="text" class="field-input font-mono" placeholder="Broker-Demo" maxlength="128" required>
+        </div>
+        <div class="sm:col-span-2">
+          <label class="field-label" for="acc-password">Password</label>
+          <input id="acc-password" type="password" class="field-input font-mono" autocomplete="new-password" required>
+          <div class="text-fg-subtle text-[11px] mt-1">เข้ารหัส AES-256 ก่อนเก็บ DB · verify ผ่าน VPS — อาจใช้เวลาสักครู่</div>
+        </div>
+
+        <div class="sm:col-span-2 flex items-center justify-end gap-3 flex-wrap">
+          <span id="add-account-msg" class="text-xs"></span>
+          <button id="add-account-btn" type="submit"
+            class="bg-info hover:bg-blue-500 text-white font-semibold px-4 py-2 rounded-lg text-sm flex items-center gap-2 transition-colors disabled:opacity-60 disabled:cursor-not-allowed">
+            <svg id="add-account-spinner" class="hidden w-3.5 h-3.5 spin" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M12 4v2m0 12v2m8-8h-2M6 12H4m12.95-5.95l-1.41 1.41M7.46 16.54l-1.41 1.41m0-13.9l1.41 1.41m9.08 9.08l1.41 1.41"/>
+            </svg>
+            <span id="add-account-label">เพิ่มบัญชี</span>
+          </button>
+        </div>
+      </form>
+    </section>
+
     <!-- ═════════ Section A — Run Optimize form ═════════ -->
     <section class="bg-bg-card border border-border-subtle rounded-xl p-5 mb-6">
       <div class="flex items-center justify-between mb-4">
@@ -921,10 +963,108 @@
       }
     }
 
+    // ─── Add MT5 Account (admin self-add) ───────────────────────────────
+    // ส่ง POST /api/mt5/accounts → backend verify ผ่าน VPS ในตัว
+    // Note: backend ใช้ 400 สำหรับทั้ง duplicate และ verify-fail (ดู routers/mt5.py)
+    async function handleAddAccount(e) {
+      e.preventDefault();
+
+      const form    = el('add-account-form');
+      const btn     = el('add-account-btn');
+      const label   = el('add-account-label');
+      const spinner = el('add-account-spinner');
+      const msg     = el('add-account-msg');
+      const pwInput = el('acc-password');
+
+      // ─── Collect + sanitize ────────────────────────────────────────
+      const name     = el('acc-name').value.trim();
+      const loginRaw = el('acc-login').value.trim();
+      const server   = el('acc-server').value.trim();
+      const password = pwInput.value;  // ห้าม trim — broker อาจอนุญาต whitespace
+
+      // ─── Client-side validation ────────────────────────────────────
+      const loginNum = Number.parseInt(loginRaw, 10);
+      if (!name || !server || !password) {
+        msg.textContent = 'กรอกข้อมูลให้ครบ';
+        msg.className = 'text-xs text-danger';
+        return;
+      }
+      if (!Number.isFinite(loginNum) || loginNum <= 0) {
+        msg.textContent = 'Login ต้องเป็นเลขจำนวนเต็มบวก';
+        msg.className = 'text-xs text-danger';
+        return;
+      }
+
+      // ─── Build body — DO NOT log password ──────────────────────────
+      const body = {
+        name,
+        login: loginNum,
+        password,
+        server,
+      };
+
+      btn.disabled = true;
+      spinner.classList.remove('hidden');
+      label.textContent = 'กำลังเพิ่ม + verify...';
+      msg.textContent = '';
+      msg.className = 'text-xs';
+
+      try {
+        const res = await fetch('/api/mt5/accounts', {
+          method: 'POST',
+          headers: AUTH_HEADERS,
+          body: JSON.stringify(body),
+        });
+
+        if (res.status === 401) {
+          clearAuthAndRedirect('/login/');
+          return;
+        }
+
+        const data = await res.json().catch(() => ({}));
+
+        if (!res.ok) {
+          // 400 ครอบทั้ง duplicate, login invalid, server not found, verify fail
+          // 409 — กันไว้ตาม spec (ปัจจุบัน backend ใช้ 400)
+          let detail = data.detail || data.message || `HTTP ${res.status}`;
+          if (res.status === 409) detail = 'บัญชีนี้มีอยู่แล้ว';
+          throw new Error(detail);
+        }
+
+        // Success — reset password ก่อน (security) แล้ว reset form
+        pwInput.value = '';
+        form.reset();
+
+        const displayName = escapeHtml(data.name || String(data.login || ''));
+        msg.innerHTML = `<span class="text-accent">✓ เพิ่มแล้ว: ${displayName}</span>`;
+        msg.className = 'text-xs';
+
+        // Reload dropdown ใน Section A
+        await loadAccounts();
+
+        // Banner alert ที่ Section A (reuse showAlert ของหน้านี้)
+        showAlert(
+          'success',
+          `เพิ่ม MT5 account "${data.name || data.login}" สำเร็จ — verify ผ่าน VPS เรียบร้อย`
+        );
+      } catch (err) {
+        // ห้าม log password / body ใน catch — log แค่ error message
+        const errMsg = err.message || String(err);
+        msg.textContent = errMsg;
+        msg.className = 'text-xs text-danger';
+        showAlert('error', 'เพิ่ม MT5 account ไม่สำเร็จ: ' + errMsg);
+      } finally {
+        btn.disabled = false;
+        spinner.classList.add('hidden');
+        label.textContent = 'เพิ่มบัญชี';
+      }
+    }
+
     // ─── Wire up ────────────────────────────────────────────────────────
     el('run-btn').addEventListener('click', runOptimize);
     el('cycle-btn').addEventListener('click', triggerCycle);
     el('recent-refresh-btn').addEventListener('click', loadRecent);
+    el('add-account-form').addEventListener('submit', handleAddAccount);
 
     // ─── Initial load triggered by verifyAdmin() เมื่อ gate ผ่าน ────────
   </script>
