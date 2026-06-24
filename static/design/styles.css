@@ -1,0 +1,16 @@
+/* ============================================================
+   designMD Design System — global entry point
+   ------------------------------------------------------------
+   Consumers link THIS one file. It is an @import manifest only;
+   every rule lives in a token/base file below. Order: fonts →
+   tokens → base utilities.
+   ============================================================ */
+
+@import url("tokens/fonts.css");
+@import url("tokens/colors.css");
+@import url("tokens/typography.css");
+@import url("tokens/spacing.css");
+@import url("tokens/radius.css");
+@import url("tokens/shadows.css");
+@import url("tokens/dark.css");
+@import url("tokens/base.css");

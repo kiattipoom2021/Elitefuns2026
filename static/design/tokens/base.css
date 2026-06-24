@@ -1,0 +1,95 @@
+/* ============================================================
+   designMD — base layer
+   element defaults + brand utility classes built on the tokens
+   ============================================================ */
+
+*, *::before, *::after { box-sizing: border-box; }
+
+html { -webkit-font-smoothing: antialiased; text-rendering: optimizeLegibility; }
+
+body {
+  margin: 0;
+  background: var(--surface-canvas);
+  color: var(--text-primary);
+  font-family: var(--font-sans);
+  font-weight: var(--fw-body);
+  font-size: var(--body-size);
+  line-height: var(--body-lh);
+}
+
+/* — Type primitives — */
+.dmd-h1 {
+  font-family: var(--font-display);
+  font-weight: var(--fw-medium);
+  font-size: var(--h1-size); line-height: var(--h1-lh);
+  letter-spacing: var(--h1-track); margin: 0;
+}
+.dmd-h2 {
+  font-family: var(--font-display);
+  font-weight: var(--fw-medium);
+  font-size: var(--h2-size); line-height: var(--h2-lh);
+  letter-spacing: var(--h2-track); margin: 0;
+}
+.dmd-h3 {
+  font-family: var(--font-display);
+  font-weight: var(--fw-medium);
+  font-size: var(--h3-size); line-height: var(--h3-lh);
+  letter-spacing: var(--h3-track); margin: 0;
+}
+.dmd-body {
+  font-weight: var(--fw-body);
+  font-size: var(--body-size); line-height: var(--body-lh); margin: 0;
+}
+.dmd-lead {
+  font-weight: var(--fw-body);
+  font-size: 20px; line-height: 28px; letter-spacing: -0.2px;
+  color: var(--text-secondary); margin: 0;
+}
+
+/* — Eyebrow: accent dot + uppercase +4% tracking — the identity signal — */
+.dmd-eyebrow {
+  display: inline-flex; align-items: center; gap: 8px;
+  font-weight: var(--fw-bold);
+  font-size: var(--eyebrow-size); line-height: var(--eyebrow-lh);
+  letter-spacing: var(--eyebrow-track);
+  text-transform: uppercase;
+  color: var(--text-primary);
+}
+.dmd-eyebrow::before {
+  content: ""; width: 8px; height: 8px; border-radius: 50%;
+  background: var(--accent-dot); flex: none;
+}
+
+/* — Ghost watermark headline (cream-on-cream, sits behind content) — */
+.dmd-ghost {
+  font-family: var(--font-display);
+  font-weight: var(--fw-medium);
+  font-size: var(--ghost-size);
+  line-height: 0.92;
+  letter-spacing: var(--ghost-track);
+  color: var(--ghost-text);
+  margin: 0;
+  user-select: none;
+  pointer-events: none;
+}
+
+/* — Orbital arc: thin yellow curve implying connection — */
+.dmd-arc {
+  fill: none;
+  stroke: var(--accent-arc);
+  stroke-width: 1.5;
+  stroke-linecap: round;
+}
+
+/* — Link — */
+.dmd-link {
+  color: var(--text-link); text-decoration: none;
+  border-bottom: 1px solid color-mix(in srgb, var(--text-link) 35%, transparent);
+  transition: border-color var(--dur-quick) var(--ease-soft);
+}
+.dmd-link:hover { border-bottom-color: var(--text-link); }
+
+/* — Surfaces — */
+.dmd-canvas { background: var(--surface-canvas); }
+.dmd-lifted { background: var(--surface-lifted); }
+.dmd-ink    { background: var(--surface-ink); color: var(--text-on-ink); }

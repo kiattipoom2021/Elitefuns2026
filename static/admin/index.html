@@ -1,0 +1,932 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Admin — ELITEFUNS</title>
+
+  <link rel="stylesheet" href="/design/styles.css">
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            bg:       { DEFAULT: '#121110', elevated: '#1A1815', card: '#1A1815', muted: '#232019' },
+            fg:       { DEFAULT: '#F6F2EC', muted: '#C8C1B5', subtle: '#908A7E' },
+            accent:   '#10B981',
+            danger:   '#F87171',
+            warning:  '#F9A826',
+            info:     '#F9A826',
+            'border-subtle': 'rgba(255,255,255,0.09)',
+          },
+          fontFamily: {
+            sans:  ["'Sofia Sans'", 'SofiaSans', 'Arial', 'sans-serif'],
+            mono:  ["'JetBrains Mono'", 'monospace'],
+          },
+        },
+      },
+    };
+  </script>
+
+  <link rel="stylesheet" href="/design/app-shim.css">
+
+  <!-- ─── Table tweaks (match optimize/bot-trade pattern) ─── -->
+  <style>
+    /* app-shim.css forces `.data-table thead th { text-align: left }`.
+       Raise specificity so Tailwind alignment utilities win for numeric/center cols. */
+    #result-preview-body-container .data-table thead th.text-right,
+    #recent-container .data-table thead th.text-right { text-align: right; }
+    #result-preview-body-container .data-table thead th.text-center,
+    #recent-container .data-table thead th.text-center { text-align: center; }
+    #result-preview-body-container .data-table thead th.text-left,
+    #recent-container .data-table thead th.text-left { text-align: left; }
+
+    /* Tighter sparkline cell density */
+    #result-preview-body-container .data-table td.spark-cell,
+    #recent-container .data-table td.spark-cell {
+      padding-top: 0.4rem;
+      padding-bottom: 0.4rem;
+      line-height: 0;
+    }
+  </style>
+</head>
+<body class="theme-dark bg-bg text-fg antialiased">
+
+  <!-- ═════════ Admin gate overlay ═════════ -->
+  <!-- แสดงระหว่างยืนยันสิทธิ์ admin — ซ่อน main content จนกว่าจะ verify ผ่าน -->
+  <div id="admin-gate-overlay" class="fixed inset-0 z-50 bg-bg flex items-center justify-center">
+    <div class="flex flex-col items-center gap-3 text-fg-muted text-sm">
+      <svg class="w-6 h-6 animate-spin" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+        <path stroke-linecap="round" stroke-linejoin="round" d="M12 4v2m0 12v2m8-8h-2M6 12H4m12.95-5.95l-1.41 1.41M7.46 16.54l-1.41 1.41m0-13.9l1.41 1.41m9.08 9.08l1.41 1.41"/>
+      </svg>
+      <span>กำลังตรวจสอบสิทธิ์...</span>
+    </div>
+  </div>
+
+  <!-- ═════════ Admin badge banner ═════════ -->
+  <div class="bg-accent/10 border-b border-accent/30 text-accent">
+    <div class="max-w-4xl mx-auto px-4 py-2.5 flex items-center gap-2.5 text-sm">
+      <svg class="w-5 h-5 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+        <path stroke-linecap="round" stroke-linejoin="round" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
+      </svg>
+      <span><strong class="font-semibold">Admin Console</strong> — เฉพาะผู้ดูแลระบบเท่านั้น</span>
+    </div>
+  </div>
+
+  <!-- ═════════ Brand strip ═════════ -->
+  <div class="bg-bg-elevated border-b border-border-subtle">
+    <div class="max-w-4xl mx-auto px-4 py-4 flex items-center justify-between">
+      <a href="/dashboard/" class="brand-mark">
+        <img src="/design/logo.png" alt="ELITEFUNS">
+        <span class="word">Elitefuns</span>
+      </a>
+      <div class="flex items-center gap-4">
+        <span id="admin-email-label" class="text-fg-muted text-xs font-mono"></span>
+        <a href="/dashboard/" class="text-fg-muted hover:text-fg text-xs uppercase tracking-wider font-semibold transition-colors">
+          ← Dashboard
+        </a>
+      </div>
+    </div>
+  </div>
+
+  <main class="max-w-4xl mx-auto px-4 py-8">
+
+    <!-- ═════════ Header ═════════ -->
+    <header class="mb-6">
+      <div class="flex items-center gap-2 text-xs text-fg-subtle mb-2">
+        <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"/>
+        </svg>
+        <span class="uppercase tracking-wider font-medium">Admin · Internal</span>
+      </div>
+      <h1 class="text-2xl font-semibold tracking-tight">Admin — Run Optimize</h1>
+      <p class="text-fg-muted text-sm mt-1">ทริกเกอร์ backtest ใหม่และดูรายการล่าสุด</p>
+    </header>
+
+    <!-- ═════════ Section A — Run Optimize form ═════════ -->
+    <section class="bg-bg-card border border-border-subtle rounded-xl p-5 mb-6">
+      <div class="flex items-center justify-between mb-4">
+        <h2 class="text-fg font-semibold text-sm">ทริกเกอร์ Optimize ใหม่</h2>
+        <span class="text-fg-subtle text-[11px] font-mono">POST /api/admin/optimize/run</span>
+      </div>
+
+      <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-4">
+
+        <div class="sm:col-span-2">
+          <label class="field-label" for="account-select">MT5 Account</label>
+          <select id="account-select" class="field-input" disabled>
+            <option>กำลังโหลดบัญชี...</option>
+          </select>
+          <div id="account-help" class="text-fg-subtle text-[11px] mt-1">ใช้บัญชีนี้ดึงราคาย้อนหลังจากโบรกเกอร์</div>
+        </div>
+
+        <div>
+          <label class="field-label" for="strategy-select">Strategy</label>
+          <select id="strategy-select" class="field-input">
+            <option value="ma_cross" selected>MA Cross</option>
+          </select>
+        </div>
+
+        <div>
+          <label class="field-label" for="timeframe-select">Timeframe</label>
+          <select id="timeframe-select" class="field-input">
+            <option value="M5">M5 — 5 นาที</option>
+            <option value="M15">M15 — 15 นาที</option>
+            <option value="M30">M30 — 30 นาที</option>
+            <option value="H1" selected>H1 — 1 ชั่วโมง</option>
+            <option value="H4">H4 — 4 ชั่วโมง</option>
+            <option value="D1">D1 — 1 วัน</option>
+          </select>
+        </div>
+
+        <div class="sm:col-span-2">
+          <div class="bg-bg-card border border-border-subtle rounded-xl p-5">
+            <h3 class="text-fg font-semibold text-sm mb-4">Risk Management</h3>
+            <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+              <div>
+                <label class="field-label">SL Lookback (แท่ง)</label>
+                <div class="field-input font-mono text-fg-muted bg-bg-muted/40 cursor-not-allowed">sweep: 10, 20, 30</div>
+                <div class="text-fg-subtle text-[11px] mt-1">ระบบจะลองทั้ง 3 ค่าให้</div>
+              </div>
+              <div>
+                <label class="field-label">RR Ratio</label>
+                <div class="field-input font-mono text-fg-muted bg-bg-muted/40 cursor-not-allowed">sweep: 1.5, 2.0, 3.0</div>
+                <div class="text-fg-subtle text-[11px] mt-1">ระบบจะลองทั้ง 3 ค่าให้</div>
+              </div>
+              <div>
+                <label class="field-label" for="risk-per-trade">Risk ต่อ trade (USD)</label>
+                <input id="risk-per-trade" type="number" min="1" max="10000" step="1" value="10" class="field-input font-mono" />
+                <div class="text-fg-subtle text-[11px] mt-1">เงินที่ยอมเสียถ้า SL hit</div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="sm:col-span-2">
+          <div class="field-label">คู่เงินที่จะรัน</div>
+          <div id="majors-pills" class="flex flex-wrap gap-1.5">
+            <!-- skeleton pills while loading -->
+            <span class="text-[10px] uppercase tracking-wider px-2 py-0.5 rounded bg-bg-muted/60 border border-border-subtle font-mono text-transparent select-none animate-pulse">EURUSD</span>
+            <span class="text-[10px] uppercase tracking-wider px-2 py-0.5 rounded bg-bg-muted/60 border border-border-subtle font-mono text-transparent select-none animate-pulse">USDJPY</span>
+            <span class="text-[10px] uppercase tracking-wider px-2 py-0.5 rounded bg-bg-muted/60 border border-border-subtle font-mono text-transparent select-none animate-pulse">GBPUSD</span>
+            <span class="text-[10px] uppercase tracking-wider px-2 py-0.5 rounded bg-bg-muted/60 border border-border-subtle font-mono text-transparent select-none animate-pulse">USDCHF</span>
+          </div>
+          <div class="text-fg-subtle text-[11px] mt-1.5">ทุก trigger จะรันคู่เงินเหล่านี้พร้อมกัน (login MT5 ครั้งเดียว)</div>
+        </div>
+
+      </div>
+
+      <div class="bg-bg-muted/40 border border-border-subtle rounded-lg px-3 py-2.5 text-fg-muted text-xs flex items-start gap-2 mb-4">
+        <svg class="w-4 h-4 mt-0.5 flex-shrink-0 text-info" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+        </svg>
+        <span>
+          ระบบจะดึงราคา <span class="text-fg">6 เดือน</span> ×
+          <span class="text-fg">18 MA × 3 RR × 3 SL × 7 majors = 1,134 runs</span> ·
+          SL/TP/Lot คำนวณตาม Risk Management ด้านบน ·
+          ใช้เวลา 15–30 นาที
+        </span>
+      </div>
+
+      <div class="flex items-center justify-between gap-3 flex-wrap">
+        <div id="run-helper" class="text-fg-subtle text-[11px]">
+          กดปุ่มขวาเพื่อเริ่ม — ใช้เวลาประมาณ 15–30 นาที
+        </div>
+        <button id="run-btn"
+          class="bg-info hover:bg-blue-500 text-white font-semibold px-5 py-2.5 rounded-lg text-sm flex items-center gap-2 transition-colors disabled:opacity-60 disabled:cursor-not-allowed disabled:hover:bg-info">
+          <svg id="run-btn-icon" class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M13 10V3L4 14h7v7l9-11h-7z"/>
+          </svg>
+          <svg id="run-btn-spinner" class="w-4 h-4 spin hidden" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M12 4v2m0 12v2m8-8h-2M6 12H4m12.95-5.95l-1.41 1.41M7.46 16.54l-1.41 1.41m0-13.9l1.41 1.41m9.08 9.08l1.41 1.41"/>
+          </svg>
+          <span id="run-btn-label">เริ่ม Optimize</span>
+        </button>
+      </div>
+
+      <!-- inline alert -->
+      <div id="run-alert" class="mt-4 hidden"></div>
+    </section>
+
+    <!-- ═════════ Section A2 — Manual Bot Cycle Trigger ═════════ -->
+    <section class="bg-bg-card border border-border-subtle rounded-xl p-5 mb-6">
+      <div class="flex items-start justify-between gap-3 flex-wrap mb-3">
+        <div>
+          <h2 class="text-fg font-semibold text-sm mb-1">Manual Bot Cycle</h2>
+          <div class="text-fg-subtle text-[11px]">
+            รัน <code class="text-info">run_bot_cycle()</code> ทันที — ไม่ต้องรอ scheduler tick 15 นาที
+            (สำหรับ debug + ทดสอบ end-to-end)
+          </div>
+        </div>
+        <button id="cycle-btn"
+          class="bg-bg-muted hover:bg-bg-elevated border border-border-subtle text-fg font-semibold px-4 py-2 rounded-lg text-sm flex items-center gap-2 transition-colors disabled:opacity-60 disabled:cursor-not-allowed">
+          <svg id="cycle-btn-icon" class="w-4 h-4 text-accent" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z"/>
+            <path stroke-linecap="round" stroke-linejoin="round" d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+          </svg>
+          <svg id="cycle-btn-spinner" class="w-4 h-4 spin hidden" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M12 4v2m0 12v2m8-8h-2M6 12H4m12.95-5.95l-1.41 1.41M7.46 16.54l-1.41 1.41m0-13.9l1.41 1.41m9.08 9.08l1.41 1.41"/>
+          </svg>
+          <span id="cycle-btn-label">รัน Bot Cycle ทันที</span>
+        </button>
+      </div>
+      <div id="cycle-result" class="hidden"></div>
+    </section>
+
+    <!-- ═════════ Section B — Result preview (last submission) ═════════ -->
+    <section id="result-preview" class="bg-bg-card border border-border-subtle rounded-xl mb-6 hidden">
+      <div class="px-5 py-4 border-b border-border-subtle flex items-center justify-between">
+        <h2 class="text-fg font-semibold text-sm">ผลล่าสุด — Top 10 (จาก Net Profit)</h2>
+        <span id="result-meta" class="text-fg-subtle text-xs"></span>
+      </div>
+      <div id="result-preview-body-container" class="overflow-x-auto">
+        <table class="data-table">
+          <thead>
+            <tr>
+              <th class="text-left min-w-[200px]">Code</th>
+              <th class="text-right whitespace-nowrap w-28">Net Profit</th>
+              <th class="text-right whitespace-nowrap w-28" title="ขาดทุนสะสมสูงสุด">Max Drawdown</th>
+              <th class="text-right whitespace-nowrap w-24" title="จำนวน trade ใน window">Total Trades</th>
+              <th class="text-right whitespace-nowrap w-20">Win Rate</th>
+              <th class="text-right whitespace-nowrap w-24" title="Gross profit ÷ |Gross loss|">Profit Factor</th>
+              <th class="text-right whitespace-nowrap w-20" title="Risk-adjusted return (higher = better)">Sharpe</th>
+              <th class="text-center w-24" title="1Y equity curve">Equity</th>
+            </tr>
+          </thead>
+          <tbody id="result-preview-body"></tbody>
+        </table>
+      </div>
+      <div class="px-5 pb-4">
+        <div class="text-fg-subtle text-xs mt-2">
+          Config: SL sweep [10, 20, 30] · RR sweep [1.5, 2.0, 3.0] ·
+          Risk $<span id="cfg-risk">10</span>/trade ·
+          Backtest window <span class="text-fg">1 ปีย้อนหลัง</span>
+        </div>
+      </div>
+    </section>
+
+    <!-- ═════════ Section C — Recent runs ═════════ -->
+    <section class="bg-bg-card border border-border-subtle rounded-xl">
+      <div class="px-5 py-4 border-b border-border-subtle flex items-center justify-between">
+        <h2 class="text-fg font-semibold text-sm">Runs ล่าสุด</h2>
+        <button id="recent-refresh-btn"
+          class="text-fg-muted hover:text-fg transition-colors flex items-center gap-1.5 text-xs px-2 py-1 rounded hover:bg-bg-muted">
+          <svg id="recent-refresh-icon" class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/>
+          </svg>
+          รีเฟรช
+        </button>
+      </div>
+      <div id="recent-container" class="overflow-x-auto">
+        <!-- table or empty state injected here -->
+      </div>
+    </section>
+
+  </main>
+
+  <script>
+    // ─── Admin gate ─────────────────────────────────────────────────────
+    // ทุก request ต้องมี Authorization header — backend จะ enforce admin ด้วย 403
+    const token = localStorage.getItem('jwt_token');
+    if (!token) { window.location.href = '/login/'; }
+
+    const AUTH_HEADERS = {
+      'Authorization': `Bearer ${token}`,
+      'Content-Type': 'application/json',
+    };
+
+    function clearAuthAndRedirect(target) {
+      localStorage.removeItem('jwt_token');
+      localStorage.removeItem('is_admin');
+      window.location.href = target;
+    }
+
+    // Verify admin ก่อนแสดงเนื้อหา — เผื่อ localStorage stale (เคยเป็น admin แต่ถูก demote)
+    (async function verifyAdmin() {
+      try {
+        const res = await fetch('/auth/me', {
+          headers: { 'Authorization': `Bearer ${token}` },
+        });
+        if (res.status === 401) {
+          clearAuthAndRedirect('/login/');
+          return;
+        }
+        if (!res.ok) throw new Error('verify failed');
+        const me = await res.json();
+        // sync flag กับ server เสมอ
+        localStorage.setItem('is_admin', String(Boolean(me.is_admin)));
+
+        if (!me.is_admin) {
+          alert('ต้องเป็น admin เท่านั้น');
+          window.location.href = '/dashboard/';
+          return;
+        }
+
+        // ผ่าน — ปลดล็อค UI
+        document.body.classList.add('user-is-admin');
+        const overlay = document.getElementById('admin-gate-overlay');
+        if (overlay) overlay.remove();
+        const emailLabel = document.getElementById('admin-email-label');
+        if (emailLabel && me.email) emailLabel.textContent = me.email;
+
+        // เริ่ม load resources หลังผ่าน gate
+        loadAccounts();
+        loadMajors();
+        loadRecent();
+      } catch (err) {
+        // network/server error → ส่งกลับ login ปลอดภัยกว่า
+        clearAuthAndRedirect('/login/');
+      }
+    })();
+
+    const API = {
+      accounts: '/api/admin/mt5-accounts',
+      majors: '/api/admin/majors',
+      runOptimize: '/api/admin/optimize/run',
+      triggerCycle: '/api/admin/bot/trigger-cycle',
+      recentRuns: (code, limit) => `/api/strategies/${code}/runs?limit=${limit}&sort=run_at`,
+    };
+
+    // Fallback list — used if /api/admin/majors fails so the page still works
+    const FALLBACK_MAJORS = ['EURUSD', 'USDJPY', 'GBPUSD', 'USDCHF', 'AUDUSD', 'USDCAD', 'NZDUSD'];
+
+    const el = (id) => document.getElementById(id);
+
+    // ─── Formatters ─────────────────────────────────────────────────────
+    const fmtMoney = (n) => {
+      if (n === null || n === undefined || isNaN(n)) return '—';
+      const sign = n < 0 ? '-' : '';
+      const abs = Math.abs(n);
+      return sign + '$' + abs.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+    };
+    const fmtPct = (n) => {
+      if (n === null || n === undefined || isNaN(n)) return '—';
+      return (n * 100).toFixed(1) + '%';
+    };
+    const fmtNum = (n, digits = 2) => {
+      if (n === null || n === undefined || isNaN(n)) return '—';
+      return Number(n).toFixed(digits);
+    };
+    const fmtInt = (n) => {
+      if (n === null || n === undefined || isNaN(n)) return '—';
+      return Math.round(n).toLocaleString('en-US');
+    };
+    // Profit Factor formatter (∞ for no losses)
+    const fmtFactor = (n) => {
+      if (n === null || n === undefined || isNaN(n)) return '—';
+      if (!isFinite(n)) return '∞';
+      return Number(n).toFixed(2);
+    };
+
+    // ─── Color classes (match optimize / bot-trade) ─────────────────────
+    // Net Profit: bold + colored only for non-zero
+    const profitClass = (n) => {
+      if (n === null || n === undefined || isNaN(n)) return 'text-fg-muted';
+      if (n > 0) return 'text-accent font-semibold';
+      if (n < 0) return 'text-danger font-semibold';
+      return 'text-fg-muted';
+    };
+    // Max Drawdown — neutral muted by default; warning when > $2000 (20% of $10k initial)
+    const ddClass = (n) => ((n ?? 0) > 2000 ? 'text-warning' : 'text-fg-muted');
+    // Win Rate — 3-tier: ≥55% accent · 40–55% neutral fg · <40% danger
+    const winRateClass = (n) => {
+      if (n === null || n === undefined || isNaN(n)) return 'text-fg-muted';
+      const v = Number(n);
+      if (v >= 0.55) return 'text-accent';
+      if (v >= 0.40) return 'text-fg';
+      return 'text-danger';
+    };
+    // Profit Factor — 3-tier: ≥1.5 accent · 1–1.5 neutral fg · <1 danger
+    const pfClass = (n) => {
+      if (n === null || n === undefined || isNaN(n)) return 'text-fg-muted';
+      if (!isFinite(n) || n >= 1.5) return 'text-accent';
+      if (n >= 1) return 'text-fg';
+      return 'text-danger';
+    };
+    // Sharpe — sign-based 3-tier: ≥1 accent · 0–1 neutral fg · <0 danger
+    const sharpeClass = (n) => {
+      if (n === null || n === undefined || isNaN(n)) return 'text-fg-muted';
+      const v = Number(n);
+      if (v >= 1) return 'text-accent';
+      if (v >= 0) return 'text-fg';
+      return 'text-danger';
+    };
+
+    // ─── Tiny HTML escaper ──────────────────────────────────────────────
+    const escapeHtml = (s) => {
+      if (s === null || s === undefined) return '';
+      return String(s)
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#39;');
+    };
+
+    // ─── Inline SVG sparkline (port of optimize page) ───────────────────
+    // values: array of cumulative P/L points (number[])
+    function renderSparkline(values, opts = {}) {
+      const { width = 80, height = 20 } = opts;
+      if (!Array.isArray(values) || values.length === 0) {
+        return `<svg width="${width}" height="${height}" class="inline-block align-middle">
+                  <line x1="0" y1="${height / 2}" x2="${width}" y2="${height / 2}"
+                        stroke="rgba(255,255,255,0.08)" stroke-width="1" stroke-dasharray="2,2"/>
+                </svg>`;
+      }
+      const numericVals = values.map(v => Number(v) || 0);
+      const min = Math.min(0, ...numericVals);
+      const max = Math.max(0, ...numericVals);
+      const range = (max - min) || 1;
+      const n = numericVals.length;
+      const stepX = n > 1 ? width / (n - 1) : 0;
+
+      const pts = numericVals.map((v, i) => {
+        const x = i * stepX;
+        const y = height - ((v - min) / range) * height;
+        const yc = Math.max(0.5, Math.min(height - 0.5, y));
+        return `${x.toFixed(1)},${yc.toFixed(1)}`;
+      }).join(' ');
+
+      const finalVal = numericVals[n - 1];
+      const lineColor = finalVal > 0 ? '#10B981' : finalVal < 0 ? '#F87171' : '#908A7E';
+      const zeroY = height - ((0 - min) / range) * height;
+      const zeroYc = Math.max(0.5, Math.min(height - 0.5, zeroY));
+
+      return `
+        <svg width="${width}" height="${height}" viewBox="0 0 ${width} ${height}" class="inline-block align-middle" aria-hidden="true">
+          <line x1="0" y1="${zeroYc.toFixed(1)}" x2="${width}" y2="${zeroYc.toFixed(1)}"
+                stroke="rgba(255,255,255,0.10)" stroke-width="1" stroke-dasharray="2,2"/>
+          <polyline points="${pts}" fill="none" stroke="${lineColor}"
+                    stroke-width="1.5" stroke-linejoin="round" stroke-linecap="round"/>
+        </svg>
+      `;
+    }
+
+    // ─── Adapter: produce {stats, sparkline} from any run shape ─────────
+    // - If run has stats_1y → use it (public endpoint)
+    // - Else fall back to aggregate fields (admin sweep response)
+    // - profit_factor fallback uses recovery_factor (best available proxy)
+    function adaptRun(run) {
+      const s1y = run?.stats_1y;
+      const sparkline = Array.isArray(run?.sparkline_1y) ? run.sparkline_1y : [];
+      if (s1y && typeof s1y === 'object') {
+        return {
+          stats: {
+            net_profit: s1y.net_profit,
+            max_drawdown: s1y.max_drawdown,
+            total_trades: s1y.total_trades,
+            win_rate: s1y.win_rate,
+            profit_factor: s1y.profit_factor,
+            sharpe: run.sharpe_ratio,    // window stats schema has no sharpe — use run-level
+          },
+          sparkline,
+        };
+      }
+      // Legacy / admin sweep result — no stats_1y; use aggregate cols.
+      return {
+        stats: {
+          net_profit: run?.net_profit ?? null,
+          max_drawdown: run?.max_drawdown ?? null,
+          total_trades: run?.total_trades ?? null,
+          win_rate: run?.win_rate ?? null,
+          // No profit_factor on legacy/admin response → fall back to recovery_factor
+          profit_factor: run?.profit_factor ?? run?.recovery_factor ?? null,
+          sharpe: run?.sharpe_ratio ?? null,
+        },
+        sparkline,
+      };
+    }
+
+    // ─── Common row renderer (8 unified columns) ────────────────────────
+    function renderRunRow(run, opts = {}) {
+      const { isLeader = false } = opts;
+      const code = run.run_code || '—';
+      const { stats: s, sparkline } = adaptRun(run);
+      const ddVal = s.max_drawdown == null ? null : Math.abs(Number(s.max_drawdown));
+      const sparkFinal = sparkline.length ? Number(sparkline[sparkline.length - 1]) : null;
+      const sparkTitle = sparkline.length
+        ? `1Y equity curve · final ${fmtMoney(sparkFinal)}`
+        : 'ไม่มี equity curve';
+      const rowCls = isLeader ? 'leader-row' : '';
+      return `
+        <tr class="${rowCls}">
+          <td class="text-left">
+            <span class="font-mono text-info text-xs font-semibold run-code-cell" title="คลิกเพื่อคัดลอก">${escapeHtml(code)}</span>
+          </td>
+          <td class="text-right font-mono tabular-nums ${profitClass(s.net_profit)}">${fmtMoney(s.net_profit)}</td>
+          <td class="text-right font-mono tabular-nums ${ddClass(ddVal)}">${fmtMoney(ddVal)}</td>
+          <td class="text-right font-mono tabular-nums text-fg">${fmtInt(s.total_trades)}</td>
+          <td class="text-right font-mono tabular-nums ${winRateClass(s.win_rate)}">${fmtPct(s.win_rate)}</td>
+          <td class="text-right font-mono tabular-nums ${pfClass(s.profit_factor)}">${fmtFactor(s.profit_factor)}</td>
+          <td class="text-right font-mono tabular-nums ${sharpeClass(s.sharpe)}">${fmtNum(s.sharpe, 2)}</td>
+          <td class="text-center spark-cell" title="${escapeHtml(sparkTitle)}">${renderSparkline(sparkline, { width: 80, height: 20 })}</td>
+        </tr>
+      `;
+    }
+
+    // ─── Click-to-copy wiring for run-code cells in a container ─────────
+    function wireRunCodeCopy(container) {
+      if (!container) return;
+      container.querySelectorAll('.run-code-cell').forEach((node) => {
+        node.addEventListener('click', (e) => {
+          e.stopPropagation();
+          const code = node.textContent.trim();
+          if (code && code !== '—' && !code.startsWith('✓')) {
+            navigator.clipboard?.writeText(code).then(() => {
+              const original = node.textContent;
+              node.textContent = '✓ คัดลอกแล้ว';
+              setTimeout(() => { node.textContent = original; }, 1200);
+            });
+          }
+        });
+      });
+    }
+
+    const relTime = (iso) => {
+      if (!iso) return '—';
+      // Backend ส่ง naive ISO (ไม่มี Z) — ถือว่าเป็น UTC เพื่อกัน TZ drift
+      const norm = /[zZ]|[+-]\d{2}:?\d{2}$/.test(iso) ? iso : iso + 'Z';
+      const t = new Date(norm).getTime();
+      if (isNaN(t)) return '—';
+      const diff = Math.floor((Date.now() - t) / 1000);
+      if (diff < 5) return 'เพิ่งนี้';
+      if (diff < 60) return diff + ' วินาทีที่แล้ว';
+      if (diff < 3600) return Math.floor(diff / 60) + ' นาทีที่แล้ว';
+      if (diff < 86400) return Math.floor(diff / 3600) + ' ชั่วโมงที่แล้ว';
+      if (diff < 86400 * 7) return Math.floor(diff / 86400) + ' วันที่แล้ว';
+      return new Date(norm).toLocaleDateString('th-TH');
+    };
+
+    // ─── Inline alert helpers ───────────────────────────────────────────
+    const showAlert = (type, message) => {
+      const box = el('run-alert');
+      const styles = {
+        success: 'bg-accent/10 border-accent/30 text-accent',
+        error:   'bg-danger/10 border-danger/30 text-danger',
+        info:    'bg-info/10 border-info/30 text-info',
+      };
+      box.className = `mt-4 rounded-lg px-3 py-2.5 text-sm border ${styles[type] || styles.info}`;
+      box.textContent = message;
+      box.classList.remove('hidden');
+    };
+    const hideAlert = () => {
+      el('run-alert').classList.add('hidden');
+    };
+
+    // ─── Load MT5 accounts dropdown ─────────────────────────────────────
+    async function loadAccounts() {
+      const select = el('account-select');
+      const help = el('account-help');
+      select.disabled = true;
+      select.innerHTML = '<option>กำลังโหลดบัญชี...</option>';
+
+      try {
+        const res = await fetch(API.accounts, { headers: AUTH_HEADERS });
+        if (res.status === 401 || res.status === 403) { clearAuthAndRedirect('/dashboard/'); return; }
+        if (!res.ok) throw new Error(`HTTP ${res.status}`);
+        const accounts = await res.json();
+
+        if (!Array.isArray(accounts) || accounts.length === 0) {
+          select.innerHTML = '<option value="">— ไม่มีบัญชี MT5 ในระบบ —</option>';
+          select.disabled = true;
+          help.textContent = 'ยังไม่มีลูกค้าเชื่อม MT5 — โปรดสร้างก่อน';
+          help.className = 'text-danger text-[11px] mt-1';
+          el('run-btn').disabled = true;
+          return;
+        }
+
+        select.innerHTML = '';
+        let firstEnabledIdx = -1;
+        accounts.forEach((a, i) => {
+          const opt = document.createElement('option');
+          opt.value = a.id;
+          const base = `${a.name || 'unnamed'} — Login: ${a.login}  ·  ${a.server || a.broker || ''}`;
+          if (a.verified === false) {
+            opt.disabled = true;
+            opt.textContent = base + ' (ยังไม่ verified)';
+          } else {
+            opt.textContent = base;
+            if (firstEnabledIdx === -1) firstEnabledIdx = i;
+          }
+          select.appendChild(opt);
+        });
+
+        select.disabled = false;
+        if (firstEnabledIdx >= 0) {
+          select.selectedIndex = firstEnabledIdx;
+          help.textContent = `${accounts.length} บัญชีในระบบ · ปิดใช้บัญชีที่ยัง verify ไม่ผ่าน`;
+          help.className = 'text-fg-subtle text-[11px] mt-1';
+        } else {
+          help.textContent = 'ไม่มีบัญชีที่ verified — ลูกค้าต้องทดสอบเชื่อมต่อ MT5 ให้ผ่านก่อน';
+          help.className = 'text-warning text-[11px] mt-1';
+          el('run-btn').disabled = true;
+        }
+      } catch (err) {
+        select.innerHTML = '<option value="">— โหลดบัญชีไม่ได้ —</option>';
+        select.disabled = true;
+        help.textContent = 'โหลดรายการบัญชีไม่สำเร็จ: ' + (err.message || err);
+        help.className = 'text-danger text-[11px] mt-1';
+        el('run-btn').disabled = true;
+      }
+    }
+
+    // ─── Run optimize ───────────────────────────────────────────────────
+    const formInputs = () => [
+      el('account-select'),
+      el('strategy-select'),
+      el('timeframe-select'),
+      el('risk-per-trade'),
+    ];
+
+    function setLoading(loading) {
+      const btn = el('run-btn');
+      const icon = el('run-btn-icon');
+      const spin = el('run-btn-spinner');
+      const label = el('run-btn-label');
+      const helper = el('run-helper');
+
+      btn.disabled = loading;
+      formInputs().forEach((i) => (i.disabled = loading));
+
+      if (loading) {
+        icon.classList.add('hidden');
+        spin.classList.remove('hidden');
+        label.textContent = 'กำลังประมวลผล... (อาจใช้เวลา 3–8 นาที)';
+        helper.textContent = 'อย่าปิดหน้าระหว่างประมวลผล';
+        helper.className = 'text-warning text-[11px]';
+      } else {
+        icon.classList.remove('hidden');
+        spin.classList.add('hidden');
+        label.textContent = 'เริ่ม Optimize';
+        helper.textContent = 'กดปุ่มขวาเพื่อเริ่ม — ใช้เวลาประมาณ 3–8 นาที';
+        helper.className = 'text-fg-subtle text-[11px]';
+      }
+    }
+
+    async function runOptimize() {
+      hideAlert();
+
+      const accountId = el('account-select').value;
+      const strategyCode = el('strategy-select').value;
+      const timeframe = el('timeframe-select').value;
+
+      if (!accountId) {
+        showAlert('error', 'กรุณาเลือก MT5 Account');
+        return;
+      }
+
+      // ─── Validate risk-per-trade (sl_lookback + rr_ratio ใช้ sweep) ──
+      const riskRaw = el('risk-per-trade').value;
+      const riskPerTrade = Number.parseFloat(riskRaw);
+
+      if (!Number.isFinite(riskPerTrade) || riskPerTrade <= 0 || riskPerTrade > 10000) {
+        showAlert('error', 'Risk ต้องอยู่ระหว่าง 1–10000');
+        return;
+      }
+
+      // ─── Snapshot config into preview caption BEFORE submit ─────────
+      el('cfg-risk').textContent = String(riskPerTrade);
+
+      setLoading(true);
+
+      try {
+        const res = await fetch(API.runOptimize, {
+          method: 'POST',
+          headers: AUTH_HEADERS,
+          body: JSON.stringify({
+            mt5_account_id: accountId,
+            strategy_code: strategyCode,
+            timeframe,
+            risk_per_trade_usd: riskPerTrade,
+          }),
+        });
+
+        if (res.status === 401 || res.status === 403) { clearAuthAndRedirect('/dashboard/'); return; }
+
+        const data = await res.json().catch(() => ({}));
+
+        if (!res.ok) {
+          const msg = data.detail || data.message || `HTTP ${res.status}`;
+          if (res.status === 503) {
+            showAlert('error', 'VPS ไม่พร้อมใช้งาน: ' + msg);
+          } else if (res.status === 404) {
+            showAlert('error', 'ไม่พบข้อมูล: ' + msg);
+          } else {
+            showAlert('error', msg);
+          }
+          return;
+        }
+
+        const inserted = data.inserted ?? (data.runs ? data.runs.length : 0);
+        showAlert('success', `สำเร็จ — บันทึก ${inserted} runs`);
+        renderPreview(data.runs || [], { timeframe });
+        // refresh recent table
+        loadRecent();
+      } catch (err) {
+        showAlert('error', 'เกิดข้อผิดพลาดทางเครือข่าย: ' + (err.message || err));
+      } finally {
+        setLoading(false);
+      }
+    }
+
+    // ─── Render preview (top 10 by net_profit) ──────────────────────────
+    function renderPreview(runs, ctx) {
+      const section = el('result-preview');
+      const tbody = el('result-preview-body');
+      const meta = el('result-meta');
+
+      if (!runs.length) {
+        section.classList.add('hidden');
+        return;
+      }
+
+      const sorted = [...runs].sort((a, b) => (b.net_profit ?? -Infinity) - (a.net_profit ?? -Infinity));
+      const top = sorted.slice(0, 10);
+
+      // distinct symbols in this batch (for context line)
+      const symbols = Array.from(new Set(runs.map(r => r.symbol).filter(Boolean)));
+      const symbolLabel = symbols.length === 1
+        ? symbols[0]
+        : `${symbols.length} symbols`;
+      meta.textContent = `${symbolLabel} · ${ctx.timeframe} · จากทั้งหมด ${runs.length} runs`;
+
+      // Admin sweep response has no stats_1y / sparkline_1y → adapter falls back to aggregate.
+      // Sparkline cell will render as a dashed placeholder.
+      tbody.innerHTML = top.map((r, i) => renderRunRow(r, { isLeader: i === 0 })).join('');
+
+      section.classList.remove('hidden');
+      wireRunCodeCopy(el('result-preview-body-container'));
+    }
+
+    // ─── Recent runs ────────────────────────────────────────────────────
+    async function loadRecent() {
+      const container = el('recent-container');
+      const refreshIcon = el('recent-refresh-icon');
+      refreshIcon.classList.add('spin');
+
+      container.innerHTML = `
+        <div class="px-5 py-8 text-center text-fg-subtle text-sm">กำลังโหลด...</div>
+      `;
+
+      try {
+        const res = await fetch(API.recentRuns('ma_cross', 10), { headers: AUTH_HEADERS });
+        if (res.status === 401 || res.status === 403) { clearAuthAndRedirect('/dashboard/'); return; }
+        if (!res.ok) throw new Error(`HTTP ${res.status}`);
+        const runs = await res.json();
+
+        if (!Array.isArray(runs) || runs.length === 0) {
+          container.innerHTML = `
+            <div class="px-5 py-14 text-center">
+              <div class="w-12 h-12 mx-auto mb-3 rounded-xl bg-bg-muted flex items-center justify-center">
+                <svg class="w-6 h-6 text-fg-subtle" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                  <path stroke-linecap="round" stroke-linejoin="round" d="M9 17v-2a4 4 0 014-4h4M5 7h14M5 12h6m-6 5h4"/>
+                </svg>
+              </div>
+              <div class="text-fg-muted text-sm">ยังไม่มี run</div>
+              <div class="text-fg-subtle text-xs mt-1">กดปุ่ม "เริ่ม Optimize" ด้านบนเพื่อทริกเกอร์ครั้งแรก</div>
+            </div>
+          `;
+          return;
+        }
+
+        container.innerHTML = renderRecentTable(runs);
+        wireRunCodeCopy(container);
+      } catch (err) {
+        container.innerHTML = `
+          <div class="px-5 py-8 text-center text-danger text-sm">
+            โหลดไม่สำเร็จ: ${err.message || err}
+          </div>
+        `;
+      } finally {
+        refreshIcon.classList.remove('spin');
+      }
+    }
+
+    function renderRecentTable(runs) {
+      // Use same 8-column layout as Section C. Public endpoint /api/strategies/{code}/runs
+      // returns stats_1y + sparkline_1y → adapter picks them automatically.
+      const rows = runs.map((r, i) => renderRunRow(r, { isLeader: i === 0 })).join('');
+
+      return `
+        <table class="data-table">
+          <thead>
+            <tr>
+              <th class="text-left min-w-[200px]">Code</th>
+              <th class="text-right whitespace-nowrap w-28">Net Profit</th>
+              <th class="text-right whitespace-nowrap w-28" title="ขาดทุนสะสมสูงสุด">Max Drawdown</th>
+              <th class="text-right whitespace-nowrap w-24" title="จำนวน trade ใน window">Total Trades</th>
+              <th class="text-right whitespace-nowrap w-20">Win Rate</th>
+              <th class="text-right whitespace-nowrap w-24" title="Gross profit ÷ |Gross loss|">Profit Factor</th>
+              <th class="text-right whitespace-nowrap w-20" title="Risk-adjusted return (higher = better)">Sharpe</th>
+              <th class="text-center w-24" title="1Y equity curve">Equity</th>
+            </tr>
+          </thead>
+          <tbody>${rows}</tbody>
+        </table>
+      `;
+    }
+
+    // ─── Load majors list ───────────────────────────────────────────────
+    function renderMajorsPills(symbols) {
+      const container = el('majors-pills');
+      container.innerHTML = symbols.map((s) => `
+        <span class="text-[10px] uppercase tracking-wider px-2 py-0.5 rounded bg-info/10 text-info border border-info/30 font-mono">${s}</span>
+      `).join('');
+    }
+
+    async function loadMajors() {
+      try {
+        const res = await fetch(API.majors, { headers: AUTH_HEADERS });
+        if (res.status === 401 || res.status === 403) { clearAuthAndRedirect('/dashboard/'); return; }
+        if (!res.ok) throw new Error(`HTTP ${res.status}`);
+        const data = await res.json();
+        const symbols = Array.isArray(data.symbols) && data.symbols.length
+          ? data.symbols
+          : FALLBACK_MAJORS;
+        renderMajorsPills(symbols);
+      } catch (err) {
+        // soft-fail: render fallback so the page still works
+        renderMajorsPills(FALLBACK_MAJORS);
+      }
+    }
+
+    // ─── Manual Bot Cycle ───────────────────────────────────────────────
+    async function triggerCycle() {
+      const btn = el('cycle-btn');
+      const icon = el('cycle-btn-icon');
+      const spin = el('cycle-btn-spinner');
+      const label = el('cycle-btn-label');
+      const result = el('cycle-result');
+
+      btn.disabled = true;
+      icon.classList.add('hidden');
+      spin.classList.remove('hidden');
+      label.textContent = 'กำลังรัน...';
+      result.classList.add('hidden');
+
+      try {
+        const res = await fetch(API.triggerCycle, { method: 'POST', headers: AUTH_HEADERS });
+        if (res.status === 401 || res.status === 403) { clearAuthAndRedirect('/dashboard/'); return; }
+        const data = await res.json().catch(() => ({}));
+
+        if (!res.ok) {
+          throw new Error(data.detail || `HTTP ${res.status}`);
+        }
+
+        const s = (data && data.summary) || {};
+        if (s.skipped) {
+          result.innerHTML = `
+            <div class="mt-3 bg-warning/5 border border-warning/30 rounded-lg px-4 py-3 text-sm">
+              <span class="text-warning font-medium">ข้าม — </span>
+              <span class="text-fg-muted">cycle อื่นกำลังรันอยู่ (overlap protection)</span>
+            </div>`;
+        } else {
+          const errs = (s.errors || []).length;
+          const errLine = errs
+            ? `<div class="text-danger text-xs mt-1">errors: ${errs}</div>`
+            : '';
+          result.innerHTML = `
+            <div class="mt-3 bg-accent/5 border border-accent/30 rounded-lg px-4 py-3">
+              <div class="text-accent text-sm font-medium mb-2">✓ Cycle เสร็จสมบูรณ์</div>
+              <div class="grid grid-cols-2 sm:grid-cols-3 gap-3 text-xs font-mono">
+                <div><span class="text-fg-subtle">subs total:</span> <span class="text-fg">${s.subscriptions_total ?? 0}</span></div>
+                <div><span class="text-fg-subtle">ports:</span> <span class="text-fg">${s.ports_iterated ?? 0}</span></div>
+                <div><span class="text-fg-subtle">signals:</span> <span class="text-fg">${s.signals_detected ?? 0}</span></div>
+                <div><span class="text-fg-subtle">orders sent:</span> <span class="text-accent">${s.orders_sent ?? 0}</span></div>
+                <div><span class="text-fg-subtle">dedup skip:</span> <span class="text-fg-muted">${s.orders_skipped_dedup ?? 0}</span></div>
+                <div><span class="text-fg-subtle">guard reject:</span> <span class="text-fg-muted">${s.orders_rejected_guard ?? 0}</span></div>
+              </div>
+              ${errLine}
+            </div>`;
+        }
+        result.classList.remove('hidden');
+      } catch (err) {
+        result.innerHTML = `
+          <div class="mt-3 bg-danger/5 border border-danger/30 rounded-lg px-4 py-3 text-sm">
+            <span class="text-danger font-medium">รันไม่สำเร็จ:</span>
+            <span class="text-fg-muted">${err.message || err}</span>
+          </div>`;
+        result.classList.remove('hidden');
+      } finally {
+        btn.disabled = false;
+        spin.classList.add('hidden');
+        icon.classList.remove('hidden');
+        label.textContent = 'รัน Bot Cycle ทันที';
+      }
+    }
+
+    // ─── Wire up ────────────────────────────────────────────────────────
+    el('run-btn').addEventListener('click', runOptimize);
+    el('cycle-btn').addEventListener('click', triggerCycle);
+    el('recent-refresh-btn').addEventListener('click', loadRecent);
+
+    // ─── Initial load triggered by verifyAdmin() เมื่อ gate ผ่าน ────────
+  </script>
+</body>
+</html>

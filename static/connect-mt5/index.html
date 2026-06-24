@@ -1,0 +1,992 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>พอร์ต MT5 — ELITEFUNS</title>
+
+  <link rel="stylesheet" href="/design/styles.css">
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            bg:       { DEFAULT: '#121110', elevated: '#1A1815', card: '#1A1815', muted: '#232019' },
+            fg:       { DEFAULT: '#F6F2EC', muted: '#C8C1B5', subtle: '#908A7E' },
+            accent:   '#10B981',
+            danger:   '#F87171',
+            warning:  '#F9A826',
+            info:     '#F9A826',
+            'border-subtle': 'rgba(255,255,255,0.09)',
+          },
+          fontFamily: {
+            sans:  ["'Sofia Sans'", 'SofiaSans', 'Arial', 'sans-serif'],
+            mono:  ["'JetBrains Mono'", 'monospace'],
+          },
+        },
+      },
+    };
+  </script>
+
+  <link rel="stylesheet" href="/design/app-shim.css">
+
+  <style>
+    /* Invalid-input red — page-specific */
+    .field-input.is-invalid { border-color: #F87171 !important; }
+  </style>
+</head>
+<body class="theme-dark bg-bg text-fg antialiased">
+
+  <div class="flex min-h-screen">
+
+    <!-- ═════════ Sidebar ═════════ -->
+    <aside class="w-60 border-r border-border-subtle bg-bg-elevated flex flex-col flex-shrink-0">
+      <!-- Brand -->
+      <div class="px-5 py-5 border-b border-border-subtle">
+        <a href="/dashboard/" class="brand-mark">
+          <img src="/design/logo.png" alt="ELITEFUNS">
+          <span class="word">Elitefuns</span>
+        </a>
+      </div>
+
+      <!-- Nav -->
+      <nav class="flex-1 px-3 py-4 space-y-0.5">
+        <div class="px-2 mb-1.5 text-[10px] uppercase tracking-wider font-medium text-fg-subtle">เมนูหลัก</div>
+
+        <a href="/dashboard/" class="nav-link">
+          <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"/></svg>
+          Dashboard
+        </a>
+
+        <a href="/connect-mt5/" class="nav-link active">
+          <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/><path stroke-linecap="round" stroke-linejoin="round" d="M12 3v9l6 3"/></svg>
+          พอร์ต MT5
+        </a>
+
+        <a href="/optimize/" class="nav-link">
+          <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M3 6h13M3 12h9m-9 6h6M17 14l4 4m0 0l-4 4m4-4H13"/></svg>
+          Optimize
+        </a>
+
+        <a href="/bot-trade/" class="nav-link">
+          <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M9 3v2m6-2v2M9 19v2m6-2v2M5 9H3m2 6H3m18-6h-2m2 6h-2M7 19h10a2 2 0 002-2V7a2 2 0 00-2-2H7a2 2 0 00-2 2v10a2 2 0 002 2zM9 9h6v6H9V9z"/></svg>
+          Bot Trade
+        </a>
+
+        <a href="/arbitrage/" class="nav-link">
+          <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M7 16V4m0 0L3 8m4-4l4 4m6 0v12m0 0l4-4m-4 4l-4-4"/>
+          </svg>
+          Arbitrage
+        </a>
+
+        <a id="nav-admin-link" href="/admin/" class="nav-link admin-only">
+          <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"/>
+          </svg>
+          Admin
+        </a>
+      </nav>
+
+      <!-- User card -->
+      <div class="p-3 border-t border-border-subtle">
+        <div class="flex items-center gap-2.5 px-2 py-2">
+          <div id="avatar" class="w-8 h-8 rounded-full bg-gradient-to-br from-info to-accent flex items-center justify-center font-semibold text-white text-xs flex-shrink-0">?</div>
+          <div class="flex-1 min-w-0">
+            <div id="user-email" class="text-fg text-xs font-medium truncate">กำลังโหลด...</div>
+            <div class="text-fg-subtle text-[10px]">Free plan</div>
+          </div>
+          <button id="logout-btn" title="ออกจากระบบ"
+            class="text-fg-muted hover:text-danger transition-colors p-1 rounded">
+            <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"/>
+            </svg>
+          </button>
+        </div>
+      </div>
+    </aside>
+
+    <!-- ═════════ Main ═════════ -->
+    <main class="flex-1 flex flex-col min-w-0">
+      <!-- Topbar -->
+      <header class="h-14 border-b border-border-subtle bg-bg-elevated flex items-center justify-between px-6">
+        <div class="flex items-center gap-2 text-sm">
+          <span class="text-fg-subtle">หน้าหลัก</span>
+          <span class="text-fg-subtle">›</span>
+          <span class="text-fg font-medium">พอร์ต MT5</span>
+        </div>
+        <div class="flex items-center gap-2">
+          <button class="w-8 h-8 rounded-lg hover:bg-bg-muted flex items-center justify-center text-fg-muted hover:text-fg transition-colors" title="แจ้งเตือน">
+            <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"/>
+            </svg>
+          </button>
+        </div>
+      </header>
+
+      <!-- Content -->
+      <div class="flex-1 p-6 overflow-auto">
+
+        <!-- Header -->
+        <div class="mb-6 flex items-start justify-between gap-4">
+          <div>
+            <h1 class="text-2xl font-semibold tracking-tight">พอร์ต MT5</h1>
+            <p class="text-fg-muted text-sm mt-1">จัดการบัญชี MT5 ที่ใช้รัน bot — credentials ถูก encrypt ก่อนเก็บลง DB</p>
+          </div>
+        </div>
+
+        <!-- ═════════ Section 1: Add account form (collapsible) ═════════ -->
+        <div class="bg-bg-card border border-border-subtle rounded-xl mb-5 overflow-hidden">
+
+          <button id="form-toggle" type="button"
+            class="w-full px-5 py-4 flex items-center justify-between hover:bg-bg-muted/40 transition-colors">
+            <div class="flex items-center gap-3">
+              <div class="w-9 h-9 rounded-lg bg-info/10 border border-info/30 flex items-center justify-center">
+                <svg class="w-4 h-4 text-info" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                  <path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4"/>
+                </svg>
+              </div>
+              <div class="text-left">
+                <div class="text-fg font-semibold text-sm">เพิ่มบัญชี MT5</div>
+                <div class="text-fg-subtle text-xs mt-0.5">กรอกข้อมูล MT5 ของคุณ — ระบบจะทดสอบเชื่อมต่อก่อนบันทึก</div>
+              </div>
+            </div>
+            <svg id="form-chevron" class="w-4 h-4 text-fg-muted transition-transform" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M19 9l-7 7-7-7"/>
+            </svg>
+          </button>
+
+          <div id="form-body" class="border-t border-border-subtle px-5 py-5">
+            <form id="add-form" autocomplete="off" novalidate>
+              <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-4">
+
+                <div>
+                  <label class="field-label" for="f-name">ชื่อเล่น</label>
+                  <input id="f-name" name="name" type="text" maxlength="64" required
+                         class="field-input" placeholder="เช่น บัญชีหลัก" />
+                  <div class="text-fg-subtle text-[11px] mt-1">ใช้ในระบบเท่านั้น เพื่อให้คุณจำง่าย</div>
+                </div>
+
+                <div>
+                  <label class="field-label" for="f-login">Login</label>
+                  <input id="f-login" name="login" type="number" inputmode="numeric" required min="1"
+                         class="field-input font-mono" placeholder="12345678" />
+                  <div class="text-fg-subtle text-[11px] mt-1">หมายเลข MT5 account</div>
+                </div>
+
+                <div>
+                  <label class="field-label" for="f-password">Password</label>
+                  <div class="relative">
+                    <input id="f-password" name="password" type="password" required
+                           autocomplete="new-password"
+                           class="field-input pr-10" placeholder="••••••••" />
+                    <button id="toggle-pwd" type="button" tabindex="-1"
+                            class="absolute right-2 top-1/2 -translate-y-1/2 w-7 h-7 flex items-center justify-center text-fg-muted hover:text-fg transition-colors rounded"
+                            title="แสดง/ซ่อน password">
+                      <!-- eye-off (default = hidden state shown) -->
+                      <svg id="eye-icon" class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/>
+                      </svg>
+                    </button>
+                  </div>
+                  <div class="text-fg-subtle text-[11px] mt-1">ระบบเก็บแบบ AES-256 — ไม่บันทึก plaintext</div>
+                </div>
+
+                <div>
+                  <label class="field-label" for="f-server">Server</label>
+                  <input id="f-server" name="server" type="text" maxlength="64" required
+                         class="field-input font-mono" placeholder="เช่น Exness-Trial5" />
+                  <div class="text-fg-subtle text-[11px] mt-1">ชื่อเซิร์ฟเวอร์ที่โบรกเกอร์กำหนด</div>
+                </div>
+
+                <div class="sm:col-span-2">
+                  <label class="field-label" for="f-broker">Broker <span class="text-fg-subtle">(ไม่บังคับ)</span></label>
+                  <input id="f-broker" name="broker" type="text" maxlength="64"
+                         class="field-input" placeholder="เช่น Exness, ICMarkets, FBS" />
+                  <div class="text-fg-subtle text-[11px] mt-1">ชื่อโบรกเกอร์ที่ใช้แสดงในรายการ</div>
+                </div>
+
+              </div>
+
+              <!-- alert -->
+              <div id="form-alert" class="hidden rounded-lg px-3 py-2 text-sm mb-3"></div>
+
+              <div class="flex items-center justify-end gap-2">
+                <button id="reset-btn" type="reset"
+                  class="text-fg-muted hover:text-fg px-4 py-2.5 rounded-lg text-sm font-medium transition-colors">
+                  ล้างค่า
+                </button>
+                <button id="submit-btn" type="submit"
+                  class="bg-info hover:bg-blue-500 active:bg-blue-700 text-white font-semibold px-5 py-2.5 rounded-lg text-sm flex items-center gap-2 transition-colors disabled:opacity-50 disabled:cursor-not-allowed">
+                  <svg id="submit-spinner" class="w-4 h-4 spin hidden" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/>
+                  </svg>
+                  <svg id="submit-icon" class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                  </svg>
+                  <span id="submit-label">เพิ่มและทดสอบเชื่อมต่อ</span>
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+
+        <!-- ═════════ Section 2: Accounts table ═════════ -->
+        <div class="bg-bg-card border border-border-subtle rounded-xl">
+          <div class="px-5 py-4 border-b border-border-subtle flex items-center justify-between">
+            <div class="flex items-center gap-3">
+              <h3 class="text-fg font-semibold text-sm">บัญชีทั้งหมด</h3>
+              <span id="account-count" class="text-fg-subtle text-xs">—</span>
+            </div>
+            <button id="refresh-btn" type="button" title="โหลดใหม่"
+              class="icon-btn">
+              <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/>
+              </svg>
+            </button>
+          </div>
+
+          <!-- loading state -->
+          <div id="table-loading" class="px-5 py-14 text-center">
+            <svg class="w-6 h-6 mx-auto mb-3 spin text-fg-subtle" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/>
+            </svg>
+            <div class="text-fg-subtle text-sm">กำลังโหลดบัญชี...</div>
+          </div>
+
+          <!-- error state -->
+          <div id="table-error" class="hidden px-5 py-12 text-center">
+            <div class="w-12 h-12 mx-auto mb-3 rounded-xl bg-danger/10 border border-danger/30 flex items-center justify-center">
+              <svg class="w-6 h-6 text-danger" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/>
+              </svg>
+            </div>
+            <div class="text-fg text-sm" id="table-error-msg">โหลดข้อมูลไม่สำเร็จ</div>
+            <button id="retry-btn" type="button"
+              class="mt-3 text-info hover:text-blue-400 text-xs font-medium transition-colors">ลองอีกครั้ง</button>
+          </div>
+
+          <!-- empty state -->
+          <div id="table-empty" class="hidden px-5 py-14 text-center">
+            <div class="w-12 h-12 mx-auto mb-3 rounded-xl bg-bg-muted flex items-center justify-center">
+              <svg class="w-6 h-6 text-fg-subtle" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z"/>
+              </svg>
+            </div>
+            <div class="text-fg-muted text-sm">ยังไม่มีบัญชี MT5</div>
+            <div class="text-fg-subtle text-xs mt-1">เพิ่มบัญชีแรกของคุณด้านบน</div>
+          </div>
+
+          <!-- table -->
+          <div id="table-wrapper" class="hidden overflow-x-auto">
+            <table class="data-table">
+              <thead>
+                <tr>
+                  <th>ชื่อเล่น</th>
+                  <th>Login</th>
+                  <th>Server</th>
+                  <th>สถานะ</th>
+                  <th class="text-right">Balance</th>
+                  <th>Last check</th>
+                  <th class="text-right">Actions</th>
+                </tr>
+              </thead>
+              <tbody id="table-body"></tbody>
+            </table>
+          </div>
+        </div>
+
+      </div>
+    </main>
+  </div>
+
+  <!-- ═════════ Page-level toast (top-right) ═════════ -->
+  <div id="page-toast" class="hidden fixed top-4 right-4 z-[60] max-w-sm rounded-lg px-4 py-3 text-sm shadow-[0_8px_32px_rgba(0,0,0,0.5)] flex items-start gap-2"></div>
+
+  <!-- ═════════ Edit-password modal ═════════ -->
+  <div id="pw-modal" class="hidden fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm">
+    <div class="bg-bg-card border border-border-subtle rounded-xl w-full max-w-md mx-4 p-5 shadow-[0_8px_32px_rgba(0,0,0,0.5)]">
+      <div class="flex items-start gap-3 mb-4">
+        <div class="w-9 h-9 rounded-lg bg-info/10 border border-info/30 flex items-center justify-center flex-shrink-0">
+          <svg class="w-4 h-4 text-info" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M15 7a4 4 0 11-4 4m0 0L3 19m4-4l3 3m-3-3l3-3"/>
+            <circle cx="15" cy="9" r="1.25" fill="currentColor" stroke="none"/>
+          </svg>
+        </div>
+        <div class="min-w-0 flex-1">
+          <h3 class="text-fg font-semibold text-sm">แก้รหัสผ่าน</h3>
+          <p class="text-fg-muted text-xs mt-1">
+            <span id="pw-name" class="text-fg font-medium"></span>
+            <span class="text-fg-subtle"> · </span>
+            Login: <span id="pw-login" class="font-mono text-fg"></span>
+          </p>
+        </div>
+      </div>
+
+      <div class="mb-3">
+        <label class="field-label" for="pw-input">รหัสผ่านใหม่</label>
+        <div class="relative">
+          <input id="pw-input" type="password" autocomplete="new-password"
+                 class="field-input pr-10" placeholder="••••••••" />
+          <button id="pw-toggle" type="button" tabindex="-1"
+                  class="absolute right-2 top-1/2 -translate-y-1/2 w-7 h-7 flex items-center justify-center text-fg-muted hover:text-fg transition-colors rounded"
+                  title="แสดง/ซ่อน password">
+            <svg id="pw-eye-icon" class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
+              <path stroke-linecap="round" stroke-linejoin="round" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/>
+            </svg>
+          </button>
+        </div>
+        <div class="text-fg-subtle text-[11px] mt-1">ระบบจะทดสอบเชื่อมต่อกับ MT5 อีกครั้งหลังบันทึก</div>
+      </div>
+
+      <!-- inline modal alert -->
+      <div id="pw-alert" class="hidden rounded-lg px-3 py-2 text-sm mb-3 bg-danger/10 border border-danger/30 text-danger"></div>
+
+      <div class="flex items-center justify-end gap-2">
+        <button id="pw-cancel" type="button"
+          class="text-fg-muted hover:text-fg px-4 py-2 rounded-lg text-sm font-medium transition-colors">ยกเลิก</button>
+        <button id="pw-confirm" type="button"
+          class="bg-info hover:bg-blue-500 active:bg-blue-700 text-white font-semibold px-4 py-2 rounded-lg text-sm flex items-center gap-2 transition-colors disabled:opacity-50 disabled:cursor-not-allowed">
+          <svg id="pw-spinner" class="w-4 h-4 spin hidden" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/>
+          </svg>
+          <svg id="pw-icon" class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
+          </svg>
+          <span id="pw-label">บันทึก + ทดสอบเชื่อมต่อ</span>
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═════════ Confirm-delete modal ═════════ -->
+  <div id="del-modal" class="hidden fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm">
+    <div class="bg-bg-card border border-border-subtle rounded-xl w-full max-w-sm mx-4 p-5 shadow-[0_8px_32px_rgba(0,0,0,0.5)]">
+      <div class="flex items-start gap-3 mb-4">
+        <div class="w-9 h-9 rounded-lg bg-danger/10 border border-danger/30 flex items-center justify-center flex-shrink-0">
+          <svg class="w-4 h-4 text-danger" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/>
+          </svg>
+        </div>
+        <div class="min-w-0">
+          <h3 class="text-fg font-semibold text-sm">ยืนยันการลบบัญชี</h3>
+          <p class="text-fg-muted text-xs mt-1">
+            ลบบัญชี <span id="del-name" class="text-fg font-medium"></span> (login <span id="del-login" class="font-mono text-fg"></span>)?
+            <br/>การลบนี้จะหยุด bot ที่ใช้บัญชีนี้ทั้งหมด และไม่สามารถกู้คืนได้
+          </p>
+        </div>
+      </div>
+      <div class="flex items-center justify-end gap-2">
+        <button id="del-cancel" type="button"
+          class="text-fg-muted hover:text-fg px-4 py-2 rounded-lg text-sm font-medium transition-colors">ยกเลิก</button>
+        <button id="del-confirm" type="button"
+          class="bg-danger hover:bg-red-500 text-white font-semibold px-4 py-2 rounded-lg text-sm flex items-center gap-2 transition-colors disabled:opacity-50 disabled:cursor-not-allowed">
+          <svg id="del-spinner" class="w-4 h-4 spin hidden" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/>
+          </svg>
+          <span>ลบบัญชี</span>
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // ═════════ Auth gate ═════════
+    const token = localStorage.getItem('jwt_token');
+    if (!token) { window.location.href = '/login/'; }
+
+    const AUTH_HEADERS = {
+      'Authorization': `Bearer ${token}`,
+      'Content-Type': 'application/json',
+    };
+
+    function handleUnauth() {
+      localStorage.removeItem('jwt_token');
+      localStorage.removeItem('is_admin');
+      window.location.href = '/login/';
+    }
+
+    // ═════════ Optimistic admin reveal ═════════
+    if (localStorage.getItem('is_admin') === 'true') {
+      document.body.classList.add('user-is-admin');
+    }
+
+    // ═════════ Logout ═════════
+    document.getElementById('logout-btn').addEventListener('click', () => {
+      localStorage.removeItem('jwt_token');
+      localStorage.removeItem('is_admin');
+      window.location.href = '/';
+    });
+
+    // ═════════ Load current user ═════════
+    fetch('/auth/me', { headers: { 'Authorization': `Bearer ${token}` } })
+      .then(r => {
+        if (r.status === 401) { handleUnauth(); return; }
+        if (!r.ok) throw new Error('unauthorized');
+        return r.json();
+      })
+      .then(d => {
+        if (!d) return;
+        const email   = d.email || 'user';
+        const name    = email.split('@')[0];
+        const initial = name.charAt(0).toUpperCase();
+        document.getElementById('user-email').textContent = email;
+        document.getElementById('avatar').textContent     = initial;
+        // sync is_admin จาก server
+        const isAdmin = Boolean(d.is_admin);
+        localStorage.setItem('is_admin', String(isAdmin));
+        document.body.classList.toggle('user-is-admin', isAdmin);
+      })
+      .catch(() => handleUnauth());
+
+    // ═════════ Helpers ═════════
+    function escapeHtml(str) {
+      return String(str ?? '')
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#39;');
+    }
+
+    function formatMoney(value, currency) {
+      if (value === null || value === undefined) return '<span class="text-fg-subtle">—</span>';
+      const n = Number(value);
+      if (Number.isNaN(n)) return '<span class="text-fg-subtle">—</span>';
+      const formatted = n.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+      const ccy = currency ? `<span class="text-fg-subtle text-[11px] ml-1">${escapeHtml(currency)}</span>` : '';
+      return `${formatted}${ccy}`;
+    }
+
+    function relativeTime(iso) {
+      if (!iso) return '<span class="text-fg-subtle">ยังไม่ตรวจ</span>';
+      const t = new Date(iso).getTime();
+      if (Number.isNaN(t)) return '<span class="text-fg-subtle">—</span>';
+      const diffSec = Math.floor((Date.now() - t) / 1000);
+      if (diffSec < 0) return 'อีกสักครู่';
+      if (diffSec < 60) return `${diffSec} วินาทีที่แล้ว`;
+      const m = Math.floor(diffSec / 60);
+      if (m < 60) return `${m} นาทีที่แล้ว`;
+      const h = Math.floor(m / 60);
+      if (h < 24) return `${h} ชั่วโมงที่แล้ว`;
+      const d = Math.floor(h / 24);
+      if (d < 30) return `${d} วันที่แล้ว`;
+      return new Date(iso).toLocaleDateString('th-TH');
+    }
+
+    function statusPill(verified, hasChecked) {
+      if (verified === true) {
+        return `<span class="inline-flex items-center gap-1.5 px-2 py-0.5 rounded text-[10px] font-medium bg-accent/10 text-accent border border-accent/30">
+          <span class="w-1.5 h-1.5 bg-accent rounded-full"></span> verified
+        </span>`;
+      }
+      if (hasChecked && verified === false) {
+        return `<span class="inline-flex items-center gap-1.5 px-2 py-0.5 rounded text-[10px] font-medium bg-danger/10 text-danger border border-danger/30">
+          <span class="w-1.5 h-1.5 bg-danger rounded-full"></span> failed
+        </span>`;
+      }
+      return `<span class="inline-flex items-center gap-1.5 px-2 py-0.5 rounded text-[10px] font-medium bg-bg-muted text-fg-subtle border border-border-subtle">
+        <span class="w-1.5 h-1.5 bg-fg-subtle rounded-full"></span> ยังไม่ตรวจ
+      </span>`;
+    }
+
+    function showAlert(kind, msg) {
+      const el = document.getElementById('form-alert');
+      el.className = '';
+      const base = 'rounded-lg px-3 py-2 text-sm mb-3 flex items-start gap-2';
+      if (kind === 'success') {
+        el.className = `${base} bg-accent/10 border border-accent/30 text-accent`;
+      } else {
+        el.className = `${base} bg-danger/10 border border-danger/30 text-danger`;
+      }
+      el.innerHTML = `<svg class="w-4 h-4 mt-0.5 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+        ${kind === 'success'
+          ? '<path stroke-linecap="round" stroke-linejoin="round" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>'
+          : '<path stroke-linecap="round" stroke-linejoin="round" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/>'}
+      </svg><span>${escapeHtml(msg)}</span>`;
+    }
+
+    function hideAlert() {
+      const el = document.getElementById('form-alert');
+      el.className = 'hidden rounded-lg px-3 py-2 text-sm mb-3';
+      el.textContent = '';
+    }
+
+    // ═════════ Collapsible form ═════════
+    let formOpen = true;
+    const formBody = document.getElementById('form-body');
+    const formChevron = document.getElementById('form-chevron');
+    document.getElementById('form-toggle').addEventListener('click', () => {
+      formOpen = !formOpen;
+      formBody.classList.toggle('hidden', !formOpen);
+      formChevron.style.transform = formOpen ? '' : 'rotate(-90deg)';
+    });
+
+    // ═════════ Password toggle ═════════
+    const pwdInput = document.getElementById('f-password');
+    const eyeIcon = document.getElementById('eye-icon');
+    document.getElementById('toggle-pwd').addEventListener('click', () => {
+      const isHidden = pwdInput.type === 'password';
+      pwdInput.type = isHidden ? 'text' : 'password';
+      eyeIcon.innerHTML = isHidden
+        ? '<path stroke-linecap="round" stroke-linejoin="round" d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.88 9.88l-3.29-3.29m7.532 7.532l3.29 3.29M3 3l3.59 3.59m0 0A9.953 9.953 0 0112 5c4.478 0 8.268 2.943 9.542 7a10.025 10.025 0 01-4.132 5.411m0 0L21 21"/>'
+        : '<path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/><path stroke-linecap="round" stroke-linejoin="round" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/>';
+    });
+
+    // ═════════ API helpers ═════════
+    async function apiRequest(path, options = {}) {
+      const res = await fetch(path, {
+        ...options,
+        headers: { ...AUTH_HEADERS, ...(options.headers || {}) },
+      });
+      if (res.status === 401) {
+        handleUnauth();
+        throw new Error('unauthorized');
+      }
+      let body = null;
+      const text = await res.text();
+      if (text) {
+        try { body = JSON.parse(text); } catch { body = { detail: text }; }
+      }
+      if (!res.ok) {
+        const msg = (body && (body.detail || body.message || body.error)) || `เกิดข้อผิดพลาด (${res.status})`;
+        const err = new Error(typeof msg === 'string' ? msg : JSON.stringify(msg));
+        err.status = res.status;
+        err.body = body;
+        throw err;
+      }
+      return body;
+    }
+
+    // ═════════ Load accounts ═════════
+    let accounts = [];
+
+    async function loadAccounts() {
+      const wrapEl  = document.getElementById('table-wrapper');
+      const loadEl  = document.getElementById('table-loading');
+      const errEl   = document.getElementById('table-error');
+      const emptyEl = document.getElementById('table-empty');
+      const errMsg  = document.getElementById('table-error-msg');
+
+      wrapEl.classList.add('hidden');
+      errEl.classList.add('hidden');
+      emptyEl.classList.add('hidden');
+      loadEl.classList.remove('hidden');
+
+      try {
+        const data = await apiRequest('/api/mt5/accounts');
+        accounts = Array.isArray(data) ? data : (data?.items || data?.accounts || []);
+        loadEl.classList.add('hidden');
+        renderTable();
+      } catch (err) {
+        if (err.message === 'unauthorized') return;
+        loadEl.classList.add('hidden');
+        errEl.classList.remove('hidden');
+        errMsg.textContent = err.message || 'โหลดข้อมูลไม่สำเร็จ';
+      }
+    }
+
+    function renderTable() {
+      const countEl  = document.getElementById('account-count');
+      const wrapEl   = document.getElementById('table-wrapper');
+      const emptyEl  = document.getElementById('table-empty');
+      const tbody    = document.getElementById('table-body');
+
+      countEl.textContent = accounts.length === 0 ? 'ยังไม่มีบัญชี' : `${accounts.length} บัญชี`;
+
+      if (accounts.length === 0) {
+        wrapEl.classList.add('hidden');
+        emptyEl.classList.remove('hidden');
+        return;
+      }
+
+      emptyEl.classList.add('hidden');
+      wrapEl.classList.remove('hidden');
+
+      tbody.innerHTML = accounts.map(acc => {
+        const verified   = acc.verified === true;
+        const hasChecked = !!acc.last_check;
+        const balance    = (verified && acc.balance_cached !== null && acc.balance_cached !== undefined)
+                            ? formatMoney(acc.balance_cached, acc.currency_cached)
+                            : '<span class="text-fg-subtle">—</span>';
+        const lastCheck  = acc.last_check
+                            ? `<span title="${escapeHtml(new Date(acc.last_check).toLocaleString('th-TH'))}">${relativeTime(acc.last_check)}</span>`
+                            : '<span class="text-fg-subtle">ยังไม่ตรวจ</span>';
+        const broker     = acc.broker ? `<div class="text-fg-subtle text-[11px] mt-0.5">${escapeHtml(acc.broker)}</div>` : '';
+
+        return `
+          <tr data-id="${escapeHtml(acc.id)}">
+            <td>
+              <div class="text-fg font-medium">${escapeHtml(acc.name || '(ไม่มีชื่อ)')}</div>
+              ${broker}
+            </td>
+            <td class="font-mono tabular-nums">${escapeHtml(acc.login)}</td>
+            <td class="font-mono text-fg-muted">${escapeHtml(acc.server || '—')}</td>
+            <td>${statusPill(verified, hasChecked)}</td>
+            <td class="text-right font-mono tabular-nums">${balance}</td>
+            <td class="text-fg-muted text-xs">${lastCheck}</td>
+            <td>
+              <div class="flex items-center justify-end gap-1">
+                <button type="button" class="icon-btn" data-action="verify" data-id="${escapeHtml(acc.id)}" title="ทดสอบเชื่อมต่อใหม่">
+                  <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/>
+                  </svg>
+                </button>
+                <button type="button" class="icon-btn" data-action="edit-pw" data-edit-pw="${escapeHtml(acc.id)}" data-id="${escapeHtml(acc.id)}" title="แก้รหัสผ่าน">
+                  <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M15 7a4 4 0 11-4 4m0 0L3 19m4-4l3 3m-3-3l3-3"/>
+                    <circle cx="15" cy="9" r="1.25" fill="currentColor" stroke="none"/>
+                  </svg>
+                </button>
+                <button type="button" class="icon-btn danger" data-action="delete" data-id="${escapeHtml(acc.id)}" title="ลบบัญชี">
+                  <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6M1 7h22M9 7V4a1 1 0 011-1h4a1 1 0 011 1v3"/>
+                  </svg>
+                </button>
+              </div>
+            </td>
+          </tr>
+        `;
+      }).join('');
+    }
+
+    // ═════════ Submit form ═════════
+    document.getElementById('add-form').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      hideAlert();
+
+      const name     = document.getElementById('f-name').value.trim();
+      const loginRaw = document.getElementById('f-login').value.trim();
+      const password = document.getElementById('f-password').value;
+      const server   = document.getElementById('f-server').value.trim();
+      const broker   = document.getElementById('f-broker').value.trim();
+
+      // basic validation
+      if (!name || !loginRaw || !password || !server) {
+        showAlert('error', 'กรุณากรอกข้อมูลให้ครบ — ชื่อเล่น, Login, Password, Server');
+        return;
+      }
+      const login = Number.parseInt(loginRaw, 10);
+      if (!Number.isFinite(login) || login <= 0) {
+        showAlert('error', 'Login ต้องเป็นตัวเลขที่ถูกต้อง');
+        return;
+      }
+
+      // duplicate check (client-side hint; server is source of truth)
+      if (accounts.some(a => Number(a.login) === login && (a.server || '') === server)) {
+        showAlert('error', `บัญชี login ${login} บน server "${server}" มีอยู่แล้วในระบบ`);
+        return;
+      }
+
+      // toggle loading
+      const submitBtn   = document.getElementById('submit-btn');
+      const submitSpin  = document.getElementById('submit-spinner');
+      const submitIcon  = document.getElementById('submit-icon');
+      const submitLabel = document.getElementById('submit-label');
+      const inputs = document.querySelectorAll('#add-form input');
+      submitBtn.disabled = true;
+      inputs.forEach(i => { i.disabled = true; });
+      submitSpin.classList.remove('hidden');
+      submitIcon.classList.add('hidden');
+      submitLabel.textContent = 'กำลังทดสอบเชื่อมต่อ...';
+
+      try {
+        const created = await apiRequest('/api/mt5/accounts', {
+          method: 'POST',
+          body: JSON.stringify({ name, login, password, server, broker: broker || null }),
+        });
+        const isVerified = created && created.verified === true;
+        if (isVerified) {
+          showAlert('success', `เพิ่มบัญชี "${name}" สำเร็จ — เชื่อมต่อ MT5 ได้`);
+        } else {
+          showAlert('success', `บันทึกบัญชี "${name}" แล้ว — แต่ทดสอบเชื่อมต่อไม่ผ่าน คุณสามารถกด verify ใหม่จากในตารางได้`);
+        }
+        // clear form
+        document.getElementById('add-form').reset();
+        await loadAccounts();
+      } catch (err) {
+        if (err.message === 'unauthorized') return;
+        showAlert('error', err.message || 'เพิ่มบัญชีไม่สำเร็จ');
+      } finally {
+        submitBtn.disabled = false;
+        inputs.forEach(i => { i.disabled = false; });
+        submitSpin.classList.add('hidden');
+        submitIcon.classList.remove('hidden');
+        submitLabel.textContent = 'เพิ่มและทดสอบเชื่อมต่อ';
+      }
+    });
+
+    // ═════════ Row actions (verify / delete) ═════════
+    document.getElementById('table-body').addEventListener('click', (e) => {
+      const btn = e.target.closest('button[data-action]');
+      if (!btn) return;
+      const id = btn.dataset.id;
+      const action = btn.dataset.action;
+      if (action === 'verify') verifyAccount(id, btn);
+      else if (action === 'delete') openDeleteModal(id);
+      else if (action === 'edit-pw') openEditPwModal(id);
+    });
+
+    async function verifyAccount(id, btn) {
+      const svg = btn.querySelector('svg');
+      btn.disabled = true;
+      svg.classList.add('spin');
+      try {
+        const updated = await apiRequest(`/api/mt5/accounts/${encodeURIComponent(id)}/verify`, { method: 'POST' });
+        // merge into local list
+        const idx = accounts.findIndex(a => a.id === id);
+        if (idx >= 0 && updated && typeof updated === 'object') {
+          accounts[idx] = { ...accounts[idx], ...updated };
+        }
+        renderTable();
+      } catch (err) {
+        if (err.message === 'unauthorized') return;
+        // mark row as failed locally so user sees feedback even if backend didn't return updated object
+        const idx = accounts.findIndex(a => a.id === id);
+        if (idx >= 0) {
+          accounts[idx] = { ...accounts[idx], verified: false, last_check: new Date().toISOString() };
+          renderTable();
+        }
+        alert(`ทดสอบเชื่อมต่อไม่สำเร็จ: ${err.message}`);
+      } finally {
+        btn.disabled = false;
+        svg.classList.remove('spin');
+      }
+    }
+
+    // ═════════ Delete modal ═════════
+    let pendingDeleteId = null;
+    const modal = document.getElementById('del-modal');
+    const delName = document.getElementById('del-name');
+    const delLogin = document.getElementById('del-login');
+    const delConfirmBtn = document.getElementById('del-confirm');
+    const delSpinner = document.getElementById('del-spinner');
+
+    function openDeleteModal(id) {
+      const acc = accounts.find(a => a.id === id);
+      if (!acc) return;
+      pendingDeleteId = id;
+      delName.textContent  = acc.name || '(ไม่มีชื่อ)';
+      delLogin.textContent = acc.login ?? '—';
+      modal.classList.remove('hidden');
+    }
+
+    function closeDeleteModal() {
+      pendingDeleteId = null;
+      modal.classList.add('hidden');
+      delConfirmBtn.disabled = false;
+      delSpinner.classList.add('hidden');
+    }
+
+    document.getElementById('del-cancel').addEventListener('click', closeDeleteModal);
+    modal.addEventListener('click', (e) => {
+      if (e.target === modal) closeDeleteModal();
+    });
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape' && !modal.classList.contains('hidden')) closeDeleteModal();
+    });
+
+    delConfirmBtn.addEventListener('click', async () => {
+      if (!pendingDeleteId) return;
+      delConfirmBtn.disabled = true;
+      delSpinner.classList.remove('hidden');
+      const id = pendingDeleteId;
+      try {
+        await apiRequest(`/api/mt5/accounts/${encodeURIComponent(id)}`, { method: 'DELETE' });
+        accounts = accounts.filter(a => a.id !== id);
+        renderTable();
+        closeDeleteModal();
+      } catch (err) {
+        if (err.message === 'unauthorized') return;
+        alert(`ลบบัญชีไม่สำเร็จ: ${err.message}`);
+        delConfirmBtn.disabled = false;
+        delSpinner.classList.add('hidden');
+      }
+    });
+
+    // ═════════ Page-level toast (top-right) ═════════
+    let _toastTimer = null;
+    function showPageToast(kind, msg) {
+      const el = document.getElementById('page-toast');
+      const base = 'fixed top-4 right-4 z-[60] max-w-sm rounded-lg px-4 py-3 text-sm shadow-[0_8px_32px_rgba(0,0,0,0.5)] flex items-start gap-2';
+      const variant = (kind === 'success')
+        ? 'bg-accent/10 border border-accent/30 text-accent'
+        : 'bg-danger/10 border border-danger/30 text-danger';
+      el.className = `${base} ${variant}`;
+      el.innerHTML = `<svg class="w-4 h-4 mt-0.5 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+        ${kind === 'success'
+          ? '<path stroke-linecap="round" stroke-linejoin="round" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>'
+          : '<path stroke-linecap="round" stroke-linejoin="round" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/>'}
+      </svg><span>${escapeHtml(msg)}</span>`;
+      if (_toastTimer) clearTimeout(_toastTimer);
+      _toastTimer = setTimeout(() => {
+        el.className = 'hidden ' + base;
+      }, 4000);
+    }
+
+    // ═════════ Edit-password modal ═════════
+    let pendingEditId = null;
+    const pwModal       = document.getElementById('pw-modal');
+    const pwInput       = document.getElementById('pw-input');
+    const pwNameEl      = document.getElementById('pw-name');
+    const pwLoginEl     = document.getElementById('pw-login');
+    const pwConfirmBtn  = document.getElementById('pw-confirm');
+    const pwCancelBtn   = document.getElementById('pw-cancel');
+    const pwSpinner     = document.getElementById('pw-spinner');
+    const pwIcon        = document.getElementById('pw-icon');
+    const pwLabel       = document.getElementById('pw-label');
+    const pwAlert       = document.getElementById('pw-alert');
+    const pwEyeIcon     = document.getElementById('pw-eye-icon');
+    const pwToggleBtn   = document.getElementById('pw-toggle');
+
+    function pwShowAlert(msg) {
+      pwAlert.textContent = msg;
+      pwAlert.classList.remove('hidden');
+    }
+    function pwHideAlert() {
+      pwAlert.textContent = '';
+      pwAlert.classList.add('hidden');
+    }
+    function pwResetEye() {
+      pwInput.type = 'password';
+      pwEyeIcon.innerHTML = '<path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/><path stroke-linecap="round" stroke-linejoin="round" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/>';
+    }
+    function setPwBusy(busy) {
+      pwConfirmBtn.disabled = busy;
+      pwCancelBtn.disabled  = busy;
+      pwInput.disabled      = busy;
+      pwToggleBtn.disabled  = busy;
+      if (busy) {
+        pwSpinner.classList.remove('hidden');
+        pwIcon.classList.add('hidden');
+        pwLabel.textContent = 'กำลังทดสอบเชื่อมต่อ...';
+      } else {
+        pwSpinner.classList.add('hidden');
+        pwIcon.classList.remove('hidden');
+        pwLabel.textContent = 'บันทึก + ทดสอบเชื่อมต่อ';
+      }
+    }
+
+    function openEditPwModal(id) {
+      const acc = accounts.find(a => a.id === id);
+      if (!acc) return;
+      pendingEditId = id;
+      pwNameEl.textContent  = acc.name || '(ไม่มีชื่อ)';
+      pwLoginEl.textContent = acc.login ?? '—';
+      pwInput.value = '';
+      pwHideAlert();
+      pwResetEye();
+      setPwBusy(false);
+      pwModal.classList.remove('hidden');
+      // SPEC: do NOT autofocus the password input
+    }
+
+    function closeEditPwModal() {
+      pendingEditId = null;
+      pwModal.classList.add('hidden');
+      // clear sensitive value from DOM
+      pwInput.value = '';
+      pwHideAlert();
+      pwResetEye();
+      setPwBusy(false);
+    }
+
+    pwCancelBtn.addEventListener('click', () => {
+      if (pwConfirmBtn.disabled) return; // can't cancel mid-submit
+      closeEditPwModal();
+    });
+    pwModal.addEventListener('click', (e) => {
+      if (e.target === pwModal && !pwConfirmBtn.disabled) closeEditPwModal();
+    });
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape' && !pwModal.classList.contains('hidden') && !pwConfirmBtn.disabled) {
+        closeEditPwModal();
+      }
+    });
+
+    pwToggleBtn.addEventListener('click', () => {
+      const isHidden = pwInput.type === 'password';
+      pwInput.type = isHidden ? 'text' : 'password';
+      pwEyeIcon.innerHTML = isHidden
+        ? '<path stroke-linecap="round" stroke-linejoin="round" d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.88 9.88l-3.29-3.29m7.532 7.532l3.29 3.29M3 3l3.59 3.59m0 0A9.953 9.953 0 0112 5c4.478 0 8.268 2.943 9.542 7a10.025 10.025 0 01-4.132 5.411m0 0L21 21"/>'
+        : '<path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/><path stroke-linecap="round" stroke-linejoin="round" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/>';
+    });
+
+    // Enter in the input submits
+    pwInput.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter' && !pwConfirmBtn.disabled) {
+        e.preventDefault();
+        pwConfirmBtn.click();
+      }
+    });
+
+    pwConfirmBtn.addEventListener('click', async () => {
+      if (!pendingEditId) return;
+      const newPassword = pwInput.value;
+      if (!newPassword) {
+        pwShowAlert('กรุณากรอกรหัสผ่านใหม่');
+        return;
+      }
+      pwHideAlert();
+      setPwBusy(true);
+      const id = pendingEditId;
+      try {
+        const updated = await apiRequest(`/api/mt5/accounts/${encodeURIComponent(id)}/password`, {
+          method: 'PUT',
+          body: JSON.stringify({ password: newPassword }),
+        });
+        // merge into local list
+        const idx = accounts.findIndex(a => a.id === id);
+        if (idx >= 0 && updated && typeof updated === 'object') {
+          accounts[idx] = { ...accounts[idx], ...updated };
+        }
+        closeEditPwModal();
+        showPageToast('success', 'แก้รหัสผ่านสำเร็จ');
+        await loadAccounts();
+      } catch (err) {
+        if (err.message === 'unauthorized') return;
+        // 404 = account no longer owned / not found → recover gracefully
+        if (err.status === 404) {
+          closeEditPwModal();
+          showPageToast('error', 'ไม่พบบัญชีนี้ในระบบแล้ว');
+          await loadAccounts();
+          return;
+        }
+        // 503 = VPS down → keep modal open, show friendly msg
+        if (err.status === 503) {
+          pwShowAlert('VPS ไม่สามารถเชื่อมต่อได้ (VPS not reachable) — ลองอีกครั้งภายหลัง');
+        } else {
+          // 400 broker rejection or other errors → show backend message
+          pwShowAlert(err.message || 'แก้รหัสผ่านไม่สำเร็จ');
+        }
+        setPwBusy(false);
+      }
+    });
+
+    // ═════════ Misc ═════════
+    document.getElementById('refresh-btn').addEventListener('click', loadAccounts);
+    document.getElementById('retry-btn').addEventListener('click', loadAccounts);
+    document.getElementById('reset-btn').addEventListener('click', () => {
+      hideAlert();
+    });
+
+    // initial load
+    loadAccounts();
+
+    // refresh relative time every 30s
+    setInterval(() => {
+      if (accounts.length > 0 && !document.getElementById('table-wrapper').classList.contains('hidden')) {
+        renderTable();
+      }
+    }, 30000);
+  </script>
+</body>
+</html>

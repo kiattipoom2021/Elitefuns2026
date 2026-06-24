@@ -1,0 +1,936 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Arbitrage — ELITEFUNS</title>
+
+  <link rel="stylesheet" href="/design/styles.css">
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            bg:       { DEFAULT: '#121110', elevated: '#1A1815', card: '#1A1815', muted: '#232019' },
+            fg:       { DEFAULT: '#F6F2EC', muted: '#C8C1B5', subtle: '#908A7E' },
+            accent:   '#10B981',
+            danger:   '#F87171',
+            warning:  '#F9A826',
+            info:     '#F9A826',
+            'border-subtle': 'rgba(255,255,255,0.09)',
+          },
+          fontFamily: {
+            sans:  ["'Sofia Sans'", 'SofiaSans', 'Arial', 'sans-serif'],
+            mono:  ["'JetBrains Mono'", 'monospace'],
+          },
+        },
+      },
+    };
+  </script>
+
+  <link rel="stylesheet" href="/design/app-shim.css">
+
+  <style>
+    /* ═══════════ Page-specific (arbitrage) ═══════════ */
+
+    /* Account-pick card */
+    .account-card {
+      position: relative;
+      background: var(--surface-lifted);
+      border: 1px solid var(--border-soft);
+      border-radius: 14px;
+      padding: 1.25rem;
+      cursor: pointer;
+      transition: border-color 0.15s, background-color 0.15s, box-shadow 0.15s;
+      text-align: left;
+      width: 100%;
+    }
+    .account-card:hover:not(.is-selected):not(.is-disabled) { border-color: rgba(249,168,38,0.45); }
+    .account-card.is-selected {
+      border-color: var(--accent);
+      background: rgba(249,168,38,0.08);
+      box-shadow: 0 0 0 1px rgba(249,168,38,0.40);
+    }
+    .account-card.is-disabled { cursor: not-allowed; opacity: 0.55; }
+    .account-card:focus-visible {
+      outline: none;
+      border-color: var(--accent);
+      box-shadow: 0 0 0 2px rgba(249,168,38,0.35);
+    }
+    .account-card .check-mark {
+      position: absolute;
+      top: 0.75rem; right: 0.75rem;
+      width: 1.25rem; height: 1.25rem;
+      border-radius: 9999px;
+      background: var(--accent);
+      color: var(--cta-text);
+      display: none;
+      align-items: center; justify-content: center;
+    }
+    .account-card.is-selected .check-mark { display: inline-flex; }
+
+    /* Mono-numeric input override */
+    .field-input { font-family: 'JetBrains Mono', monospace; font-variant-numeric: tabular-nums; }
+    .field-input.is-invalid, .field-select.is-invalid { border-color: #F87171 !important; }
+
+    /* Clickable rows */
+    .data-table tbody tr.is-clickable { cursor: pointer; transition: background-color 0.12s; }
+    .data-table tbody tr.is-clickable:hover { background: rgba(249,168,38,0.07); }
+
+    /* Chart SVG — z-score modal */
+    .chart-svg text { font-family: 'JetBrains Mono', monospace; fill: var(--text-secondary); }
+    .chart-svg .axis-line { stroke: var(--border-soft); stroke-width: 1; }
+    .chart-svg .grid-line { stroke: var(--border-soft); stroke-width: 1; }
+    .chart-svg .ref-zero  { stroke: var(--text-muted); stroke-width: 1; }
+    .chart-svg .ref-amber { stroke: var(--accent); stroke-width: 1; stroke-dasharray: 4 3; }
+    .chart-svg .ref-red   { stroke: #F87171; stroke-width: 1; stroke-dasharray: 4 3; }
+    .chart-svg .z-line    { stroke: var(--accent); stroke-width: 1.5; fill: none; }
+
+    /* Severity pills */
+    .pill {
+      display: inline-flex; align-items: center;
+      padding: 0.15rem 0.5rem; border-radius: 999px;
+      font-size: 10px; font-weight: 700;
+      letter-spacing: 0.06em; text-transform: uppercase;
+      border: 1px solid transparent;
+      font-family: var(--font-sans);
+    }
+    .pill-extreme { background: rgba(248,113,113,0.10); color: #F87171; border-color: rgba(248,113,113,0.32); }
+    .pill-high    { background: rgba(249,168,38,0.10); color: var(--accent); border-color: rgba(249,168,38,0.32); }
+    .pill-normal  { background: rgba(255,255,255,0.04); color: var(--text-muted); border-color: var(--border-soft); }
+  </style>
+</head>
+<body class="theme-dark bg-bg text-fg antialiased">
+
+  <div class="flex min-h-screen">
+
+    <!-- ═════════ Sidebar ═════════ -->
+    <aside class="w-60 border-r border-border-subtle bg-bg-elevated flex flex-col flex-shrink-0">
+      <!-- Brand -->
+      <div class="px-5 py-5 border-b border-border-subtle">
+        <a href="/dashboard/" class="brand-mark">
+          <img src="/design/logo.png" alt="ELITEFUNS">
+          <span class="word">Elitefuns</span>
+        </a>
+      </div>
+
+      <!-- Nav -->
+      <nav class="flex-1 px-3 py-4 space-y-0.5">
+        <div class="px-2 mb-1.5 text-[10px] uppercase tracking-wider font-medium text-fg-subtle">เมนูหลัก</div>
+
+        <a href="/dashboard/" class="nav-link">
+          <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"/></svg>
+          Dashboard
+        </a>
+
+        <a href="/connect-mt5/" class="nav-link">
+          <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/><path stroke-linecap="round" stroke-linejoin="round" d="M12 3v9l6 3"/></svg>
+          พอร์ต MT5
+        </a>
+
+        <a href="/optimize/" class="nav-link">
+          <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M3 6h13M3 12h9m-9 6h6M17 14l4 4m0 0l-4 4m4-4H13"/></svg>
+          Optimize
+        </a>
+
+        <a href="/bot-trade/" class="nav-link">
+          <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M9 3v2m6-2v2M9 19v2m6-2v2M5 9H3m2 6H3m18-6h-2m2 6h-2M7 19h10a2 2 0 002-2V7a2 2 0 00-2-2H7a2 2 0 00-2 2v10a2 2 0 002 2zM9 9h6v6H9V9z"/></svg>
+          Bot Trade
+        </a>
+
+        <a href="/arbitrage/" class="nav-link active">
+          <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M7 16V4m0 0L3 8m4-4l4 4m6 0v12m0 0l4-4m-4 4l-4-4"/>
+          </svg>
+          Arbitrage
+        </a>
+
+        <a id="nav-admin-link" href="/admin/" class="nav-link admin-only">
+          <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"/>
+          </svg>
+          Admin
+        </a>
+      </nav>
+
+      <!-- User card -->
+      <div class="p-3 border-t border-border-subtle">
+        <div class="flex items-center gap-2.5 px-2 py-2">
+          <div id="avatar" class="w-8 h-8 rounded-full bg-gradient-to-br from-info to-accent flex items-center justify-center font-semibold text-white text-xs flex-shrink-0">?</div>
+          <div class="flex-1 min-w-0">
+            <div id="user-email" class="text-fg text-xs font-medium truncate">กำลังโหลด...</div>
+            <div class="text-fg-subtle text-[10px]">Free plan</div>
+          </div>
+          <button id="logout-btn" title="ออกจากระบบ"
+            class="text-fg-muted hover:text-danger transition-colors p-1 rounded">
+            <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"/>
+            </svg>
+          </button>
+        </div>
+      </div>
+    </aside>
+
+    <!-- ═════════ Main ═════════ -->
+    <main class="flex-1 flex flex-col min-w-0">
+      <!-- Topbar -->
+      <header class="h-14 border-b border-border-subtle bg-bg-elevated flex items-center justify-between px-6">
+        <div class="flex items-center gap-2 text-sm">
+          <span class="text-fg-subtle">หน้าหลัก</span>
+          <span class="text-fg-subtle">›</span>
+          <span class="text-fg font-medium">Arbitrage</span>
+        </div>
+        <div class="flex items-center gap-2">
+          <button class="w-8 h-8 rounded-lg hover:bg-bg-muted flex items-center justify-center text-fg-muted hover:text-fg transition-colors" title="แจ้งเตือน">
+            <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"/>
+            </svg>
+          </button>
+        </div>
+      </header>
+
+      <!-- Content -->
+      <div class="flex-1 p-6 overflow-auto">
+
+        <!-- Page header -->
+        <div class="mb-6">
+          <h1 class="text-2xl font-semibold tracking-tight">Arbitrage Scanner</h1>
+          <p class="text-fg-muted text-sm mt-1">ตรวจหาความแตกต่างระหว่าง pair ของสกุลเงิน — ใช้ regression beta + Z-score</p>
+        </div>
+
+        <!-- ═════════ Section A — Portfolio cards ═════════ -->
+        <section class="mb-6">
+          <div class="mb-3">
+            <h2 class="text-fg text-base font-semibold">เลือกบัญชี MT5</h2>
+            <p class="text-fg-muted text-xs mt-0.5">ใช้บัญชีนี้ดึงราคา H1 OHLC จากโบรกเกอร์</p>
+          </div>
+
+          <div id="accounts-host">
+            <!-- Loading skeleton -->
+            <div id="accounts-loading" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4"></div>
+
+            <!-- Error -->
+            <div id="accounts-error" class="hidden bg-danger/5 border border-danger/30 rounded-xl px-5 py-5">
+              <div class="flex items-start gap-3">
+                <div class="w-9 h-9 rounded-lg bg-danger/10 border border-danger/30 flex items-center justify-center flex-shrink-0">
+                  <svg class="w-4 h-4 text-danger" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/>
+                  </svg>
+                </div>
+                <div class="flex-1 min-w-0">
+                  <div class="text-fg text-sm font-medium">โหลดบัญชีไม่สำเร็จ</div>
+                  <div id="accounts-error-msg" class="text-fg-muted text-xs mt-1">เกิดข้อผิดพลาด</div>
+                </div>
+                <button id="accounts-retry-btn" type="button"
+                  class="bg-bg-muted hover:bg-bg-elevated border border-border-subtle text-fg font-medium px-3 py-1.5 rounded-lg text-xs flex items-center gap-1.5 transition-colors flex-shrink-0">
+                  ลองอีกครั้ง
+                </button>
+              </div>
+            </div>
+
+            <!-- Empty -->
+            <div id="accounts-empty" class="hidden bg-bg-card border border-border-subtle rounded-xl px-6 py-12 text-center">
+              <div class="w-14 h-14 mx-auto mb-4 rounded-2xl bg-bg-muted flex items-center justify-center">
+                <svg class="w-7 h-7 text-fg-subtle" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                  <path stroke-linecap="round" stroke-linejoin="round" d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z"/>
+                </svg>
+              </div>
+              <div class="text-fg text-base font-semibold">ยังไม่มีบัญชี MT5</div>
+              <div class="text-fg-muted text-sm mt-1 max-w-md mx-auto">เพิ่ม + verify บัญชี MT5 ของคุณก่อน — Arbitrage scanner ต้องใช้บัญชีจริงเพื่อดึงราคาจากโบรกเกอร์</div>
+              <a href="/connect-mt5/"
+                class="inline-flex items-center gap-2 mt-5 bg-info hover:bg-blue-500 active:bg-blue-700 text-white font-semibold px-5 py-2.5 rounded-lg text-sm transition-colors">
+                <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                  <path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4"/>
+                </svg>
+                เชื่อมต่อบัญชีแรก
+              </a>
+            </div>
+
+            <!-- Grid -->
+            <div id="accounts-grid" class="hidden grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4"></div>
+          </div>
+        </section>
+
+        <!-- ═════════ Section B — Config + Scan ═════════ -->
+        <section id="config-section" class="hidden mb-6">
+          <div class="bg-bg-card border border-border-subtle rounded-xl">
+            <div class="px-5 py-4 border-b border-border-subtle">
+              <h2 class="text-fg text-base font-semibold">ตั้งค่า Scan</h2>
+              <p class="text-fg-subtle text-[11px] mt-0.5">ระบบจะดึง OHLC ของแต่ละ pair → คำนวณ regression + Z-score</p>
+            </div>
+
+            <div class="p-5">
+              <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-4">
+                <div>
+                  <label for="tf-select" class="field-label">Timeframe</label>
+                  <select id="tf-select" class="field-select">
+                    <option value="M15">M15 — 15 นาที</option>
+                    <option value="M30">M30 — 30 นาที</option>
+                    <option value="H1" selected>H1 — 1 ชั่วโมง</option>
+                    <option value="H4">H4 — 4 ชั่วโมง</option>
+                    <option value="D1">D1 — 1 วัน</option>
+                  </select>
+                </div>
+
+                <div>
+                  <label for="bars-input" class="field-label">Lookback (bars)</label>
+                  <input id="bars-input" type="number" min="50" max="1000" step="10" value="200"
+                    class="field-input" />
+                  <div id="bars-helper" class="text-fg-subtle text-[11px] mt-1.5">≈ 8 วัน</div>
+                  <div id="bars-error" class="hidden text-danger text-[11px] mt-1.5">ค่าต้องอยู่ระหว่าง 50 – 1000</div>
+                </div>
+              </div>
+
+              <div class="bg-info/5 border border-info/30 rounded-lg px-4 py-3 mb-4">
+                <div class="flex items-start gap-2.5">
+                  <svg class="w-4 h-4 text-info flex-shrink-0 mt-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                  </svg>
+                  <div class="text-fg-muted text-[12px] leading-relaxed">
+                    ระบบจะดึง <span class="text-fg font-medium">20 pairs × 2 symbols × <span id="info-bars">200</span> bars</span><br>
+                    คำนวณ beta + Z-score (<span class="text-fg">~15–60 วินาที</span>)
+                  </div>
+                </div>
+              </div>
+
+              <div class="flex justify-end">
+                <button id="scan-btn" type="button"
+                  class="inline-flex items-center justify-center gap-2 bg-info hover:bg-blue-500 active:bg-blue-700 text-white font-semibold px-5 py-2.5 rounded-lg text-sm transition-colors disabled:opacity-50 disabled:cursor-not-allowed">
+                  <svg id="scan-btn-spinner" class="hidden w-4 h-4 spin" fill="none" viewBox="0 0 24 24">
+                    <circle cx="12" cy="12" r="10" stroke="currentColor" stroke-width="3" stroke-dasharray="40 60" stroke-linecap="round" opacity="0.6"></circle>
+                  </svg>
+                  <svg id="scan-btn-icon" class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M13 10V3L4 14h7v7l9-11h-7z"/>
+                  </svg>
+                  <span id="scan-btn-label">เริ่มดึงราคา</span>
+                </button>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <!-- ═════════ Section C — Results ═════════ -->
+        <section id="results-section" class="hidden">
+          <div class="bg-bg-card border border-border-subtle rounded-xl">
+            <div class="px-5 py-4 border-b border-border-subtle">
+              <div class="flex items-start justify-between flex-wrap gap-3 mb-3">
+                <div class="min-w-0">
+                  <h2 class="text-fg text-base font-semibold">ผลการ scan</h2>
+                  <div id="results-meta" class="text-fg-subtle text-[11px] mt-1">—</div>
+                </div>
+              </div>
+
+              <!-- Filter chips -->
+              <div class="flex flex-wrap" id="filter-seg">
+                <button class="seg-btn active" data-filter="all">All</button>
+                <button class="seg-btn" data-filter="ge2">|Z|≥2</button>
+                <button class="seg-btn" data-filter="ge3">|Z|≥3</button>
+              </div>
+            </div>
+
+            <div id="results-container" class="overflow-x-auto">
+              <!-- table / empty injected here -->
+            </div>
+          </div>
+        </section>
+
+      </div>
+    </main>
+  </div>
+
+  <!-- ═════════ Chart modal ═════════ -->
+  <div id="chart-modal" class="hidden fixed inset-0 z-50 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4">
+    <div id="chart-modal-card" class="bg-bg-card border border-border-subtle rounded-xl shadow-xl max-w-2xl w-full max-h-[90vh] overflow-y-auto">
+      <!-- Header -->
+      <div class="px-6 py-4 border-b border-border-subtle flex items-center justify-between">
+        <div class="min-w-0 flex-1 pr-3">
+          <h3 id="chart-modal-title" class="text-fg font-semibold text-base font-mono truncate">—</h3>
+          <div id="chart-modal-meta" class="text-fg-subtle text-xs mt-1 font-mono tabular-nums">—</div>
+        </div>
+        <button id="chart-modal-close" type="button"
+          class="text-fg-muted hover:text-fg text-2xl leading-none p-1 flex-shrink-0"
+          aria-label="ปิด">×</button>
+      </div>
+      <!-- Body -->
+      <div class="px-6 py-5">
+        <div id="chart-modal-content"></div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // ═════════ Auth gate ═════════
+    const token = localStorage.getItem('jwt_token');
+    if (!token) { window.location.href = '/login/'; }
+
+    const AUTH_HEADERS = {
+      'Authorization': `Bearer ${token}`,
+      'Content-Type': 'application/json',
+    };
+
+    function handleUnauth() {
+      localStorage.removeItem('jwt_token');
+      localStorage.removeItem('is_admin');
+      window.location.href = '/login/';
+    }
+
+    // ═════════ Optimistic admin reveal ═════════
+    if (localStorage.getItem('is_admin') === 'true') {
+      document.body.classList.add('user-is-admin');
+    }
+
+    // ═════════ Logout ═════════
+    document.getElementById('logout-btn').addEventListener('click', () => {
+      localStorage.removeItem('jwt_token');
+      localStorage.removeItem('is_admin');
+      window.location.href = '/';
+    });
+
+    // ═════════ Load current user ═════════
+    fetch('/auth/me', { headers: { 'Authorization': `Bearer ${token}` } })
+      .then(r => {
+        if (r.status === 401) { handleUnauth(); return; }
+        if (!r.ok) throw new Error('unauthorized');
+        return r.json();
+      })
+      .then(d => {
+        if (!d) return;
+        const email   = d.email || 'user';
+        const name    = email.split('@')[0];
+        const initial = name.charAt(0).toUpperCase();
+        document.getElementById('user-email').textContent = email;
+        document.getElementById('avatar').textContent     = initial;
+        // sync is_admin
+        const isAdmin = Boolean(d.is_admin);
+        localStorage.setItem('is_admin', String(isAdmin));
+        document.body.classList.toggle('user-is-admin', isAdmin);
+      })
+      .catch(() => handleUnauth());
+
+    // ═════════ Helpers ═════════
+    const $ = (id) => document.getElementById(id);
+
+    function escapeHtml(str) {
+      return String(str ?? '')
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#39;');
+    }
+
+    const fmtMoney = (n) => {
+      if (n === null || n === undefined || isNaN(n)) return '—';
+      const num = Number(n);
+      const sign = num < 0 ? '-' : '';
+      const abs = Math.abs(num);
+      return sign + '$' + abs.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+    };
+    const fmtNum = (n, digits = 4) => {
+      if (n === null || n === undefined || isNaN(n)) return '—';
+      return Number(n).toFixed(digits);
+    };
+    const fmtZ = (n) => {
+      if (n === null || n === undefined || isNaN(n)) return '—';
+      const v = Number(n);
+      const sign = v > 0 ? '+' : '';
+      return sign + v.toFixed(2);
+    };
+    const fmtInt = (n) => {
+      if (n === null || n === undefined || isNaN(n)) return '—';
+      return Math.round(n).toLocaleString('en-US');
+    };
+
+    const relTime = (iso) => {
+      if (!iso) return '—';
+      const norm = /[zZ]|[+-]\d{2}:?\d{2}$/.test(iso) ? iso : iso + 'Z';
+      const t = new Date(norm).getTime();
+      if (isNaN(t)) return '—';
+      const diff = Math.floor((Date.now() - t) / 1000);
+      if (diff < 5) return 'เพิ่งนี้';
+      if (diff < 60) return diff + ' วินาทีที่แล้ว';
+      if (diff < 3600) return Math.floor(diff / 60) + ' นาทีที่แล้ว';
+      if (diff < 86400) return Math.floor(diff / 3600) + ' ชั่วโมงที่แล้ว';
+      if (diff < 86400 * 7) return Math.floor(diff / 86400) + ' วันที่แล้ว';
+      return new Date(norm).toLocaleDateString('th-TH');
+    };
+
+    function statusBadge(verified) {
+      if (verified === true) {
+        return `<span class="inline-flex items-center gap-1.5 px-2 py-0.5 rounded text-[10px] font-medium bg-accent/10 text-accent border border-accent/30">
+          <span class="w-1.5 h-1.5 bg-accent rounded-full"></span> verified
+        </span>`;
+      }
+      return `<span class="inline-flex items-center gap-1.5 px-2 py-0.5 rounded text-[10px] font-medium bg-bg-muted text-fg-subtle border border-border-subtle">
+        <span class="w-1.5 h-1.5 bg-fg-subtle rounded-full"></span> ยังไม่ verified
+      </span>`;
+    }
+
+    // ═════════ Toast ═════════
+    function showAlert(kind, msg) {
+      const palette = {
+        info:    { bg: 'bg-info/10',    fg: 'text-info',    bd: 'border-info/30' },
+        success: { bg: 'bg-accent/10',  fg: 'text-accent',  bd: 'border-accent/30' },
+        error:   { bg: 'bg-danger/10',  fg: 'text-danger',  bd: 'border-danger/30' },
+        warn:    { bg: 'bg-warning/10', fg: 'text-warning', bd: 'border-warning/30' },
+      };
+      const c = palette[kind] || palette.info;
+      const div = document.createElement('div');
+      div.className = `fixed top-4 right-4 z-[60] ${c.bg} ${c.fg} border ${c.bd} px-4 py-2.5 rounded-lg text-sm font-medium shadow-lg transition-opacity duration-300`;
+      div.textContent = msg;
+      document.body.appendChild(div);
+      setTimeout(() => { div.style.opacity = '0'; }, 3500);
+      setTimeout(() => { div.remove(); }, 3900);
+    }
+
+    // ═════════ API helper ═════════
+    async function apiRequest(path, options = {}) {
+      const res = await fetch(path, {
+        ...options,
+        headers: { ...AUTH_HEADERS, ...(options.headers || {}) },
+      });
+      if (res.status === 401) {
+        handleUnauth();
+        throw new Error('unauthorized');
+      }
+      let body = null;
+      const text = await res.text();
+      if (text) {
+        try { body = JSON.parse(text); } catch { body = { detail: text }; }
+      }
+      if (!res.ok) {
+        const msg = (body && (body.detail || body.message || body.error)) || `เกิดข้อผิดพลาด (${res.status})`;
+        const err = new Error(typeof msg === 'string' ? msg : JSON.stringify(msg));
+        err.status = res.status;
+        err.body = body;
+        throw err;
+      }
+      return body;
+    }
+
+    // ═════════ State ═════════
+    let accounts = [];
+    let selectedId = null;
+    let lastResult = null;   // ArbScanResult
+    let activeFilter = 'all';
+    let currentScans = [];   // currently rendered rows (sorted + filtered) — used by chart modal
+
+    const LS_KEY = 'arb_selected_account_id';
+
+    // ═════════ Section A — Accounts ═════════
+    function renderAccountSkeleton() {
+      const host = $('accounts-loading');
+      const card = `
+        <div class="bg-bg-card border border-border-subtle rounded-xl p-5">
+          <div class="flex items-start justify-between gap-3 mb-3">
+            <div class="flex-1 min-w-0 space-y-2">
+              <div class="skeleton h-4 w-32"></div>
+              <div class="skeleton h-3 w-24"></div>
+              <div class="skeleton h-2.5 w-20"></div>
+            </div>
+            <div class="skeleton h-5 w-16 rounded"></div>
+          </div>
+          <div class="border-t border-border-subtle pt-3 space-y-2">
+            <div class="flex justify-between"><div class="skeleton h-3 w-16"></div><div class="skeleton h-3 w-20"></div></div>
+            <div class="flex justify-between"><div class="skeleton h-3 w-16"></div><div class="skeleton h-3 w-20"></div></div>
+            <div class="flex justify-between"><div class="skeleton h-3 w-16"></div><div class="skeleton h-3 w-12"></div></div>
+          </div>
+          <div class="mt-3 skeleton h-2.5 w-28"></div>
+        </div>
+      `;
+      host.innerHTML = card.repeat(3);
+    }
+
+    function showAccountState(which) {
+      $('accounts-loading').classList.toggle('hidden', which !== 'loading');
+      $('accounts-error').classList.toggle('hidden',   which !== 'error');
+      $('accounts-empty').classList.toggle('hidden',   which !== 'empty');
+      $('accounts-grid').classList.toggle('hidden',    which !== 'grid');
+    }
+
+    function renderAccountsGrid() {
+      const grid = $('accounts-grid');
+      grid.innerHTML = accounts.map(acc => {
+        const verified = acc.verified === true;
+        const balance  = (acc.balance_cached !== null && acc.balance_cached !== undefined)
+                          ? fmtMoney(acc.balance_cached) : '—';
+        const equity   = (acc.equity_cached !== null && acc.equity_cached !== undefined)
+                          ? fmtMoney(acc.equity_cached) : '—';
+        const currency = acc.currency_cached || '—';
+        const broker   = acc.broker
+          ? `<div class="text-fg-subtle text-[11px] truncate">${escapeHtml(acc.broker)}</div>`
+          : '';
+        const isSelected = acc.id === selectedId ? 'is-selected' : '';
+        const isDisabled = verified ? '' : 'is-disabled';
+
+        return `
+          <button type="button"
+            class="account-card ${isSelected} ${isDisabled}"
+            data-id="${escapeHtml(acc.id)}"
+            data-verified="${verified ? '1' : '0'}"
+            aria-pressed="${acc.id === selectedId}"
+            ${verified ? '' : 'aria-disabled="true"'}>
+            <span class="check-mark" aria-hidden="true">
+              <svg class="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="3">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/>
+              </svg>
+            </span>
+            <div class="flex items-start justify-between gap-3 mb-3 pr-6">
+              <div class="min-w-0 flex-1">
+                <div class="text-fg font-semibold text-sm truncate">${escapeHtml(acc.name || '(ไม่มีชื่อ)')}</div>
+                <div class="text-fg-muted text-xs mt-1 font-mono tabular-nums">Login: ${escapeHtml(acc.login ?? '—')}</div>
+                <div class="text-fg-muted text-xs font-mono truncate" title="${escapeHtml(acc.server || '')}">${escapeHtml(acc.server || '—')}</div>
+                ${broker}
+              </div>
+              <div class="flex-shrink-0">${statusBadge(verified)}</div>
+            </div>
+            <div class="border-t border-border-subtle pt-3 space-y-1.5 text-xs">
+              <div class="flex items-center justify-between">
+                <span class="text-fg-subtle">Balance</span>
+                <span class="text-fg font-mono tabular-nums">${balance}</span>
+              </div>
+              <div class="flex items-center justify-between">
+                <span class="text-fg-subtle">Equity</span>
+                <span class="text-fg font-mono tabular-nums">${equity}</span>
+              </div>
+              <div class="flex items-center justify-between">
+                <span class="text-fg-subtle">Currency</span>
+                <span class="text-fg-muted font-mono">${escapeHtml(currency)}</span>
+              </div>
+            </div>
+            <div class="mt-3 text-fg-subtle text-[11px]" title="${escapeHtml(acc.last_check || '')}">
+              Last check: ${relTime(acc.last_check)}
+            </div>
+          </button>
+        `;
+      }).join('');
+
+      grid.querySelectorAll('.account-card').forEach(card => {
+        card.addEventListener('click', () => {
+          if (card.dataset.verified !== '1') {
+            showAlert('warn', 'บัญชีนี้ยังไม่ verified — เปิดหน้าพอร์ต MT5 เพื่อ verify ก่อน');
+            return;
+          }
+          selectAccount(card.dataset.id);
+        });
+      });
+    }
+
+    function selectAccount(id) {
+      selectedId = id;
+      try { localStorage.setItem(LS_KEY, id); } catch (_) {}
+      document.querySelectorAll('#accounts-grid .account-card').forEach(c => {
+        const match = c.dataset.id === selectedId;
+        c.classList.toggle('is-selected', match);
+        c.setAttribute('aria-pressed', match ? 'true' : 'false');
+      });
+      $('config-section').classList.remove('hidden');
+      tryLoadLatest();
+    }
+
+    async function loadAccounts() {
+      showAccountState('loading');
+      renderAccountSkeleton();
+      try {
+        const data = await apiRequest('/api/mt5/accounts');
+        const all = Array.isArray(data) ? data : (data?.items || data?.accounts || []);
+        accounts = all;
+
+        if (accounts.length === 0) {
+          selectedId = null;
+          $('config-section').classList.add('hidden');
+          $('results-section').classList.add('hidden');
+          showAccountState('empty');
+          return;
+        }
+
+        // Restore selection from localStorage (if still exists + verified)
+        let restored = null;
+        try { restored = localStorage.getItem(LS_KEY); } catch (_) {}
+        if (restored && accounts.some(a => a.id === restored && a.verified === true)) {
+          selectedId = restored;
+        } else if (selectedId && !accounts.some(a => a.id === selectedId)) {
+          selectedId = null;
+        }
+
+        renderAccountsGrid();
+        showAccountState('grid');
+
+        if (selectedId) {
+          $('config-section').classList.remove('hidden');
+          tryLoadLatest();
+        }
+      } catch (err) {
+        if (err.message === 'unauthorized') return;
+        $('accounts-error-msg').textContent = err.message || 'โหลดข้อมูลไม่สำเร็จ';
+        showAccountState('error');
+      }
+    }
+
+    $('accounts-retry-btn').addEventListener('click', loadAccounts);
+
+    // ═════════ Section B — Config ═════════
+    function getBarsTimeEstimate(tf, bars) {
+      const tfMinutes = { M15: 15, M30: 30, H1: 60, H4: 240, D1: 1440 };
+      const m = tfMinutes[tf];
+      if (!m || !bars) return '—';
+      const totalMin = m * bars;
+      if (totalMin < 60) return `≈ ${totalMin} นาที`;
+      const totalHours = totalMin / 60;
+      if (totalHours < 24) {
+        const rounded = totalHours >= 10 ? Math.round(totalHours) : totalHours.toFixed(1);
+        return `≈ ${rounded} ชั่วโมง`;
+      }
+      const totalDays = totalHours / 24;
+      if (totalDays < 30) {
+        const rounded = totalDays >= 10 ? Math.round(totalDays) : totalDays.toFixed(1);
+        return `≈ ${rounded} วัน`;
+      }
+      const totalMonths = totalDays / 30;
+      const rounded = totalMonths >= 10 ? Math.round(totalMonths) : totalMonths.toFixed(1);
+      return `≈ ${rounded} เดือน`;
+    }
+
+    function validateConfig() {
+      const tf = $('tf-select').value;
+      const bars = parseInt($('bars-input').value, 10);
+      const tfValid = ['M15', 'M30', 'H1', 'H4', 'D1'].includes(tf);
+      const barsValid = Number.isInteger(bars) && bars >= 50 && bars <= 1000;
+
+      $('bars-input').classList.toggle('is-invalid', !barsValid);
+      $('bars-error').classList.toggle('hidden', barsValid);
+      $('tf-select').classList.toggle('is-invalid', !tfValid);
+
+      return tfValid && barsValid ? { tf, bars } : null;
+    }
+
+    function updateBarsHelper() {
+      const tf = $('tf-select').value;
+      const barsRaw = parseInt($('bars-input').value, 10);
+      const bars = Number.isInteger(barsRaw) ? barsRaw : 200;
+      $('bars-helper').textContent = getBarsTimeEstimate(tf, bars);
+      $('info-bars').textContent = Number.isInteger(barsRaw) ? bars : 200;
+    }
+
+    $('tf-select').addEventListener('change', () => { updateBarsHelper(); validateConfig(); });
+    $('bars-input').addEventListener('input',  () => { updateBarsHelper(); validateConfig(); });
+    updateBarsHelper();
+
+    // ═════════ Scan submit ═════════
+    function setScanLoading(loading) {
+      const btn = $('scan-btn');
+      const lbl = $('scan-btn-label');
+      const spin = $('scan-btn-spinner');
+      const icon = $('scan-btn-icon');
+      btn.disabled = loading;
+      $('tf-select').disabled = loading;
+      $('bars-input').disabled = loading;
+      if (loading) {
+        lbl.textContent = 'กำลังดึงราคา... (อาจใช้เวลา 15–60 วินาที)';
+        spin.classList.remove('hidden');
+        icon.classList.add('hidden');
+      } else {
+        lbl.textContent = 'เริ่มดึงราคา';
+        spin.classList.add('hidden');
+        icon.classList.remove('hidden');
+      }
+    }
+
+    async function triggerScan() {
+      if (!selectedId) {
+        showAlert('warn', 'กรุณาเลือกบัญชี MT5 ก่อน');
+        return;
+      }
+      const cfg = validateConfig();
+      if (!cfg) {
+        showAlert('error', 'ค่าที่กรอกไม่ถูกต้อง — ตรวจสอบ Lookback');
+        return;
+      }
+      setScanLoading(true);
+      try {
+        const body = JSON.stringify({
+          mt5_account_id: selectedId,
+          timeframe: cfg.tf,
+          lookback_bars: cfg.bars,
+        });
+        const result = await apiRequest('/api/arbitrage/scan', { method: 'POST', body });
+        lastResult = result;
+        renderResults();
+        $('results-section').classList.remove('hidden');
+        showAlert('success', 'Scan สำเร็จ');
+      } catch (err) {
+        if (err.message === 'unauthorized') return;
+        showAlert('error', err.message || 'Scan ไม่สำเร็จ');
+      } finally {
+        setScanLoading(false);
+      }
+    }
+
+    $('scan-btn').addEventListener('click', triggerScan);
+
+    // ═════════ Section C — Results render ═════════
+    function zTag(z) {
+      if (z === null || z === undefined || isNaN(z)) return '';
+      const abs = Math.abs(z);
+      if (abs >= 3) return `<span class="pill pill-extreme">extreme</span>`;
+      if (abs >= 2) return `<span class="pill pill-high">high</span>`;
+      return `<span class="pill pill-normal">normal</span>`;
+    }
+
+    function zClass(z) {
+      if (z === null || z === undefined || isNaN(z)) return 'text-fg-muted';
+      const abs = Math.abs(z);
+      if (abs >= 3) return 'text-danger';
+      if (abs >= 2) return 'text-warning';
+      return 'text-fg';
+    }
+
+    function filterRows(rows) {
+      if (activeFilter === 'ge2') return rows.filter(r => r.z_score !== null && r.z_score !== undefined && Math.abs(r.z_score) >= 2);
+      if (activeFilter === 'ge3') return rows.filter(r => r.z_score !== null && r.z_score !== undefined && Math.abs(r.z_score) >= 3);
+      return rows;
+    }
+
+    function sortByZAbsDesc(rows) {
+      return [...rows].sort((a, b) => {
+        const aHas = a.z_score !== null && a.z_score !== undefined && !isNaN(a.z_score);
+        const bHas = b.z_score !== null && b.z_score !== undefined && !isNaN(b.z_score);
+        if (aHas && !bHas) return -1;
+        if (!aHas && bHas) return 1;
+        if (!aHas && !bHas) return 0;
+        return Math.abs(b.z_score) - Math.abs(a.z_score);
+      });
+    }
+
+    function renderResults() {
+      if (!lastResult) return;
+
+      // Meta line
+      const acc = accounts.find(a => a.id === selectedId);
+      const accName = acc ? (acc.name || `Login ${acc.login}`) : `Login ${lastResult.mt5_login_used}`;
+      $('results-meta').innerHTML = `
+        TF: <span class="text-fg font-medium">${escapeHtml(lastResult.timeframe)}</span>
+        · Lookback: <span class="text-fg font-medium">${fmtInt(lastResult.lookback_bars)} bars</span>
+        · บัญชี: <span class="text-fg font-medium">${escapeHtml(accName)}</span>
+        · Last scan: <span class="text-fg font-medium" title="${escapeHtml(lastResult.scan_at || '')}">${relTime(lastResult.scan_at)}</span>
+      `;
+
+      const sorted = sortByZAbsDesc(lastResult.scans || []);
+      const rows = filterRows(sorted);
+      currentScans = rows; // keep reference so chart modal can look up by index
+
+      const container = $('results-container');
+      if (rows.length === 0) {
+        const isFiltered = activeFilter !== 'all';
+        container.innerHTML = `
+          <div class="px-6 py-12 text-center">
+            <div class="text-fg text-sm font-semibold">${isFiltered ? 'ไม่มี pair ตรงตามตัวกรอง' : 'ไม่มี pair ที่คำนวณได้'}</div>
+            <div class="text-fg-muted text-xs mt-1 max-w-md mx-auto">
+              ${isFiltered ? 'ลองเปลี่ยนตัวกรองหรือ scan ใหม่' : 'broker อาจไม่มี symbol บางตัว — ลอง scan ใหม่ภายหลัง'}
+            </div>
+          </div>
+        `;
+        return;
+      }
+
+      const tbody = rows.map((r, i) => {
+        const idx = i + 1;
+        const zHasVal = r.z_score !== null && r.z_score !== undefined && !isNaN(r.z_score);
+        const tagHtml = zHasVal ? zTag(r.z_score) : '<span class="text-fg-muted">—</span>';
+        const zCls = zClass(r.z_score);
+        const hasChart = Array.isArray(r.z_series) && r.z_series.length > 0;
+        const trAttrs = hasChart
+          ? `class="is-clickable" data-pair-index="${i}"`
+          : '';
+        return `
+          <tr ${trAttrs}>
+            <td class="text-fg-subtle font-mono tabular-nums">${idx}</td>
+            <td class="font-mono">
+              <span class="text-info">${escapeHtml(r.sym_high)}</span><span class="text-fg-subtle"> - </span><span class="text-fg">${escapeHtml(r.sym_low)}</span>
+            </td>
+            <td class="text-right font-mono tabular-nums">${fmtNum(r.beta, 3)}</td>
+            <td class="text-right font-mono tabular-nums">${fmtNum(r.current_spread, 4)}</td>
+            <td class="text-right font-mono tabular-nums">${fmtNum(r.mean_spread, 4)}</td>
+            <td class="text-right font-mono tabular-nums">${fmtNum(r.std_spread, 4)}</td>
+            <td class="text-right font-mono tabular-nums ${zCls}">${fmtZ(r.z_score)}</td>
+            <td>${tagHtml}</td>
+            <td class="text-right text-fg-subtle font-mono tabular-nums text-xs">${fmtInt(r.bars_used)}</td>
+          </tr>
+        `;
+      }).join('');
+
+      container.innerHTML = `
+        <table class="data-table">
+          <thead>
+            <tr>
+              <th>#</th>
+              <th>Pair (high - low)</th>
+              <th class="text-right">β</th>
+              <th class="text-right">Spread Now</th>
+              <th class="text-right">Mean</th>
+              <th class="text-right">Std</th>
+              <th class="text-right">Z-Score</th>
+              <th>Tag</th>
+              <th class="text-right">Bars</th>
+            </tr>
+          </thead>
+          <tbody>${tbody}</tbody>
+        </table>
+      `;
+
+      // Event delegation — listen on the table, find clickable row
+      const tableEl = container.querySelector('table');
+      if (tableEl) {
+        tableEl.addEventListener('click', (e) => {
+          const tr = e.target.closest('tr.is-clickable');
+          if (!tr) return;
+          const idx = parseInt(tr.dataset.pairIndex, 10);
+          if (Number.isInteger(idx)) openChartModal(idx);
+        });
+      }
+    }
+
+    // Filter chips
+    document.querySelectorAll('#filter-seg .seg-btn').forEach(btn => {
+      btn.addEventListener('click', () => {
+        document.querySelectorAll('#filter-seg .seg-btn').forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+        activeFilter = btn.dataset.filter;
+        renderResults();
+      });
+    });
+
+    // ═════════ Try load latest snapshot on page load ═════════
+    async function tryLoadLatest() {
+      if (!selectedId) return;
+      try {
+        const result = await apiRequest(`/api/arbitrage/latest?mt5_account_id=${encodeURIComponent(selectedId)}`);
+        if (result && Array.isArray(result.scans) && result.scans.length > 0) {
+          lastResult = result;
+          // Sync controls to the snapshot's TF + bars
+          if (result.timeframe && ['M15','M30','H1','H4','D1'].includes(result.timeframe)) {
+            $('tf-select').value = result.timeframe;
+          }
+          if (Number.isInteger(result.lookback_bars)) {
+            $('bars-input').value = result.lookback_bars;
+          }
+          updateBarsHelper();
+          renderResults();
+          $('results-section').classList.remove('hidden');
+        }
+      } catch (err) {
+        // 404 or other → silently skip (Phase 1 manual-only is OK)
+      }
+    }
+
+    // ═════════ Boot ═════════
+    loadAccounts();
+  </script>
+</body>
+</html>

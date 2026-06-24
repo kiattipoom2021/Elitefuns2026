@@ -1,0 +1,367 @@
+/* ============================================================
+   ELITEFUNS — App Shim
+   ------------------------------------------------------------
+   Shared retheme layer for app pages (dashboard, connect-mt5,
+   bot-trade, optimize, arbitrage, admin). Loaded AFTER
+   /design/styles.css and the Tailwind CDN, this:
+     1. Maps existing Tailwind utility classes (bg-bg-*, text-fg-*,
+        bg-info, text-info, bg-warning, bg-danger, etc.) onto the
+        ELITEFUNS warm-dark + amber palette.
+     2. Re-tones common component classes used across pages
+        (.nav-link, .brand-mark, .data-table, .icon-btn,
+        .modal-backdrop, .modal-card, .metric-tile, .skeleton,
+        .field-label-pill).
+   ============================================================ */
+
+html, body { margin: 0; }
+body {
+  font-family: var(--font-sans);
+  background:
+    radial-gradient(120% 60% at 50% -10%, rgba(249,168,38,0.06), transparent 55%),
+    var(--surface-canvas);
+  color: var(--text-primary);
+  -webkit-font-smoothing: antialiased;
+}
+
+.tabular-nums { font-variant-numeric: tabular-nums; }
+
+/* ═══════════ Tailwind utility shim ═══════════ */
+.bg-bg            { background-color: var(--surface-canvas) !important; }
+.bg-bg-elevated   { background-color: var(--surface-lifted) !important; }
+.bg-bg-card       { background-color: var(--surface-lifted) !important; }
+.bg-bg-muted      { background-color: var(--surface-raised) !important; }
+.bg-bg-muted\/50  { background-color: rgba(35,32,25,0.55) !important; }
+.bg-bg-muted\/40  { background-color: rgba(35,32,25,0.45) !important; }
+.bg-bg-elevated\/40 { background-color: rgba(26,24,21,0.45) !important; }
+
+.text-fg          { color: var(--text-primary) !important; }
+.text-fg-muted    { color: var(--text-secondary) !important; }
+.text-fg-subtle   { color: var(--text-muted) !important; }
+.text-bg          { color: var(--cta-text) !important; }
+
+.bg-fg-subtle     { background-color: var(--text-muted) !important; }
+.text-info        { color: var(--accent) !important; }
+.text-warning     { color: var(--accent) !important; }
+.text-accent      { color: #10B981 !important; }
+.text-danger      { color: #F87171 !important; }
+.text-danger\/70  { color: rgba(248,113,113,0.75) !important; }
+
+.border-border-subtle { border-color: var(--border-soft) !important; }
+.bg-border-subtle     { background-color: var(--border-soft) !important; }
+.divide-border-subtle > * + * { border-color: var(--border-soft) !important; }
+
+/* Amber primary buttons (formerly blue .bg-info) */
+.bg-info {
+  background-color: var(--cta-bg) !important;
+  color: var(--cta-text) !important;
+}
+.bg-info:hover,
+.hover\:bg-blue-500:hover,
+.active\:bg-blue-700:active {
+  background-color: var(--accent-hover) !important;
+  color: var(--cta-text) !important;
+}
+.bg-info\/10  { background-color: rgba(249,168,38,0.10) !important; }
+.bg-info\/20  { background-color: rgba(249,168,38,0.20) !important; }
+.border-info\/30 { border-color: rgba(249,168,38,0.30) !important; }
+.border-info\/40 { border-color: rgba(249,168,38,0.45) !important; }
+
+/* Green = P&L / Active badges */
+.bg-accent       { background-color: #10B981 !important; }
+.bg-accent\/10   { background-color: rgba(16,185,129,0.12) !important; }
+.border-accent\/30 { border-color: rgba(16,185,129,0.35) !important; }
+
+/* Amber warning family */
+.bg-warning      { background-color: var(--accent) !important; color: var(--cta-text) !important; }
+.bg-warning\/5   { background-color: rgba(249,168,38,0.06) !important; }
+.bg-warning\/10  { background-color: rgba(249,168,38,0.12) !important; }
+.bg-warning\/20  { background-color: rgba(249,168,38,0.22) !important; }
+.border-warning\/30 { border-color: rgba(249,168,38,0.30) !important; }
+.border-warning\/40 { border-color: rgba(249,168,38,0.45) !important; }
+.hover\:bg-warning\/20:hover { background-color: rgba(249,168,38,0.20) !important; }
+.hover\:bg-amber-500:hover { background-color: var(--accent-hover) !important; }
+.active\:bg-amber-600:active { background-color: var(--accent-deep) !important; }
+.hover\:text-amber-400:hover { color: var(--accent-hover) !important; }
+
+/* Danger reds — warmer tone */
+.bg-danger        { background-color: #F87171 !important; color: var(--cta-text) !important; }
+.bg-danger\/5     { background-color: rgba(248,113,113,0.06) !important; }
+.bg-danger\/10    { background-color: rgba(248,113,113,0.10) !important; }
+.bg-danger\/15    { background-color: rgba(248,113,113,0.15) !important; }
+.bg-danger\/20    { background-color: rgba(248,113,113,0.20) !important; }
+.hover\:bg-danger\/15:hover { background-color: rgba(248,113,113,0.15) !important; }
+.hover\:bg-danger\/20:hover { background-color: rgba(248,113,113,0.20) !important; }
+.border-danger\/30 { border-color: rgba(248,113,113,0.30) !important; }
+.border-danger\/40 { border-color: rgba(248,113,113,0.45) !important; }
+.hover\:border-danger\/60:hover { border-color: rgba(248,113,113,0.65) !important; }
+.hover\:bg-red-500:hover { background-color: #FCA5A5 !important; }
+.active\:bg-red-700:active { background-color: #EF4444 !important; }
+.hover\:text-danger:hover { color: #F87171 !important; }
+
+/* Gradient brand chip flatten — formerly `bg-gradient-to-br from-info to-accent` */
+.bg-gradient-to-br.from-info.to-accent {
+  background: var(--cta-bg) !important;
+}
+
+/* Pulse helper */
+@keyframes pulse-dot { 0%,100% { opacity: 1; } 50% { opacity: 0.4; } }
+.animate-pulse { animation: pulse-dot 1.6s ease-in-out infinite; }
+
+/* Mono helper */
+.font-mono { font-family: 'JetBrains Mono', monospace !important; }
+
+/* ═══════════ Sidebar nav-link ═══════════ */
+.nav-link {
+  display: flex; align-items: center; gap: 0.625rem;
+  padding: 0.55rem 0.75rem; border-radius: 12px;
+  color: var(--text-secondary);
+  font-family: var(--font-sans);
+  font-size: 0.875rem; font-weight: 500;
+  letter-spacing: -0.1px;
+  transition: background-color .15s ease, color .15s ease;
+}
+.nav-link:hover { background: var(--surface-raised); color: var(--text-primary); }
+.nav-link.active {
+  background: rgba(249,168,38,0.10);
+  color: var(--text-primary);
+}
+.nav-link.active svg { color: var(--accent); }
+
+/* ═══════════ Admin-only elements ═══════════
+   ซ่อนทุก element ที่มี class .admin-only โดย default
+   เมื่อ user เป็น admin → JS เติม class .user-is-admin ที่ <body>
+   element เหล่านั้นจะถูกแสดงด้วย display ที่ระบุไว้ (flex สำหรับ nav-link)
+   ============================================================ */
+.admin-only { display: none !important; }
+body.user-is-admin .admin-only { display: flex !important; }
+body.user-is-admin .admin-only.admin-only-inline { display: inline-flex !important; }
+body.user-is-admin .admin-only.admin-only-block { display: block !important; }
+
+/* ═══════════ Brand (sidebar header) ═══════════ */
+.brand-mark {
+  display: inline-flex; align-items: center; gap: 11px;
+  text-decoration: none;
+}
+.brand-mark img { height: 26px; width: auto; display: block; }
+.brand-mark .word {
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: 18px;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  color: var(--text-primary);
+  line-height: 1;
+}
+
+/* ═══════════ Spinner / skeleton ═══════════ */
+@keyframes spin { to { transform: rotate(360deg); } }
+.spin { animation: spin 0.8s linear infinite; }
+@keyframes pulse-skel { 0%,100% { opacity: 0.5; } 50% { opacity: 0.8; } }
+.skeleton {
+  background: var(--surface-raised);
+  border-radius: 8px;
+  animation: pulse-skel 1.4s ease-in-out infinite;
+}
+
+/* ═══════════ Data table ═══════════ */
+.data-table { width: 100%; border-collapse: collapse; }
+.data-table thead th {
+  text-align: left;
+  font-family: var(--font-sans);
+  font-size: 10px; font-weight: 600;
+  letter-spacing: 0.06em; text-transform: uppercase;
+  color: var(--text-secondary);
+  padding: 0.625rem 0.75rem;
+  border-bottom: 1px solid var(--border-soft);
+  background: rgba(255,255,255,0.025);
+  white-space: nowrap;
+}
+.data-table tbody td {
+  padding: 0.7rem 0.75rem;
+  border-bottom: 1px solid var(--border-soft);
+  font-size: 0.8125rem;
+  color: var(--text-primary);
+  vertical-align: middle;
+  white-space: nowrap;
+}
+.data-table tbody tr:last-child td { border-bottom: 0; }
+.data-table tbody tr:hover { background: rgba(255,255,255,0.03); }
+
+/* Highlighted "leader" row (optimize leaderboard, etc.) */
+.leader-row td {
+  background: rgba(249,168,38,0.06);
+  border-bottom-color: rgba(249,168,38,0.25);
+}
+.leader-row td:first-child {
+  box-shadow: inset 3px 0 0 var(--accent);
+}
+
+/* Row near safety-cut trigger (DD >= 80% of safety_cut) */
+.data-table tbody tr.row-near-cut td:first-child {
+  border-left: 2px solid #F87171;
+}
+.data-table tbody tr.row-near-cut {
+  background: rgba(248,113,113,0.06);
+}
+.data-table tbody tr.row-near-cut:hover {
+  background: rgba(248,113,113,0.09);
+}
+
+/* ═══════════ Icon button ═══════════ */
+.icon-btn {
+  width: 28px; height: 28px; border-radius: 8px;
+  display: inline-flex; align-items: center; justify-content: center;
+  color: var(--text-muted);
+  background: transparent;
+  border: 0;
+  cursor: pointer;
+  transition: background-color .15s ease, color .15s ease;
+}
+.icon-btn:hover { background: var(--surface-raised); color: var(--text-primary); }
+.icon-btn.danger:hover { color: #F87171; }
+.icon-btn:disabled { cursor: not-allowed; }
+
+/* ═══════════ Modal ═══════════ */
+.modal-backdrop {
+  position: fixed; inset: 0; z-index: 50;
+  background: rgba(8,7,6,0.72);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  display: flex; align-items: center; justify-content: center;
+  padding: 1rem;
+}
+.modal-card {
+  background: var(--surface-lifted);
+  border: 1.5px solid var(--border-soft);
+  border-radius: 24px;
+  padding: 28px;
+  width: 100%; max-width: 28rem;
+  box-shadow: var(--elev-2);
+}
+
+/* ═══════════ Metric tiles (inside modals) ═══════════ */
+.metric-tile {
+  background: var(--surface-raised);
+  border: 1px solid var(--border-soft);
+  border-radius: 12px;
+  padding: 0.5rem 0.625rem;
+}
+.metric-label {
+  font-family: var(--font-sans);
+  font-size: 10px; font-weight: 600;
+  letter-spacing: 0.06em; text-transform: uppercase;
+  color: var(--text-secondary);
+  margin-bottom: 0.125rem;
+}
+.metric-value {
+  font-family: 'JetBrains Mono', monospace;
+  font-variant-numeric: tabular-nums;
+  font-size: 0.8125rem; font-weight: 600;
+  color: var(--text-primary);
+}
+
+/* ═══════════ Inline field labels / pills ═══════════ */
+.input-disabled-look {
+  opacity: 0.45;
+  cursor: not-allowed;
+  text-decoration: line-through;
+}
+.field-label-pill {
+  font-family: var(--font-sans);
+  font-size: 9px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  padding: 1px 6px;
+  border-radius: 999px;
+}
+.field-label-pill.on  {
+  color: var(--accent);
+  background: rgba(249,168,38,0.12);
+  border: 1px solid rgba(249,168,38,0.30);
+}
+.field-label-pill.off {
+  color: var(--text-muted);
+  background: rgba(255,255,255,0.04);
+  border: 1px solid var(--border-soft);
+}
+
+/* ═══════════ Common form field — matches login/claim-port .ctrl ═══════════ */
+.field-label {
+  font-family: var(--font-sans);
+  font-size: 0.75rem; font-weight: 600;
+  color: var(--text-secondary);
+  margin-bottom: 0.25rem; display: block;
+  letter-spacing: 0.02em;
+}
+.field-input {
+  width: 100%; box-sizing: border-box;
+  padding: 0.6rem 0.85rem;
+  background: var(--surface-raised);
+  border: 1.5px solid var(--border-soft);
+  border-radius: 12px;
+  color: var(--text-primary);
+  font-family: var(--font-sans);
+  font-size: 0.875rem; font-weight: 450;
+  transition: border-color 0.15s ease;
+  outline: none;
+}
+.field-input::placeholder { color: var(--text-muted); }
+.field-input:focus { border-color: var(--accent) !important; }
+.field-input:disabled { opacity: 0.55; cursor: not-allowed; }
+
+input[type="number"]:focus,
+input[type="text"]:focus,
+input[type="email"]:focus,
+input[type="password"]:focus,
+select:focus,
+textarea:focus {
+  outline: none;
+  border-color: var(--accent) !important;
+}
+
+/* ═══════════ Segmented control (.seg-btn) ═══════════ */
+.seg-btn {
+  flex: 1; padding: 0.45rem 0.5rem;
+  font-family: var(--font-sans);
+  font-size: 0.75rem; font-weight: 500;
+  background: transparent;
+  color: var(--text-secondary);
+  border: 1px solid var(--border-soft);
+  cursor: pointer;
+  transition: background-color .15s ease, color .15s ease, border-color .15s ease;
+}
+.seg-btn:first-child { border-radius: 12px 0 0 12px; }
+.seg-btn:last-child  { border-radius: 0 12px 12px 0; }
+.seg-btn:not(:last-child) { border-right: 0; }
+.seg-btn.active {
+  background: rgba(249,168,38,0.12);
+  color: var(--text-primary);
+  border-color: rgba(249,168,38,0.45);
+}
+.seg-btn:hover:not(.active) {
+  background: var(--surface-raised);
+  color: var(--text-primary);
+}
+
+/* ═══════════ Strategy card (optimize, bot-trade) ═══════════ */
+.strategy-card {
+  display: flex; flex-direction: column; gap: 0.25rem;
+  padding: 0.75rem; border-radius: 14px;
+  border: 1px solid var(--border-soft);
+  background: var(--surface-lifted);
+  cursor: pointer;
+  transition: background-color .15s ease, border-color .15s ease;
+}
+.strategy-card:hover:not(.disabled) {
+  border-color: rgba(249,168,38,0.40);
+  background: var(--surface-raised);
+}
+.strategy-card.active {
+  border-color: var(--accent);
+  background: rgba(249,168,38,0.08);
+}
+.strategy-card.disabled { cursor: not-allowed; opacity: 0.55; }
+
+/* Headings */
+h1, h2, h3 { font-family: var(--font-display); letter-spacing: -0.01em; }

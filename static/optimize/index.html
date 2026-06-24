@@ -1,0 +1,1280 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Optimize — ELITEFUNS</title>
+
+  <link rel="stylesheet" href="/design/styles.css">
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chartjs-adapter-date-fns@3.0.0/dist/chartjs-adapter-date-fns.bundle.min.js"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            bg:       { DEFAULT: '#121110', elevated: '#1A1815', card: '#1A1815', muted: '#232019' },
+            fg:       { DEFAULT: '#F6F2EC', muted: '#C8C1B5', subtle: '#908A7E' },
+            accent:   '#10B981',
+            danger:   '#F87171',
+            warning:  '#F9A826',
+            info:     '#F9A826',
+            'border-subtle': 'rgba(255,255,255,0.09)',
+          },
+          fontFamily: {
+            sans:  ["'Sofia Sans'", 'SofiaSans', 'Arial', 'sans-serif'],
+            mono:  ["'JetBrains Mono'", 'monospace'],
+          },
+        },
+      },
+    };
+  </script>
+
+  <link rel="stylesheet" href="/design/app-shim.css">
+
+  <!-- ─── Leaderboard table tweaks (match bot-trade pattern) ─── -->
+  <style>
+    /* Rows are clickable → open detail drawer */
+    #leaderboard-container .data-table tbody tr {
+      cursor: pointer;
+      transition: background-color 0.15s;
+    }
+    #leaderboard-container .data-table tbody tr:hover {
+      background: rgba(249,168,38,0.07);
+    }
+    /* First-place row uses warm amber tint (.leader-row already defined in shim) */
+    #leaderboard-container .leader-row:hover td { background: rgba(249,168,38,0.12); }
+
+    /* Tighter density for sparkline cell */
+    #leaderboard-container .data-table td.spark-cell {
+      padding-top: 0.4rem;
+      padding-bottom: 0.4rem;
+      line-height: 0;
+    }
+
+    /* ── Header alignment override ──
+       app-shim.css forces `.data-table thead th { text-align: left }`.
+       Raise specificity so Tailwind utility classes win for numeric/center cols. */
+    #leaderboard-container .data-table thead th.text-right  { text-align: right;  }
+    #leaderboard-container .data-table thead th.text-center { text-align: center; }
+    #leaderboard-container .data-table thead th.text-left   { text-align: left;   }
+  </style>
+</head>
+<body class="theme-dark bg-bg text-fg antialiased">
+
+  <div class="flex min-h-screen">
+
+    <!-- ═════════ Sidebar ═════════ -->
+    <aside class="w-60 border-r border-border-subtle bg-bg-elevated flex flex-col flex-shrink-0">
+      <!-- Brand -->
+      <div class="px-5 py-5 border-b border-border-subtle">
+        <a href="/dashboard/" class="brand-mark">
+          <img src="/design/logo.png" alt="ELITEFUNS">
+          <span class="word">Elitefuns</span>
+        </a>
+      </div>
+
+      <!-- Nav -->
+      <nav class="flex-1 px-3 py-4 space-y-0.5">
+        <div class="px-2 mb-1.5 text-[10px] uppercase tracking-wider font-medium text-fg-subtle">เมนูหลัก</div>
+
+        <a href="/dashboard/" class="nav-link">
+          <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"/></svg>
+          Dashboard
+        </a>
+
+        <a href="/connect-mt5/" class="nav-link">
+          <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/><path stroke-linecap="round" stroke-linejoin="round" d="M12 3v9l6 3"/></svg>
+          พอร์ต MT5
+        </a>
+
+        <a href="/optimize/" class="nav-link active">
+          <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M3 6h13M3 12h9m-9 6h6M17 14l4 4m0 0l-4 4m4-4H13"/></svg>
+          Optimize
+        </a>
+
+        <a href="/bot-trade/" class="nav-link">
+          <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M9 3v2m6-2v2M9 19v2m6-2v2M5 9H3m2 6H3m18-6h-2m2 6h-2M7 19h10a2 2 0 002-2V7a2 2 0 00-2-2H7a2 2 0 00-2 2v10a2 2 0 002 2zM9 9h6v6H9V9z"/></svg>
+          Bot Trade
+        </a>
+
+        <a href="/arbitrage/" class="nav-link">
+          <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M7 16V4m0 0L3 8m4-4l4 4m6 0v12m0 0l4-4m-4 4l-4-4"/>
+          </svg>
+          Arbitrage
+        </a>
+
+        <a id="nav-admin-link" href="/admin/" class="nav-link admin-only">
+          <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"/>
+          </svg>
+          Admin
+        </a>
+      </nav>
+
+      <!-- User card -->
+      <div class="p-3 border-t border-border-subtle">
+        <div class="flex items-center gap-2.5 px-2 py-2">
+          <div id="avatar" class="w-8 h-8 rounded-full bg-gradient-to-br from-info to-accent flex items-center justify-center font-semibold text-white text-xs flex-shrink-0">?</div>
+          <div class="flex-1 min-w-0">
+            <div id="user-email" class="text-fg text-xs font-medium truncate">กำลังโหลด...</div>
+            <div class="text-fg-subtle text-[10px]">Free plan</div>
+          </div>
+          <button id="logout-btn" title="ออกจากระบบ"
+            class="text-fg-muted hover:text-danger transition-colors p-1 rounded">
+            <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"/>
+            </svg>
+          </button>
+        </div>
+      </div>
+    </aside>
+
+    <!-- ═════════ Main ═════════ -->
+    <main class="flex-1 flex flex-col min-w-0">
+      <!-- Topbar -->
+      <header class="h-14 border-b border-border-subtle bg-bg-elevated flex items-center justify-between px-6">
+        <div class="flex items-center gap-2 text-sm">
+          <span class="text-fg-subtle">หน้าหลัก</span>
+          <span class="text-fg-subtle">›</span>
+          <span class="text-fg font-medium">Optimize</span>
+        </div>
+        <div class="flex items-center gap-2">
+          <button class="w-8 h-8 rounded-lg hover:bg-bg-muted flex items-center justify-center text-fg-muted hover:text-fg transition-colors" title="แจ้งเตือน">
+            <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"/>
+            </svg>
+          </button>
+        </div>
+      </header>
+
+      <!-- Content -->
+      <div class="flex-1 p-6 overflow-auto">
+
+        <!-- Header -->
+        <div class="mb-6">
+          <h1 class="text-2xl font-semibold tracking-tight">Optimize กลยุทธ์</h1>
+          <p class="text-fg-muted text-sm mt-1">เลือกกลยุทธ์ ดูผลย้อนหลัง และเลือก combo ที่ดีที่สุดไปใช้กับ bot</p>
+        </div>
+
+        <!-- 2-column layout -->
+        <div class="grid grid-cols-1 lg:grid-cols-[280px_1fr] gap-5">
+
+          <!-- ═════════ Strategy picker ═════════ -->
+          <aside class="space-y-2">
+            <div class="px-1 mb-1 text-[10px] uppercase tracking-wider font-medium text-fg-subtle">กลยุทธ์ทั้งหมด</div>
+
+            <!-- MA Cross (active) -->
+            <div id="strategy-ma-cross" class="strategy-card active">
+              <div class="flex items-start justify-between">
+                <div class="font-semibold text-fg text-sm">MA Cross</div>
+                <span class="text-[10px] px-1.5 py-0.5 rounded bg-accent/10 text-accent border border-accent/30">พร้อมใช้</span>
+              </div>
+              <div class="text-fg-muted text-xs">เส้นค่าเฉลี่ย 2 เส้นตัดกัน</div>
+              <div class="flex gap-1 mt-1.5">
+                <span class="text-[10px] px-1.5 py-0.5 rounded bg-bg border border-border-subtle text-fg-subtle">Trend</span>
+                <span class="text-[10px] px-1.5 py-0.5 rounded bg-bg border border-border-subtle text-fg-subtle">Crossover</span>
+              </div>
+            </div>
+
+            <!-- RSI Reversal (disabled) -->
+            <div class="strategy-card disabled">
+              <div class="flex items-start justify-between">
+                <div class="font-semibold text-fg-muted text-sm">RSI Reversal</div>
+                <span class="text-[10px] px-1.5 py-0.5 rounded bg-warning/10 text-warning border border-warning/30">เร็วๆ นี้</span>
+              </div>
+              <div class="text-fg-subtle text-xs">กลับตัวเมื่อ RSI overbought/oversold</div>
+            </div>
+
+            <!-- Bollinger Bounce (disabled) -->
+            <div class="strategy-card disabled">
+              <div class="flex items-start justify-between">
+                <div class="font-semibold text-fg-muted text-sm">Bollinger Bounce</div>
+                <span class="text-[10px] px-1.5 py-0.5 rounded bg-warning/10 text-warning border border-warning/30">เร็วๆ นี้</span>
+              </div>
+              <div class="text-fg-subtle text-xs">เด้งกลับจากเส้น Bollinger</div>
+            </div>
+
+            <!-- Grid (disabled) -->
+            <div class="strategy-card disabled">
+              <div class="flex items-start justify-between">
+                <div class="font-semibold text-fg-muted text-sm">Grid</div>
+                <span class="text-[10px] px-1.5 py-0.5 rounded bg-warning/10 text-warning border border-warning/30">เร็วๆ นี้</span>
+              </div>
+              <div class="text-fg-subtle text-xs">วาง order เป็นตารางช่วงราคา</div>
+            </div>
+          </aside>
+
+          <!-- ═════════ Strategy detail ═════════ -->
+          <section class="space-y-5">
+
+            <!-- Strategy header card -->
+            <div class="bg-bg-card border border-border-subtle rounded-xl p-5">
+              <div class="flex items-start justify-between gap-4 mb-3">
+                <div>
+                  <div class="flex items-center gap-2 mb-1">
+                    <h2 class="text-fg text-lg font-semibold">MA Cross</h2>
+                    <span class="text-[10px] px-1.5 py-0.5 rounded bg-accent/10 text-accent border border-accent/30">พร้อมใช้</span>
+                  </div>
+                  <p class="text-fg-muted text-sm">
+                    ใช้เส้นค่าเฉลี่ย <span class="text-fg">Fast MA</span> ตัดกับ <span class="text-fg">Slow MA</span> —
+                    Fast ตัดขึ้น = สัญญาณ <span class="text-accent">Buy</span>, Fast ตัดลง = สัญญาณ <span class="text-danger">Sell</span>
+                  </p>
+                </div>
+                <div class="w-10 h-10 rounded-lg bg-info/10 border border-info/30 flex items-center justify-center flex-shrink-0">
+                  <svg class="w-5 h-5 text-info" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6"/>
+                  </svg>
+                </div>
+              </div>
+              <div class="flex flex-wrap gap-3 text-xs pt-3 border-t border-border-subtle">
+                <div>
+                  <span class="text-fg-subtle">ประเภท: </span>
+                  <span class="text-fg-muted">Trend-following</span>
+                </div>
+                <div>
+                  <span class="text-fg-subtle">ตลาดที่เหมาะ: </span>
+                  <span class="text-fg-muted">Forex · Indices · Crypto</span>
+                </div>
+                <div>
+                  <span class="text-fg-subtle">ความเสี่ยง: </span>
+                  <span class="text-warning">ปานกลาง</span>
+                </div>
+              </div>
+            </div>
+
+            <!-- Sort selector -->
+            <div class="bg-bg-card border border-border-subtle rounded-xl p-5">
+              <h3 class="text-fg font-semibold text-sm mb-1">เป้าหมายในการจัดเรียง</h3>
+              <p class="text-fg-subtle text-[11px] mb-4">เลือกตัวชี้วัดที่ใช้จัดเรียงผลลัพธ์ในตารางด้านล่าง — ระบบใช้สถิติของช่วงเวลาที่เลือก (ค่าเริ่มต้น: 1 ปี)</p>
+              <div class="flex flex-wrap" id="sort-seg">
+                <button class="seg-btn active" data-sort="net_profit">Net Profit สูงสุด</button>
+                <button class="seg-btn" data-sort="recovery">Profit/DD สูงสุด</button>
+                <button class="seg-btn" data-sort="sharpe">Sharpe สูงสุด</button>
+                <button class="seg-btn" data-sort="max_dd">Max Drawdown ต่ำสุด</button>
+                <button class="seg-btn" data-sort="win_rate">Win Rate</button>
+                <button class="seg-btn" data-sort="profit_factor">Profit Factor</button>
+              </div>
+            </div>
+
+            <!-- Admin trigger note -->
+            <div class="text-fg-subtle text-xs flex items-start gap-2">
+              <svg class="w-4 h-4 mt-0.5 flex-shrink-0 text-fg-subtle" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+              </svg>
+              <span>การ Optimize ใหม่ต้องทริกเกอร์โดยแอดมิน — หน้านี้แสดงผลล่าสุดในระบบ</span>
+            </div>
+
+            <!-- Leaderboard -->
+            <div class="bg-bg-card border border-border-subtle rounded-xl">
+              <div class="px-5 py-4 border-b border-border-subtle">
+                <div class="flex items-center justify-between flex-wrap gap-3 mb-3">
+                  <h3 class="text-fg font-semibold text-sm">Leaderboard ผลการ Optimize</h3>
+                  <span id="leaderboard-meta" class="text-fg-subtle text-xs">—</span>
+                </div>
+
+                <!-- Window selector (drives sort + highlight) -->
+                <div class="flex items-center gap-3 flex-wrap mb-3">
+                  <span class="text-fg-subtle text-[10px] uppercase tracking-wider font-medium">ช่วงเวลาที่ใช้จัดเรียง</span>
+                  <div class="flex" id="leaderboard-window-seg">
+                    <button class="seg-btn active" data-window="1y" style="flex:0 0 auto; padding: 0.35rem 0.9rem;">1 ปี</button>
+                    <button class="seg-btn" data-window="6m" style="flex:0 0 auto; padding: 0.35rem 0.9rem;">6 เดือน</button>
+                  </div>
+                </div>
+
+                <div class="grid grid-cols-1 sm:grid-cols-[1fr_180px_auto] gap-3 items-end">
+                  <div>
+                    <label class="field-label" for="filter-symbol">Symbol</label>
+                    <select id="filter-symbol" class="field-input font-mono">
+                      <option value="">ทั้งหมด</option>
+                      <option value="EURUSD" selected>EURUSD</option>
+                      <option value="USDJPY">USDJPY</option>
+                      <option value="GBPUSD">GBPUSD</option>
+                      <option value="USDCHF">USDCHF</option>
+                      <option value="AUDUSD">AUDUSD</option>
+                      <option value="USDCAD">USDCAD</option>
+                      <option value="NZDUSD">NZDUSD</option>
+                    </select>
+                  </div>
+                  <div>
+                    <label class="field-label" for="filter-timeframe">Timeframe</label>
+                    <select id="filter-timeframe" class="field-input">
+                      <option value="M5">M5</option>
+                      <option value="M15">M15</option>
+                      <option value="M30">M30</option>
+                      <option value="H1" selected>H1</option>
+                      <option value="H4">H4</option>
+                      <option value="D1">D1</option>
+                    </select>
+                  </div>
+                  <div>
+                    <button id="filter-refresh-btn"
+                      class="bg-bg-muted hover:bg-bg-elevated border border-border-subtle text-fg font-medium px-4 py-2 rounded-lg text-sm flex items-center gap-1.5 transition-colors w-full sm:w-auto justify-center">
+                      <svg id="filter-refresh-icon" class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/>
+                      </svg>
+                      ค้นหา
+                    </button>
+                  </div>
+                </div>
+              </div>
+              <div id="leaderboard-container" class="overflow-x-auto">
+                <!-- table or empty state injected here -->
+              </div>
+            </div>
+
+          </section>
+        </div>
+
+      </div>
+    </main>
+
+  </div>
+
+  <!-- ═════════ Run detail panel (slide-over drawer) ═════════ -->
+  <div id="detail-backdrop" class="hidden fixed inset-0 z-40" style="background: rgba(8,7,6,0.55); backdrop-filter: blur(4px);"></div>
+  <aside id="detail-panel" class="hidden fixed top-0 right-0 bottom-0 z-50 w-full max-w-3xl bg-bg-elevated border-l border-border-subtle flex flex-col" style="box-shadow: -8px 0 32px rgba(0,0,0,0.35);">
+    <!-- Header -->
+    <div class="px-6 py-4 border-b border-border-subtle flex items-center justify-between gap-3">
+      <div class="min-w-0">
+        <div class="text-fg-subtle text-[10px] uppercase tracking-wider font-medium mb-0.5">Run detail</div>
+        <div id="detail-code" class="font-mono text-info text-sm truncate" title="">—</div>
+      </div>
+      <button id="detail-close-btn" class="icon-btn" title="ปิด">
+        <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/>
+        </svg>
+      </button>
+    </div>
+
+    <!-- Window selector -->
+    <div class="px-6 py-4 border-b border-border-subtle flex items-center gap-3 flex-wrap">
+      <span class="text-fg-subtle text-xs uppercase tracking-wider font-medium">ช่วงเวลา</span>
+      <div class="flex" id="window-seg">
+        <button class="seg-btn active" data-window="1y">1 ปี</button>
+        <button class="seg-btn" data-window="6m">6 เดือน</button>
+      </div>
+      <span id="detail-window-meta" class="ml-auto text-fg-subtle text-xs">—</span>
+    </div>
+
+    <!-- Scrollable body -->
+    <div class="flex-1 overflow-y-auto px-6 py-5 space-y-5" id="detail-body">
+
+      <!-- Stats grid -->
+      <div>
+        <div class="text-fg-subtle text-[10px] uppercase tracking-wider font-medium mb-2">สถิติในช่วงที่เลือก</div>
+        <div id="detail-stats" class="grid grid-cols-2 sm:grid-cols-3 gap-2">
+          <!-- metric tiles injected here -->
+        </div>
+      </div>
+
+      <!-- Equity curve chart -->
+      <div>
+        <div class="flex items-center justify-between mb-2">
+          <div class="text-fg-subtle text-[10px] uppercase tracking-wider font-medium">Equity Curve</div>
+          <div id="chart-meta" class="text-fg-subtle text-[10px]">—</div>
+        </div>
+        <div id="chart-wrap" class="bg-bg-card border border-border-subtle rounded-xl p-4">
+          <div class="relative" style="height: 260px;">
+            <canvas id="equity-chart"></canvas>
+            <div id="chart-empty" class="hidden absolute inset-0 flex items-center justify-center text-fg-subtle text-xs">
+              ไม่มี trade ในช่วงนี้
+            </div>
+            <div id="chart-loading" class="hidden absolute inset-0 flex items-center justify-center">
+              <div class="text-fg-subtle text-xs flex items-center gap-2">
+                <svg class="w-4 h-4 spin" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/></svg>
+                กำลังโหลด trades…
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Legacy / error placeholder -->
+      <div id="detail-placeholder" class="hidden text-center py-6 px-4 rounded-xl border border-dashed border-border-subtle">
+        <div class="text-fg-muted text-sm" id="detail-placeholder-msg">ยังไม่มี trade data — re-sweep เพื่อ generate</div>
+        <div class="text-fg-subtle text-[11px] mt-1">Stats รวมยังคงดูได้จากตาราง leaderboard</div>
+      </div>
+
+    </div>
+  </aside>
+
+  <script>
+    // ─── Auth gate ──────────────────────────────────────────────────────
+    const token = localStorage.getItem('jwt_token');
+    if (!token) { window.location.href = '/login/'; }
+
+    // ─── Optimistic admin reveal จาก localStorage ───────────────────────
+    if (localStorage.getItem('is_admin') === 'true') {
+      document.body.classList.add('user-is-admin');
+    }
+
+    // ─── Logout ─────────────────────────────────────────────────────────
+    document.getElementById('logout-btn').addEventListener('click', () => {
+      localStorage.removeItem('jwt_token');
+      localStorage.removeItem('is_admin');
+      window.location.href = '/';
+    });
+
+    // ─── Load current user ──────────────────────────────────────────────
+    fetch('/auth/me', { headers: { 'Authorization': `Bearer ${token}` } })
+      .then(r => {
+        if (!r.ok) throw new Error('unauthorized');
+        return r.json();
+      })
+      .then(d => {
+        const email   = d.email || 'user';
+        const name    = email.split('@')[0];
+        const initial = name.charAt(0).toUpperCase();
+        document.getElementById('user-email').textContent = email;
+        document.getElementById('avatar').textContent     = initial;
+        // sync is_admin
+        const isAdmin = Boolean(d.is_admin);
+        localStorage.setItem('is_admin', String(isAdmin));
+        document.body.classList.toggle('user-is-admin', isAdmin);
+      })
+      .catch(() => {
+        localStorage.removeItem('jwt_token');
+        localStorage.removeItem('is_admin');
+        window.location.href = '/login/';
+      });
+
+    // ─── Leaderboard state ──────────────────────────────────────────────
+    const STRATEGY_CODE = 'ma_cross';
+    let currentSort = 'net_profit';
+    let leaderboardWindow = '1y';   // '1y' | '6m' — which window drives sort + highlight
+
+    const el = (id) => document.getElementById(id);
+
+    // ─── Formatters ─────────────────────────────────────────────────────
+    const fmtMoney = (n) => {
+      if (n === null || n === undefined || isNaN(n)) return '—';
+      const sign = n < 0 ? '-' : '';
+      const abs = Math.abs(n);
+      return sign + '$' + abs.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+    };
+    const fmtPct = (n) => {
+      if (n === null || n === undefined || isNaN(n)) return '—';
+      return (n * 100).toFixed(1) + '%';
+    };
+    const fmtNum = (n, digits = 2) => {
+      if (n === null || n === undefined || isNaN(n)) return '—';
+      return Number(n).toFixed(digits);
+    };
+    const fmtInt = (n) => {
+      if (n === null || n === undefined || isNaN(n)) return '—';
+      return Math.round(n).toLocaleString('en-US');
+    };
+    // Profit/DD ratio: ≥ 2 = excellent (accent), ≥ 1 = good (fg), < 1 = danger
+    const recoveryClass = (n) => {
+      if (n === null || n === undefined || isNaN(n)) return 'text-fg-muted';
+      if (n >= 2) return 'text-accent';
+      if (n >= 1) return 'text-fg';
+      return 'text-danger';
+    };
+    const fmtRecovery = (n) => {
+      if (n === null || n === undefined || isNaN(n)) return '—';
+      return Number(n).toFixed(2) + 'x';
+    };
+    // Net Profit: bold + colored only for extremes; middle (≈0) stays neutral
+    const profitClass = (n) => {
+      if (n === null || n === undefined || isNaN(n)) return 'text-fg-muted';
+      if (n > 0) return 'text-accent font-semibold';
+      if (n < 0) return 'text-danger font-semibold';
+      return 'text-fg-muted';
+    };
+    // Max Drawdown — neutral muted by default (DD ทุกค่าเป็นลบอยู่แล้ว, สีจะรกตา).
+    // Only flag with warning tone when truly extreme (> 20% of $10k initial).
+    const ddClass = (n) => ((n ?? 0) > 2000 ? 'text-warning' : 'text-fg-muted');
+    // Profit Factor — 3-tier: ≥1.5 accent · 1–1.5 neutral fg · <1 danger
+    const pfClass = (n) => {
+      if (n === null || n === undefined || isNaN(n)) return 'text-fg-muted';
+      if (!isFinite(n) || n >= 1.5) return 'text-accent';
+      if (n >= 1) return 'text-fg';
+      return 'text-danger';
+    };
+    // Win Rate — 3-tier: ≥55% accent · 40–55% neutral fg · <40% danger
+    const winRateClass = (n) => {
+      if (n === null || n === undefined || isNaN(n)) return 'text-fg-muted';
+      const v = Number(n);
+      if (v >= 0.55) return 'text-accent';
+      if (v >= 0.40) return 'text-fg';
+      return 'text-danger';
+    };
+    // Profit Factor formatter at module scope (also used in detail panel)
+    const fmtFactor = (n) => {
+      if (n === null || n === undefined || isNaN(n)) return '—';
+      if (!isFinite(n)) return '∞';
+      return Number(n).toFixed(2);
+    };
+
+    // ─── Inline SVG sparkline (no chart lib) ────────────────────────────
+    // values: array of cumulative P/L points (number[])
+    // returns SVG markup string
+    function renderSparkline(values, opts = {}) {
+      const { width = 80, height = 20 } = opts;
+      if (!Array.isArray(values) || values.length === 0) {
+        // empty placeholder — keep dim, same dimensions for layout stability
+        return `<svg width="${width}" height="${height}" class="inline-block align-middle">
+                  <line x1="0" y1="${height / 2}" x2="${width}" y2="${height / 2}"
+                        stroke="rgba(255,255,255,0.08)" stroke-width="1" stroke-dasharray="2,2"/>
+                </svg>`;
+      }
+      // Make sure 0 is always within the y-domain so zero-line is meaningful
+      const numericVals = values.map(v => Number(v) || 0);
+      const min = Math.min(0, ...numericVals);
+      const max = Math.max(0, ...numericVals);
+      const range = (max - min) || 1;
+      const n = numericVals.length;
+      const stepX = n > 1 ? width / (n - 1) : 0;
+
+      const pts = numericVals.map((v, i) => {
+        const x = i * stepX;
+        const y = height - ((v - min) / range) * height;
+        // clamp to keep stroke inside the viewBox
+        const yc = Math.max(0.5, Math.min(height - 0.5, y));
+        return `${x.toFixed(1)},${yc.toFixed(1)}`;
+      }).join(' ');
+
+      const finalVal = numericVals[n - 1];
+      const lineColor = finalVal > 0 ? '#10B981' : finalVal < 0 ? '#F87171' : '#908A7E';
+      // Zero reference line
+      const zeroY = height - ((0 - min) / range) * height;
+      const zeroYc = Math.max(0.5, Math.min(height - 0.5, zeroY));
+
+      return `
+        <svg width="${width}" height="${height}" viewBox="0 0 ${width} ${height}" class="inline-block align-middle" aria-hidden="true">
+          <line x1="0" y1="${zeroYc.toFixed(1)}" x2="${width}" y2="${zeroYc.toFixed(1)}"
+                stroke="rgba(255,255,255,0.10)" stroke-width="1" stroke-dasharray="2,2"/>
+          <polyline points="${pts}" fill="none" stroke="${lineColor}"
+                    stroke-width="1.5" stroke-linejoin="round" stroke-linecap="round"/>
+        </svg>
+      `;
+    }
+
+    // ─── Build a window stats object from either stats_X or aggregate ───
+    // returns { stats: {...}, sparkline: number[], isLegacy: boolean }
+    function pickWindowData(run, windowKey) {
+      // Preferred: stats_1y / stats_6m + sparkline_1y / sparkline_6m
+      const statsField = windowKey === '6m' ? 'stats_6m' : 'stats_1y';
+      const sparkField = windowKey === '6m' ? 'sparkline_6m' : 'sparkline_1y';
+      const stats = run?.[statsField];
+      const sparkline = run?.[sparkField];
+
+      if (stats && typeof stats === 'object') {
+        return {
+          stats,
+          sparkline: Array.isArray(sparkline) ? sparkline : [],
+          isLegacy: false,
+        };
+      }
+      // Legacy fallback — only the 1y window can use aggregate fields meaningfully.
+      // 6m has no aggregate equivalent, so we mark it null.
+      if (windowKey === '1y') {
+        return {
+          stats: {
+            total_trades: run?.total_trades ?? null,
+            wins: null,
+            losses: null,
+            net_profit: run?.net_profit ?? null,
+            win_rate: run?.win_rate ?? null,
+            max_drawdown: run?.max_drawdown ?? null,
+            profit_factor: run?.profit_factor ?? null,
+            recovery_factor: run?.recovery_factor ?? null,
+          },
+          sparkline: [],
+          isLegacy: true,
+        };
+      }
+      return { stats: null, sparkline: [], isLegacy: true };
+    }
+
+    // Sort runs client-side by active window's chosen metric.
+    // (Server still ranks; this re-orders when user switches window or sort key.)
+    function sortRunsClient(runs, windowKey, sortKey) {
+      const getVal = (r) => {
+        const s = r?.[windowKey === '6m' ? 'stats_6m' : 'stats_1y'];
+        const src = s || r;  // fallback to legacy aggregate fields
+        switch (sortKey) {
+          case 'net_profit':    return Number(src.net_profit) || 0;
+          case 'recovery':      return Number(src.recovery_factor) || 0;
+          case 'sharpe':        return Number(src.sharpe_ratio ?? r.sharpe_ratio) || 0;
+          case 'max_dd':        return Math.abs(Number(src.max_drawdown) || 0);  // ascending below
+          case 'win_rate':      return Number(src.win_rate) || 0;
+          case 'profit_factor': {
+            const v = Number(src.profit_factor);
+            if (!isFinite(v)) return Number.MAX_VALUE;
+            return v || 0;
+          }
+          default:              return Number(src.net_profit) || 0;
+        }
+      };
+      const ascending = sortKey === 'max_dd';
+      return [...runs].sort((a, b) => {
+        const va = getVal(a), vb = getVal(b);
+        return ascending ? va - vb : vb - va;
+      });
+    }
+    const relTime = (iso) => {
+      if (!iso) return '—';
+      // Backend ส่ง naive ISO (ไม่มี Z) — ถือว่าเป็น UTC เพื่อกัน TZ drift
+      const norm = /[zZ]|[+-]\d{2}:?\d{2}$/.test(iso) ? iso : iso + 'Z';
+      const t = new Date(norm).getTime();
+      if (isNaN(t)) return '—';
+      const diff = Math.floor((Date.now() - t) / 1000);
+      if (diff < 5) return 'เพิ่งนี้';
+      if (diff < 60) return diff + ' วินาทีที่แล้ว';
+      if (diff < 3600) return Math.floor(diff / 60) + ' นาทีที่แล้ว';
+      if (diff < 86400) return Math.floor(diff / 3600) + ' ชั่วโมงที่แล้ว';
+      if (diff < 86400 * 7) return Math.floor(diff / 86400) + ' วันที่แล้ว';
+      return new Date(norm).toLocaleDateString('th-TH');
+    };
+
+    // ─── Segmented control: sort selector ───────────────────────────────
+    document.querySelectorAll('#sort-seg .seg-btn').forEach(btn => {
+      btn.addEventListener('click', () => {
+        btn.parentElement.querySelectorAll('.seg-btn').forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+        currentSort = btn.dataset.sort || 'net_profit';
+        loadLeaderboard();
+      });
+    });
+
+    // ─── Segmented control: leaderboard window (1y / 6m) ────────────────
+    // Switching window: re-sort client-side + re-render — no need to refetch.
+    document.querySelectorAll('#leaderboard-window-seg .seg-btn').forEach(btn => {
+      btn.addEventListener('click', () => {
+        btn.parentElement.querySelectorAll('.seg-btn').forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+        leaderboardWindow = btn.dataset.window || '1y';
+        if (Array.isArray(currentRuns) && currentRuns.length) {
+          const sorted = sortRunsClient(currentRuns, leaderboardWindow, currentSort);
+          renderLeaderboard(sorted);
+        }
+        // also keep the detail panel in sync if it's open
+        const detailSeg = document.querySelector(`#window-seg .seg-btn[data-window="${leaderboardWindow}"]`);
+        if (detailSeg && !el('detail-panel').classList.contains('hidden')) {
+          detailSeg.click();
+        }
+      });
+    });
+
+    // ─── Leaderboard fetch + render ─────────────────────────────────────
+    function leaderboardTableHeader() {
+      // Single source of truth for <thead>; used by both skeleton and real render.
+      // 7 columns — Rank removed (sort selector handles ordering), Max Drawdown added.
+      // Width hints provide stable column widths; numeric cols are right-aligned,
+      // Code is left-aligned (default), Equity sparkline is centered.
+      return `
+        <thead>
+          <tr>
+            <th class="text-left min-w-[200px]">Code</th>
+            <th class="text-right whitespace-nowrap w-28">Net Profit</th>
+            <th class="text-right whitespace-nowrap w-28" title="ขาดทุนสะสมสูงสุด">Max Drawdown</th>
+            <th class="text-right whitespace-nowrap w-24" title="จำนวน trade ทั้งหมดใน window">Total Trades</th>
+            <th class="text-right whitespace-nowrap w-20">Win Rate</th>
+            <th class="text-right whitespace-nowrap w-24" title="Gross profit ÷ |Gross loss|">Profit Factor</th>
+            <th class="text-center w-24" title="Equity curve">Equity</th>
+          </tr>
+        </thead>
+      `;
+    }
+
+    function showSkeleton() {
+      const skelRow = `
+        <tr>
+          <td class="text-left"><div class="skeleton h-3 w-44"></div></td>
+          <td class="text-right"><div class="skeleton h-3 w-16 ml-auto"></div></td>
+          <td class="text-right"><div class="skeleton h-3 w-16 ml-auto"></div></td>
+          <td class="text-right"><div class="skeleton h-3 w-10 ml-auto"></div></td>
+          <td class="text-right"><div class="skeleton h-3 w-12 ml-auto"></div></td>
+          <td class="text-right"><div class="skeleton h-3 w-10 ml-auto"></div></td>
+          <td class="text-center"><div class="skeleton h-3 w-20 mx-auto"></div></td>
+        </tr>
+      `;
+      el('leaderboard-container').innerHTML = `
+        <table class="data-table">
+          ${leaderboardTableHeader()}
+          <tbody>${skelRow.repeat(5)}</tbody>
+        </table>
+      `;
+    }
+
+    function renderEmpty(message) {
+      el('leaderboard-container').innerHTML = `
+        <div class="px-5 py-14 text-center">
+          <div class="w-12 h-12 mx-auto mb-3 rounded-xl bg-bg-muted flex items-center justify-center">
+            <svg class="w-6 h-6 text-fg-subtle" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/>
+            </svg>
+          </div>
+          <div class="text-fg-muted text-sm">${message}</div>
+          <div class="text-fg-subtle text-[11px] mt-1">หากเพิ่งทริกเกอร์ — ลองรีเฟรชอีกครั้ง</div>
+        </div>
+      `;
+    }
+
+    function renderError(message) {
+      el('leaderboard-container').innerHTML = `
+        <div class="px-5 py-10 text-center">
+          <div class="text-danger text-sm">โหลดไม่สำเร็จ</div>
+          <div class="text-fg-subtle text-xs mt-1">${message}</div>
+        </div>
+      `;
+    }
+
+    // Hold current run set so we can resolve a run by id on row click
+    let currentRuns = [];
+
+    // Tiny HTML escaper for any user/data-derived string going into innerHTML.
+    function escapeHtml(s) {
+      if (s === null || s === undefined) return '';
+      return String(s)
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#39;');
+    }
+
+    function renderLeaderboard(runs) {
+      currentRuns = runs;
+      if (!runs.length) {
+        renderEmpty('ยังไม่มีผล Optimize — รอแอดมินทริกเกอร์ครั้งแรก');
+        return;
+      }
+
+      const rows = runs.map((r, i) => {
+        const code = r.run_code || '—';
+        const runId = r.id || r.run_id || '';
+        const isLeader = i === 0;
+
+        // Stats + sparkline for the active window (1y / 6m). Falls back to
+        // aggregate fields when stats_X are absent (legacy runs).
+        const activeData = pickWindowData(r, leaderboardWindow);
+        const s = activeData.stats || {};
+        const isLegacy = activeData.isLegacy;
+
+        // Sparkline — 80×20 matches bot-trade combo list density
+        const sparkVals = Array.isArray(activeData.sparkline) ? activeData.sparkline : [];
+        const sparkFinal = sparkVals.length ? Number(sparkVals[sparkVals.length - 1]) : null;
+        const windowLabel = leaderboardWindow === '6m' ? '6M' : '1Y';
+        const sparkTitle = sparkVals.length
+          ? `${windowLabel} equity curve · final ${fmtMoney(sparkFinal)}`
+          : 'ไม่มี equity curve (legacy run)';
+        const sparkSvg = renderSparkline(sparkVals, { width: 80, height: 20 });
+
+        // Legacy badge — small inline tag in the Code cell
+        const legacyTag = isLegacy
+          ? `<span class="ml-1.5 align-middle text-[9px] px-1 py-0.5 rounded bg-bg border border-border-subtle text-fg-subtle font-sans font-normal" title="legacy run — ไม่มี trade-level data">legacy</span>`
+          : '';
+
+        const rowCls = isLeader ? 'leader-row' : '';
+
+        // Max Drawdown — always display as positive ($amount); some legacy rows may store negative
+        const ddVal = s.max_drawdown == null ? null : Math.abs(Number(s.max_drawdown));
+
+        return `
+          <tr class="${rowCls} run-row" data-run-id="${escapeHtml(runId)}" data-run-index="${i}">
+            <td class="text-left">
+              <span class="font-mono text-info text-xs font-semibold run-code-cell" title="คลิกเพื่อคัดลอก">${escapeHtml(code)}</span>${legacyTag}
+            </td>
+            <td class="text-right font-mono tabular-nums ${profitClass(s.net_profit)}">${fmtMoney(s.net_profit)}</td>
+            <td class="text-right font-mono tabular-nums ${ddClass(ddVal)}">${fmtMoney(ddVal)}</td>
+            <td class="text-right font-mono tabular-nums text-fg">${fmtInt(s.total_trades)}</td>
+            <td class="text-right font-mono tabular-nums ${winRateClass(s.win_rate)}">${fmtPct(s.win_rate)}</td>
+            <td class="text-right font-mono tabular-nums ${pfClass(s.profit_factor)}">${fmtFactor(s.profit_factor)}</td>
+            <td class="text-center spark-cell" title="${escapeHtml(sparkTitle)}">${sparkSvg}</td>
+          </tr>
+        `;
+      }).join('');
+
+      el('leaderboard-container').innerHTML = `
+        <table class="data-table">
+          ${leaderboardTableHeader()}
+          <tbody>${rows}</tbody>
+        </table>
+      `;
+
+      // click-to-copy code (stop propagation so row-click doesn't fire)
+      el('leaderboard-container').querySelectorAll('.run-code-cell').forEach((node) => {
+        node.addEventListener('click', (e) => {
+          e.stopPropagation();
+          const code = node.textContent.trim();
+          if (code && code !== '—' && !code.startsWith('✓')) {
+            navigator.clipboard?.writeText(code).then(() => {
+              const original = node.textContent;
+              node.textContent = '✓ คัดลอกแล้ว';
+              setTimeout(() => { node.textContent = original; }, 1200);
+            });
+          }
+        });
+      });
+
+      // row click → open detail panel
+      el('leaderboard-container').querySelectorAll('tbody tr.run-row').forEach((tr) => {
+        tr.addEventListener('click', () => {
+          const idx = parseInt(tr.dataset.runIndex, 10);
+          const run = currentRuns[idx];
+          if (run) openDetailPanel(run);
+        });
+      });
+    }
+
+    async function loadLeaderboard() {
+      const symbol = el('filter-symbol').value.trim().toUpperCase();  // '' = ทั้งหมด
+      const timeframe = el('filter-timeframe').value;
+      const meta = el('leaderboard-meta');
+      const refreshIcon = el('filter-refresh-icon');
+      const symbolLabel = symbol || 'ทุก symbols';
+
+      const windowLabel = leaderboardWindow === '6m' ? '6 เดือน' : '1 ปี';
+      refreshIcon.classList.add('spin');
+      meta.textContent = `${symbolLabel} · ${timeframe} · ${windowLabel} · จัดเรียงตาม ${sortLabel(currentSort)}`;
+      showSkeleton();
+
+      try {
+        // ถ้าเลือก "ทั้งหมด" (symbol = '') → ไม่ส่ง symbol param → backend filter ออก
+        let url = `/api/strategies/${STRATEGY_CODE}/runs`
+          + `?timeframe=${encodeURIComponent(timeframe)}`
+          + `&sort=${encodeURIComponent(currentSort)}`
+          + `&limit=50`;
+        if (symbol) {
+          url += `&symbol=${encodeURIComponent(symbol)}`;
+        }
+        const res = await fetch(url);
+        if (!res.ok) throw new Error(`HTTP ${res.status}`);
+        const runs = await res.json();
+        if (!Array.isArray(runs)) {
+          renderError('รูปแบบข้อมูลไม่ถูกต้อง');
+          return;
+        }
+        // Re-sort client-side using the active window's stats so the order
+        // matches the window the user is looking at.
+        const sorted = sortRunsClient(runs, leaderboardWindow, currentSort);
+        renderLeaderboard(sorted);
+        meta.textContent = `${symbolLabel} · ${timeframe} · ${windowLabel} · ${runs.length} runs · จัดเรียงตาม ${sortLabel(currentSort)}`;
+      } catch (err) {
+        renderError(err.message || String(err));
+      } finally {
+        refreshIcon.classList.remove('spin');
+      }
+    }
+
+    function sortLabel(s) {
+      return ({
+        net_profit: 'Net Profit',
+        recovery: 'Profit/DD',
+        sharpe: 'Sharpe',
+        max_dd: 'Max Drawdown (น้อย→มาก)',
+        win_rate: 'Win Rate',
+        profit_factor: 'Profit Factor',
+      })[s] || s;
+    }
+
+    // ─── Filter wire-up ─────────────────────────────────────────────────
+    el('filter-refresh-btn').addEventListener('click', loadLeaderboard);
+    el('filter-symbol').addEventListener('change', loadLeaderboard);
+    el('filter-timeframe').addEventListener('change', loadLeaderboard);
+
+    // ─── Detail panel: state ────────────────────────────────────────────
+    const detail = {
+      run: null,       // currently selected run object from leaderboard
+      trades: null,    // array of trades (or null if legacy/unavailable)
+      window: '1y',    // '1y' | '6m'
+      chart: null,     // Chart.js instance
+    };
+
+    const WINDOW_DAYS = { '1y': 365, '6m': 182 };
+    const WINDOW_LABEL = { '1y': '1 ปี', '6m': '6 เดือน' };
+
+    // ─── Detail panel: open/close ───────────────────────────────────────
+    function openDetailPanel(run) {
+      detail.run = run;
+      detail.trades = null;
+      detail.window = '1y';
+
+      // reset window seg to 1y
+      document.querySelectorAll('#window-seg .seg-btn').forEach(b => {
+        b.classList.toggle('active', b.dataset.window === '1y');
+      });
+
+      el('detail-code').textContent = run.run_code || '—';
+      el('detail-code').title = run.run_code || '';
+      el('detail-placeholder').classList.add('hidden');
+      el('chart-empty').classList.add('hidden');
+      el('chart-loading').classList.remove('hidden');
+
+      // show panel
+      el('detail-backdrop').classList.remove('hidden');
+      el('detail-panel').classList.remove('hidden');
+      document.body.style.overflow = 'hidden';
+
+      fetchTradesAndRender();
+    }
+
+    function closeDetailPanel() {
+      el('detail-backdrop').classList.add('hidden');
+      el('detail-panel').classList.add('hidden');
+      document.body.style.overflow = '';
+      if (detail.chart) {
+        detail.chart.destroy();
+        detail.chart = null;
+      }
+      detail.run = null;
+      detail.trades = null;
+    }
+
+    el('detail-close-btn').addEventListener('click', closeDetailPanel);
+    el('detail-backdrop').addEventListener('click', closeDetailPanel);
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape' && !el('detail-panel').classList.contains('hidden')) {
+        closeDetailPanel();
+      }
+    });
+
+    // ─── Window selector wiring ─────────────────────────────────────────
+    document.querySelectorAll('#window-seg .seg-btn').forEach(btn => {
+      btn.addEventListener('click', () => {
+        btn.parentElement.querySelectorAll('.seg-btn').forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+        detail.window = btn.dataset.window || '1y';
+        if (detail.trades !== null) {
+          renderDetail();
+        } else if (detail.run) {
+          // legacy: still update stats from aggregate (no chart)
+          renderDetail();
+        }
+      });
+    });
+
+    // ─── Fetch trades ───────────────────────────────────────────────────
+    async function fetchTradesAndRender() {
+      const run = detail.run;
+      const runId = run?.id || run?.run_id;
+      if (!runId) {
+        detail.trades = null;
+        el('chart-loading').classList.add('hidden');
+        renderDetail();
+        return;
+      }
+      try {
+        const res = await fetch(
+          `/api/strategies/${STRATEGY_CODE}/runs/${encodeURIComponent(runId)}/trades`,
+          { headers: { 'Authorization': `Bearer ${token}` } }
+        );
+        if (!res.ok) throw new Error(`HTTP ${res.status}`);
+        const data = await res.json();
+        detail.trades = Array.isArray(data?.trades) ? data.trades : null;
+      } catch (err) {
+        console.warn('fetch trades failed:', err);
+        detail.trades = null;
+      } finally {
+        el('chart-loading').classList.add('hidden');
+        renderDetail();
+      }
+    }
+
+    // ─── Filter trades by window ────────────────────────────────────────
+    function parseUtc(iso) {
+      if (!iso) return null;
+      const norm = /[zZ]|[+-]\d{2}:?\d{2}$/.test(iso) ? iso : iso + 'Z';
+      const t = new Date(norm);
+      return isNaN(t.getTime()) ? null : t;
+    }
+
+    function filterTradesByWindow(trades, windowKey) {
+      if (!Array.isArray(trades)) return [];
+      const days = WINDOW_DAYS[windowKey] || 365;
+      const cutoff = Date.now() - days * 86400 * 1000;
+      return trades
+        .map(t => ({ ...t, _closeAt: parseUtc(t.close_time) }))
+        .filter(t => t._closeAt && t._closeAt.getTime() >= cutoff)
+        .sort((a, b) => a._closeAt - b._closeAt);
+    }
+
+    // Chart-only filter: plot เฉพาะ trade ที่ปิดจริงด้วย TP หรือ SL
+    // (eos = end-of-simulation, position ยังเปิดอยู่ตอนหมดข้อมูล — ไม่นับ)
+    // Stats grid ยังคงคำนวณจากทุก trade ตามเดิม
+    function filterClosedByTpSl(trades) {
+      if (!Array.isArray(trades)) return [];
+      return trades.filter(t => {
+        if (!t.close_time || t.close_price === null || t.close_price === undefined) return false;
+        const reason = (t.close_reason || '').toLowerCase();
+        return reason === 'tp' || reason === 'sl';
+      });
+    }
+
+    // ─── Compute stats from trades ──────────────────────────────────────
+    function computeStats(trades) {
+      const total = trades.length;
+      let wins = 0, losses = 0, grossProfit = 0, grossLoss = 0, net = 0;
+      let peak = 0, maxDD = 0, cum = 0;
+      for (const t of trades) {
+        const p = Number(t.profit) || 0;
+        net += p;
+        cum += p;
+        if (p > 0) { wins++; grossProfit += p; }
+        else if (p < 0) { losses++; grossLoss += -p; }
+        if (cum > peak) peak = cum;
+        const dd = peak - cum;
+        if (dd > maxDD) maxDD = dd;
+      }
+      const winRate = total > 0 ? wins / total : 0;
+      const profitFactor = grossLoss > 0 ? grossProfit / grossLoss : (grossProfit > 0 ? Infinity : 0);
+      const recovery = maxDD > 0 ? net / maxDD : (net > 0 ? Infinity : 0);
+      return {
+        total, wins, losses,
+        net_profit: net,
+        win_rate: winRate,
+        max_drawdown: maxDD,
+        profit_factor: profitFactor,
+        recovery_factor: recovery,
+      };
+    }
+
+    // ─── Render stats grid ──────────────────────────────────────────────
+    // Note: fmtFactor is defined at module scope (used by leaderboard too)
+
+    function renderStats(stats, hasTrades) {
+      const tiles = [
+        {
+          label: 'Total Trades',
+          value: fmtInt(stats.total),
+          className: 'text-fg',
+        },
+        {
+          label: 'Net Profit',
+          value: fmtMoney(stats.net_profit),
+          className: profitClass(stats.net_profit),
+        },
+        {
+          label: 'Win Rate',
+          value: fmtPct(stats.win_rate),
+          className: 'text-fg',
+        },
+        {
+          label: 'Wins / Losses',
+          value: `${fmtInt(stats.wins)} / ${fmtInt(stats.losses)}`,
+          className: 'text-fg-muted',
+        },
+        {
+          label: 'Max Drawdown',
+          value: fmtMoney(stats.max_drawdown),
+          className: ddClass(stats.max_drawdown),
+        },
+        {
+          label: 'Profit Factor',
+          value: fmtFactor(stats.profit_factor),
+          className: stats.profit_factor >= 1.5 ? 'text-accent' : (stats.profit_factor >= 1 ? 'text-fg' : 'text-danger'),
+        },
+      ];
+
+      el('detail-stats').innerHTML = tiles.map(t => `
+        <div class="metric-tile">
+          <div class="metric-label">${t.label}</div>
+          <div class="metric-value ${t.className}">${t.value}</div>
+        </div>
+      `).join('');
+
+      if (!hasTrades) {
+        // dim stats slightly when based on aggregate (legacy)
+        el('detail-stats').classList.add('opacity-75');
+      } else {
+        el('detail-stats').classList.remove('opacity-75');
+      }
+    }
+
+    // ─── Render equity curve ────────────────────────────────────────────
+    // NOTE: คาดหวังว่า `trades` ที่ส่งเข้ามาผ่าน filter TP/SL แล้ว
+    // (filter location อยู่ใน renderDetail → filterClosedByTpSl)
+    function renderEquityCurve(trades) {
+      const canvas = el('equity-chart');
+      const ctx = canvas.getContext('2d');
+
+      if (detail.chart) {
+        detail.chart.destroy();
+        detail.chart = null;
+      }
+
+      if (!trades.length) {
+        el('chart-empty').classList.remove('hidden');
+        return;
+      }
+      el('chart-empty').classList.add('hidden');
+
+      // build cumulative series + per-point metadata (reason / pnl / time)
+      // ใช้ design tokens: TP = accent (#10B981), SL = danger (#F87171)
+      const TP_COLOR = '#10B981';
+      const SL_COLOR = '#F87171';
+      let cum = 0;
+      const points = [];
+      const pointColors = [];
+      const pointMeta = []; // { reason, pnl, closeAt } per point
+      for (const t of trades) {
+        const p = Number(t.profit) || 0;
+        cum += p;
+        const reason = (t.close_reason || '').toLowerCase();
+        points.push({ x: t._closeAt.getTime(), y: Number(cum.toFixed(2)) });
+        pointColors.push(reason === 'sl' ? SL_COLOR : TP_COLOR);
+        pointMeta.push({ reason, pnl: p, closeAt: t._closeAt });
+      }
+
+      // line color = green if final net > 0 else red
+      const finalNet = cum;
+      const accentRgb = finalNet >= 0 ? '16, 185, 129' : '248, 113, 113';
+
+      const gradient = ctx.createLinearGradient(0, 0, 0, 260);
+      gradient.addColorStop(0, `rgba(${accentRgb}, 0.22)`);
+      gradient.addColorStop(1, `rgba(${accentRgb}, 0.00)`);
+
+      detail.chart = new Chart(ctx, {
+        type: 'line',
+        data: {
+          datasets: [{
+            label: 'Cumulative P/L',
+            data: points,
+            parsing: false,
+            borderColor: `rgba(${accentRgb}, 1)`,
+            backgroundColor: gradient,
+            borderWidth: 1.5,
+            // per-point color (TP green / SL red) — hide dots when chart is dense
+            pointBackgroundColor: pointColors,
+            pointBorderColor: pointColors,
+            pointRadius: points.length > 120 ? 0 : 2.5,
+            pointHoverRadius: 5,
+            pointHoverBorderWidth: 2,
+            pointHoverBackgroundColor: pointColors,
+            tension: 0.2,
+            fill: true,
+          }],
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          interaction: { mode: 'nearest', intersect: false, axis: 'x' },
+          plugins: {
+            legend: { display: false },
+            tooltip: {
+              backgroundColor: 'rgba(26,24,21,0.95)',
+              borderColor: 'rgba(255,255,255,0.12)',
+              borderWidth: 1,
+              titleColor: '#F6F2EC',
+              bodyColor: '#C8C1B5',
+              titleFont: { family: "'JetBrains Mono', monospace", size: 11 },
+              bodyFont: { family: "'JetBrains Mono', monospace", size: 11 },
+              padding: 8,
+              displayColors: false,
+              callbacks: {
+                // title = close reason badge + datetime
+                // body  = signed P/L of the trade (not cumulative)
+                title: (items) => {
+                  const idx = items[0].dataIndex;
+                  const meta = pointMeta[idx];
+                  if (!meta) return '';
+                  const tag = meta.reason === 'sl' ? 'SL' : 'TP';
+                  const d = meta.closeAt instanceof Date ? meta.closeAt : new Date(items[0].parsed.x);
+                  const dateStr = d.toLocaleDateString('th-TH', { year: 'numeric', month: 'short', day: 'numeric' });
+                  const timeStr = d.toLocaleTimeString('th-TH', { hour: '2-digit', minute: '2-digit', hour12: false });
+                  return `${tag} @ ${dateStr} ${timeStr}`;
+                },
+                label: (ctx) => {
+                  const meta = pointMeta[ctx.dataIndex];
+                  if (!meta) return fmtMoney(ctx.parsed.y);
+                  const sign = meta.pnl >= 0 ? '+' : '';
+                  return `${sign}${fmtMoney(meta.pnl)}  ·  cum ${fmtMoney(ctx.parsed.y)}`;
+                },
+              },
+            },
+            annotation: undefined,
+          },
+          scales: {
+            x: {
+              type: 'time',
+              time: {
+                unit: trades.length > 90 ? 'month' : 'week',
+                tooltipFormat: 'PP',
+                displayFormats: { week: 'MMM d', month: 'MMM yy', day: 'MMM d' },
+              },
+              grid: { color: 'rgba(255,255,255,0.04)' },
+              ticks: { color: '#908A7E', font: { family: "'JetBrains Mono', monospace", size: 10 }, maxRotation: 0 },
+            },
+            y: {
+              grid: { color: 'rgba(255,255,255,0.04)' },
+              ticks: {
+                color: '#908A7E',
+                font: { family: "'JetBrains Mono', monospace", size: 10 },
+                callback: (v) => fmtMoney(v),
+              },
+            },
+          },
+        },
+      });
+    }
+
+    // ─── Main render orchestrator for detail panel ──────────────────────
+    function renderDetail() {
+      const run = detail.run;
+      if (!run) return;
+
+      const hasTrades = Array.isArray(detail.trades);
+      // Order: window filter → (stats use this) → TP/SL filter → (chart uses this)
+      const filtered = hasTrades ? filterTradesByWindow(detail.trades, detail.window) : [];
+      const chartTrades = hasTrades ? filterClosedByTpSl(filtered) : [];
+
+      // window meta + chart meta
+      el('detail-window-meta').textContent = hasTrades
+        ? `${filtered.length} / ${detail.trades.length} trades · ${WINDOW_LABEL[detail.window]}`
+        : `${WINDOW_LABEL[detail.window]} · legacy run`;
+
+      // chart-meta: บอกจำนวน TP/SL ที่ plot จริง (อาจน้อยกว่า trades ในช่วง)
+      if (hasTrades) {
+        const tpCount = chartTrades.filter(t => (t.close_reason || '').toLowerCase() === 'tp').length;
+        const slCount = chartTrades.length - tpCount;
+        el('chart-meta').textContent = chartTrades.length
+          ? `${chartTrades.length} closed · TP ${tpCount} / SL ${slCount}`
+          : 'ไม่มี trade ที่ปิดด้วย TP/SL ในช่วงนี้';
+      } else {
+        el('chart-meta').textContent = '—';
+      }
+
+      // stats: from trades if available, otherwise fallback to aggregate
+      // NOTE: stats ใช้ `filtered` (รวม eos) ตามเดิม — ไม่ใช้ chartTrades
+      if (hasTrades) {
+        const stats = computeStats(filtered);
+        renderStats(stats, true);
+        el('detail-placeholder').classList.add('hidden');
+        el('chart-wrap').classList.remove('hidden');
+        renderEquityCurve(chartTrades);
+      } else {
+        // legacy fallback — show aggregate stats from list_runs response
+        const aggStats = {
+          total: run.total_trades || 0,
+          wins: Math.round((run.total_trades || 0) * (run.win_rate || 0)),
+          losses: (run.total_trades || 0) - Math.round((run.total_trades || 0) * (run.win_rate || 0)),
+          net_profit: run.net_profit || 0,
+          win_rate: run.win_rate || 0,
+          max_drawdown: run.max_drawdown || 0,
+          profit_factor: run.profit_factor || 0,
+          recovery_factor: run.recovery_factor || 0,
+        };
+        renderStats(aggStats, false);
+        el('detail-placeholder').classList.remove('hidden');
+        el('detail-placeholder-msg').textContent = 'ยังไม่มี trade data — re-sweep เพื่อ generate equity curve';
+        el('chart-wrap').classList.add('hidden');
+        if (detail.chart) { detail.chart.destroy(); detail.chart = null; }
+      }
+    }
+
+    // ─── Initial load ───────────────────────────────────────────────────
+    loadLeaderboard();
+  </script>
+</body>
+</html>

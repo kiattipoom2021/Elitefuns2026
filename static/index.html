@@ -1,0 +1,510 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>ELITEFUNS — Make Every Fund Count</title>
+<link rel="stylesheet" href="design/styles.css">
+<style>
+  html, body { margin: 0; }
+  body { background: var(--surface-canvas); color: var(--text-primary); overflow-x: hidden; }
+  .page { max-width: 1280px; margin: 0 auto; padding: 0 24px; }
+  a { color: inherit; }
+
+  /* ============ NAV ============ */
+  .navwrap { position: relative; z-index: 40; }
+  .nav {
+    display: flex; align-items: center; gap: 28px;
+    padding: 20px 0;
+  }
+  .brand { display: inline-flex; align-items: center; gap: 11px; text-decoration: none; flex: none; }
+  .brand img { height: 26px; width: auto; display: block; }
+  .brand .word { font-family: var(--font-display); font-weight: 700; font-size: 18px; letter-spacing: 1px; text-transform: uppercase; color: var(--text-primary); line-height: 1; }
+  .nav .links { display: flex; align-items: center; gap: 22px; margin-left: 10px; }
+  .nav .links a { text-decoration: none; color: var(--text-secondary); font-size: 15px; font-weight: 500; letter-spacing: -0.2px; display: inline-flex; align-items: center; gap: 6px; white-space: nowrap; }
+  .nav .links a:hover { color: var(--text-primary); }
+  .nav .links .caret { width: 14px; height: 14px; opacity: .6; }
+  .nav .right { margin-left: auto; display: flex; align-items: center; gap: 10px; }
+  .nav .right #nav-cta { display: flex; align-items: center; gap: 10px; }
+  .nav .right .login { color: var(--text-secondary); text-decoration: none; font-size: 15px; font-weight: 500; padding: 0 8px; white-space: nowrap; }
+  .nav .right .login:hover { color: var(--text-primary); }
+  .pill-prod {
+    display: inline-flex; align-items: center; gap: 8px;
+    background: var(--surface-raised); border: 1px solid var(--border-soft);
+    border-radius: var(--radius-pill); padding: 8px 14px;
+    font-size: 15px; font-weight: 500; color: var(--text-primary); cursor: pointer;
+  }
+
+  /* ============ HERO ============ */
+  .hero { position: relative; min-height: 760px; display: flex; align-items: center; }
+  .hero-bg { position: absolute; inset: 0; overflow: hidden; z-index: 0; }
+  .hero-bg .scrim {
+    position: absolute; inset: 0; z-index: 1;
+    background:
+      linear-gradient(90deg, rgba(10,9,8,0.55) 0%, rgba(10,9,8,0.30) 40%, rgba(10,9,8,0.72) 100%),
+      linear-gradient(180deg, rgba(10,9,8,0.45) 0%, transparent 30%, rgba(10,9,8,0.65) 100%);
+  }
+  /* primary warm glow — slow breathing pulse */
+  .hero-bg .glow {
+    position: absolute; width: 900px; height: 900px; left: -120px; top: 50%;
+    transform: translate(0, -50%) scale(1);
+    background: radial-gradient(circle, var(--glow) 0%, transparent 62%);
+    pointer-events: none;
+    animation: glowPulse 9s var(--ease-soft, ease-in-out) infinite;
+  }
+  @keyframes glowPulse {
+    0%, 100% { transform: translate(0, -50%) scale(1);    opacity: 0.9; }
+    50%      { transform: translate(0, -50%) scale(1.08); opacity: 1;   }
+  }
+  /* secondary offset glow — gentle drift on the opposite side */
+  .hero-bg .glow-drift {
+    position: absolute; width: 720px; height: 720px; right: -180px; top: 30%;
+    background: radial-gradient(circle, rgba(249, 168, 38, 0.10) 0%, transparent 62%);
+    pointer-events: none;
+    filter: blur(4px);
+    animation: glowDrift 14s ease-in-out infinite;
+  }
+  @keyframes glowDrift {
+    0%, 100% { transform: translate(0, 0)      scale(1);    opacity: 0.55; }
+    50%      { transform: translate(-40px, 30px) scale(1.06); opacity: 0.85; }
+  }
+  .hero-bg .floor {
+    position: absolute; inset: 0;
+    background:
+      radial-gradient(120% 80% at 20% 110%, rgba(249,168,38,0.06), transparent 60%),
+      linear-gradient(180deg, transparent 60%, rgba(0,0,0,0.4) 100%);
+  }
+  /* ambient floating particles — sparse, slow, on-brand amber */
+  .hero-bg .particles {
+    position: absolute; inset: 0; pointer-events: none; z-index: 1;
+  }
+  .hero-bg .particles span {
+    position: absolute;
+    width: 4px; height: 4px; border-radius: 50%;
+    background: radial-gradient(circle, rgba(249,168,38,0.55) 0%, rgba(249,168,38,0) 70%);
+    opacity: 0;
+    animation: floatUp linear infinite;
+  }
+  .hero-bg .particles span:nth-child(1)  { left: 12%; bottom: -10px; animation-duration: 18s; animation-delay:  0s; }
+  .hero-bg .particles span:nth-child(2)  { left: 22%; bottom: -10px; animation-duration: 24s; animation-delay:  3s; width: 3px; height: 3px; }
+  .hero-bg .particles span:nth-child(3)  { left: 34%; bottom: -10px; animation-duration: 21s; animation-delay:  7s; }
+  .hero-bg .particles span:nth-child(4)  { left: 47%; bottom: -10px; animation-duration: 27s; animation-delay:  1s; width: 5px; height: 5px; }
+  .hero-bg .particles span:nth-child(5)  { left: 58%; bottom: -10px; animation-duration: 20s; animation-delay:  9s; }
+  .hero-bg .particles span:nth-child(6)  { left: 67%; bottom: -10px; animation-duration: 25s; animation-delay:  4s; width: 3px; height: 3px; }
+  .hero-bg .particles span:nth-child(7)  { left: 78%; bottom: -10px; animation-duration: 22s; animation-delay: 11s; }
+  .hero-bg .particles span:nth-child(8)  { left: 88%; bottom: -10px; animation-duration: 19s; animation-delay:  6s; width: 4px; height: 4px; }
+  @keyframes floatUp {
+    0%   { transform: translate(0, 0)        scale(0.6); opacity: 0; }
+    12%  { opacity: 0.7; }
+    50%  { transform: translate(-14px, -340px) scale(1); opacity: 0.55; }
+    88%  { opacity: 0.35; }
+    100% { transform: translate(8px, -720px) scale(0.7); opacity: 0; }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .hero-bg .glow,
+    .hero-bg .glow-drift,
+    .hero-bg .particles span { animation: none; }
+  }
+  .hero .page { position: relative; z-index: 2; display: flex; justify-content: flex-end; width: 100%; align-items: center; min-height: 620px; }
+
+  .hero-copy { padding: 40px 0; max-width: 720px; text-align: right; }
+  .hero-copy .eyebrow { margin-bottom: 22px; }
+  .hero-copy h1 {
+    font-family: var(--font-display); font-weight: 500;
+    font-size: clamp(46px, 6.2vw, 84px); line-height: 0.98; letter-spacing: -0.03em;
+    margin: 0; color: var(--text-primary);
+  }
+  .hero-copy h1 .amber { color: var(--accent); }
+  .hero-copy p { margin: 26px 0 0 auto; max-width: 440px; color: var(--text-secondary); font-size: 18px; line-height: 1.5; font-weight: 450; }
+  .hero-cta { display: flex; gap: 14px; margin-top: 38px; flex-wrap: wrap; justify-content: flex-end; }
+
+  /* ============ COINS ============ */
+  .coins { position: relative; height: 620px; perspective: 1400px; transform-style: preserve-3d; }
+  .coin { position: absolute; transform-style: preserve-3d; will-change: transform; }
+  .face {
+    border-radius: 50%;
+    background:
+      radial-gradient(circle at 36% 30%, var(--metal-hi) 0%, var(--metal-1) 26%, var(--metal-2) 54%, var(--metal-3) 80%, var(--metal-lo) 100%);
+    box-shadow:
+      0 40px 70px rgba(0,0,0,0.55),
+      inset 0 0 0 3px rgba(255,255,255,0.14),
+      inset 0 -10px 24px rgba(0,0,0,0.4),
+      inset 0 8px 18px rgba(255,255,255,0.22);
+    position: relative;
+  }
+  .face::before {
+    content: ""; position: absolute; inset: 16%;
+    border-radius: 50%;
+    box-shadow: inset 0 0 0 2px rgba(94,55,4,0.45), inset 0 2px 6px rgba(0,0,0,0.3);
+    background: radial-gradient(circle at 40% 34%, rgba(255,255,255,0.28), transparent 55%);
+  }
+  .face::after {
+    content: ""; position: absolute; left: 50%; top: 50%;
+    width: 34%; height: 34%; transform: translate(-50%,-50%);
+    background: var(--metal-3);
+    clip-path: polygon(50% 0%, 61% 35%, 98% 35%, 68% 57%, 79% 91%, 50% 70%, 21% 91%, 32% 57%, 2% 35%, 39% 35%);
+    opacity: 0.55;
+    filter: drop-shadow(0 1px 1px rgba(0,0,0,0.4));
+  }
+  .edge {
+    border-radius: 50% / 50%;
+    background: linear-gradient(90deg, var(--metal-lo) 0%, var(--metal-3) 16%, var(--metal-1) 42%, var(--metal-hi) 50%, var(--metal-1) 58%, var(--metal-3) 84%, var(--metal-lo) 100%);
+    box-shadow: 0 36px 60px rgba(0,0,0,0.5), inset 0 0 0 1px rgba(255,255,255,0.18);
+  }
+
+  /* ============ HERO COIN FIELD ============ */
+  .hero-coins {
+    position: absolute; inset: 0;
+    z-index: 1;
+    pointer-events: none;
+    overflow: hidden;
+    perspective: 1600px;
+    transform-style: preserve-3d;
+  }
+  .hero-coins .coin {
+    animation: coinFloat var(--float-dur, 14s) ease-in-out infinite;
+    animation-delay: var(--float-delay, 0s);
+  }
+  .hero-coins .coin .face {
+    width: 100%; height: 100%;
+    transform-style: preserve-3d;
+    backface-visibility: visible;
+    animation: coinSpin var(--spin-dur, 12s) linear infinite;
+    animation-delay: var(--spin-delay, 0s);
+  }
+  /* placements — all on the left half, varied depth via translateZ */
+  .hero-coins .c1 {
+    width: 120px; height: 120px;
+    left: 6%;  top: 18%;
+    --spin-dur: 11s;  --float-dur: 13s;
+    --spin-delay: 0s; --float-delay: 0s;
+    filter: drop-shadow(0 30px 40px rgba(0,0,0,0.5));
+  }
+  .hero-coins .c2 {
+    width: 90px;  height: 90px;
+    left: 24%; top: 62%;
+    --spin-dur: 8s;   --float-dur: 11s;
+    --spin-delay: -2s; --float-delay: -3s;
+    transform: rotateZ(8deg);
+    opacity: 0.92;
+    filter: drop-shadow(0 22px 30px rgba(0,0,0,0.5));
+  }
+  .hero-coins .c3 {
+    width: 160px; height: 160px;
+    left: 14%; top: 36%;
+    --spin-dur: 17s;  --float-dur: 16s;
+    --spin-delay: -5s; --float-delay: -2s;
+    transform: rotateX(14deg);
+    filter: drop-shadow(0 44px 56px rgba(0,0,0,0.55));
+  }
+  .hero-coins .c4 {
+    width: 70px;  height: 70px;
+    left: 38%; top: 14%;
+    --spin-dur: 14s;  --float-dur: 10s;
+    --spin-delay: -1s; --float-delay: -6s;
+    opacity: 0.85;
+    filter: drop-shadow(0 18px 26px rgba(0,0,0,0.5));
+  }
+  .hero-coins .c5 {
+    width: 110px; height: 110px;
+    left: 32%; top: 78%;
+    --spin-dur: 20s;  --float-dur: 18s;
+    --spin-delay: -7s; --float-delay: -4s;
+    transform: rotateX(-10deg) rotateZ(-6deg);
+    opacity: 0.88;
+    filter: drop-shadow(0 28px 36px rgba(0,0,0,0.5));
+  }
+  @keyframes coinSpin {
+    from { transform: rotateY(0deg);   }
+    to   { transform: rotateY(360deg); }
+  }
+  @keyframes coinFloat {
+    0%,100% { translate: 0 0;    }
+    50%     { translate: 0 -22px; }
+  }
+  @media (max-width: 920px) {
+    .hero-coins .c3, .hero-coins .c5 { display: none; }
+    .hero-coins .c1 { width: 88px; height: 88px; }
+    .hero-coins .c2 { width: 68px; height: 68px; }
+    .hero-coins .c4 { width: 54px; height: 54px; }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .hero-coins .coin,
+    .hero-coins .coin .face { animation: none; }
+  }
+
+  /* ============ TRUST STRIP ============ */
+  .trust { border-top: 1px solid var(--border-soft); border-bottom: 1px solid var(--border-soft); }
+  .trust .page { display: flex; align-items: center; justify-content: space-between; gap: 30px; padding: 30px 28px; flex-wrap: wrap; }
+  .trust .lab { color: var(--text-muted); font-size: 13px; font-weight: 700; letter-spacing: 0.6px; text-transform: uppercase; }
+  .trust .marks { display: flex; gap: 44px; align-items: center; opacity: 0.7; flex-wrap: wrap; }
+  .trust .marks span { font-family: var(--font-display); font-weight: 700; font-size: 20px; letter-spacing: 0.5px; color: var(--text-secondary); }
+
+  /* ============ FEATURES ============ */
+  .features { padding: 120px 0 40px; }
+  .features .head { max-width: 640px; margin-bottom: 56px; }
+  .features .head h2 { font-family: var(--font-display); font-weight: 500; font-size: clamp(34px,4vw,52px); line-height: 1.04; letter-spacing: -0.02em; margin: 18px 0 0; }
+  .features .head p { color: var(--text-secondary); font-size: 18px; line-height: 1.5; margin: 20px 0 0; font-weight: 450; }
+  .grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px; }
+  .fcard {
+    background: var(--surface-lifted);
+    border: 1px solid var(--border-soft);
+    border-radius: 28px;
+    padding: 34px 30px 36px;
+    position: relative;
+    overflow: hidden;
+    transition: border-color var(--dur-base) var(--ease-soft), transform var(--dur-base) var(--ease-soft);
+  }
+  .fcard:hover { border-color: var(--border-on-ink); transform: translateY(-3px); }
+  .fcard .ic {
+    width: 52px; height: 52px; border-radius: 14px; display: flex; align-items: center; justify-content: center;
+    background: var(--surface-tint); color: var(--accent); font-size: 24px; margin-bottom: 26px;
+    border: 1px solid rgba(249,168,38,0.25);
+  }
+  .fcard h3 { font-family: var(--font-display); font-weight: 500; font-size: 23px; letter-spacing: -0.02em; margin: 0 0 10px; }
+  .fcard p { color: var(--text-secondary); font-size: 16px; line-height: 1.5; margin: 0; font-weight: 450; }
+  .fcard .glowdot { position: absolute; right: -40px; top: -40px; width: 140px; height: 140px; border-radius: 50%; background: radial-gradient(circle, rgba(249,168,38,0.12), transparent 65%); }
+
+  /* ============ CTA BAND ============ */
+  .ctaband { padding: 120px 0; }
+  .ctaband .inner {
+    position: relative; overflow: hidden;
+    background: linear-gradient(135deg, #1E1A13 0%, #14110D 60%);
+    border: 1px solid var(--border-soft);
+    border-radius: 40px; padding: 80px 64px; text-align: center;
+  }
+  .ctaband .inner::before { content:""; position:absolute; left:50%; top:-30%; width:600px; height:600px; transform:translateX(-50%); background: radial-gradient(circle, var(--glow), transparent 60%); pointer-events:none; }
+  .ctaband h2 { position: relative; font-family: var(--font-display); font-weight: 500; font-size: clamp(34px,4.4vw,60px); letter-spacing: -0.02em; line-height: 1.02; margin: 0; }
+  .ctaband p { position: relative; color: var(--text-secondary); font-size: 18px; margin: 20px auto 0; max-width: 460px; font-weight: 450; }
+  .ctaband .row { position: relative; display: flex; justify-content: center; gap: 14px; margin-top: 38px; flex-wrap: wrap; }
+
+  /* ============ FOOTER ============ */
+  footer { background: var(--surface-ink); border-top: 1px solid var(--border-soft); }
+  .foot { display: grid; grid-template-columns: 1.4fr 1fr 1fr 1fr; gap: 40px; padding: 80px 28px 56px; }
+  .foot .lead .brand { margin-bottom: 18px; }
+  .foot .lead .brand img { height: 34px; }
+  .foot .lead .brand .word { font-size: 22px; }
+  .foot .lead p { color: var(--text-muted); font-size: 15px; line-height: 1.5; max-width: 280px; margin: 0; }
+  .foot .col h4 { font-size: 12px; font-weight: 700; letter-spacing: 0.5px; text-transform: uppercase; color: var(--text-whisper); margin: 0 0 18px; }
+  .foot .col a { display: block; color: var(--text-secondary); text-decoration: none; font-size: 15px; font-weight: 450; margin-bottom: 12px; }
+  .foot .col a:hover { color: var(--accent); }
+  .footbar { border-top: 1px solid var(--divider-on-ink); }
+  .footbar .page { display: flex; justify-content: space-between; padding: 22px 28px 44px; font-size: 13px; color: var(--text-muted); flex-wrap: wrap; gap: 12px; }
+
+  @media (max-width: 920px) {
+    .hero .page { grid-template-columns: 1fr; }
+    .coins { height: 420px; order: 2; }
+    .grid { grid-template-columns: 1fr; }
+    .foot { grid-template-columns: 1fr 1fr; }
+    .nav .links { display: none; }
+  }
+
+  /* ============ REQUEST MODAL ============ */
+  .modal {
+    position: fixed; inset: 0; z-index: 200;
+    display: none; align-items: flex-start; justify-content: center;
+    padding: 40px 20px;
+    background: rgba(8, 7, 6, 0.72);
+    -webkit-backdrop-filter: blur(8px); backdrop-filter: blur(8px);
+    overflow-y: auto;
+  }
+  .modal.open { display: flex; }
+  .modal__panel {
+    position: relative;
+    width: min(720px, 100%);
+    margin: auto;
+    border-radius: 28px;
+    overflow: hidden;
+    box-shadow: 0 40px 120px rgba(0,0,0,0.6);
+    animation: modalIn .28s cubic-bezier(.22,.61,.36,1) both;
+  }
+  @keyframes modalIn { from { opacity: 0; transform: translateY(16px) scale(.98); } to { opacity: 1; transform: none; } }
+  .modal__panel iframe { display: block; width: 100%; height: min(86vh, 1320px); border: 0; background: var(--surface-canvas); }
+  .modal__close {
+    position: absolute; top: 16px; right: 16px; z-index: 2;
+    width: 40px; height: 40px; border-radius: 50%;
+    border: 1.5px solid var(--border-ink);
+    background: rgba(20, 18, 15, 0.72);
+    color: var(--text-primary);
+    -webkit-backdrop-filter: blur(6px); backdrop-filter: blur(6px);
+    display: flex; align-items: center; justify-content: center;
+    cursor: pointer; transition: background .18s ease, transform .18s ease;
+  }
+  .modal__close:hover { background: rgba(40, 36, 30, 0.9); transform: rotate(90deg); }
+  .modal__close svg { width: 18px; height: 18px; }</style>
+</head>
+<body class="theme-dark">
+
+  <!-- REQUEST MODAL -->
+  <div class="modal" id="req-modal" aria-hidden="true" role="dialog" aria-modal="true" aria-label="Request indicator access">
+    <div class="modal__panel">
+      <button class="modal__close" id="req-close" aria-label="Close">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M18 6L6 18M6 6l12 12"/></svg>
+      </button>
+      <iframe id="req-frame" title="Request indicator access" loading="lazy"></iframe>
+    </div>
+  </div>
+
+
+  <!-- NAV -->
+  <div class="page">
+    <div class="navwrap">
+      <nav class="nav">
+        <a class="brand" href="#"><img src="design/logo.png" alt="ELITEFUNS"><span class="word">Elitefuns</span></a>
+        <div class="right">
+          <div id="nav-cta"></div>
+        </div>
+      </nav>
+    </div>
+  </div>
+
+  <!-- HERO -->
+  <section class="hero">
+    <div class="hero-bg">
+      <div class="scrim"></div>
+      <div class="glow"></div>
+      <div class="glow-drift"></div>
+      <div class="floor"></div>
+      <div class="particles" aria-hidden="true">
+        <span></span><span></span><span></span><span></span><span></span>
+      </div>
+    </div>
+    <div class="hero-coins" aria-hidden="true">
+      <div class="coin c1"><div class="face"></div></div>
+      <div class="coin c2"><div class="face"></div></div>
+      <div class="coin c3"><div class="face"></div></div>
+      <div class="coin c4"><div class="face"></div></div>
+      <div class="coin c5"><div class="face"></div></div>
+    </div>
+    <div class="page">
+      <div class="hero-copy">
+        <span class="dmd-eyebrow eyebrow" style="color:var(--text-secondary)">Payments &amp; net terms</span>
+        <h1 data-comment-anchor="a730fe43f1-h1">Make Every<br><span class="amber">Fund</span> Count</h1>
+        <p>Run payments, extend net terms, and automate collections compliance — built for funds that move serious money.</p>
+        <div class="hero-cta" id="hero-cta"></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- TRUST -->
+  <div class="trust">
+    <div class="page">
+      <span class="lab">Trusted by elite funds worldwide</span>
+      <div class="marks">
+        <span>NORTHWIND</span><span>VANTA</span><span>MERIDIAN</span><span>ALTUS</span><span>KEYSTONE</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- FEATURES -->
+  <div class="page">
+    <section class="features">
+      <div class="head">
+        <span class="dmd-eyebrow" style="color:var(--text-secondary)">Why ELITEFUNS</span>
+        <h2>Everything your treasury needs, in one warm dashboard</h2>
+        <p>Move money, extend terms, and stay compliant without stitching together five tools and a spreadsheet.</p>
+      </div>
+      <div class="grid">
+        <div class="fcard"><div class="glowdot"></div>
+          <div class="ic">&#9650;</div>
+          <h3>Instant payments</h3>
+          <p>Send and settle across rails in seconds, with full visibility on every cent in motion.</p>
+        </div>
+        <div class="fcard"><div class="glowdot"></div>
+          <div class="ic">&#9671;</div>
+          <h3>Flexible net terms</h3>
+          <p>Extend net‑30 to net‑90 to your customers while we front the cash and carry the risk.</p>
+        </div>
+        <div class="fcard"><div class="glowdot"></div>
+          <div class="ic">&#9678;</div>
+          <h3>Automated compliance</h3>
+          <p>Collections, reconciliation, and audit trails handled — so your team never chases an invoice again.</p>
+        </div>
+      </div>
+    </section>
+  </div>
+
+  <!-- CTA BAND -->
+  <div class="page">
+    <section class="ctaband">
+      <div class="inner">
+        <h2>Ready to make every fund count?</h2>
+        <p>Join the funds moving billions with a warmer, faster treasury stack.</p>
+        <div class="row" id="band-cta"></div>
+      </div>
+    </section>
+  </div>
+
+  <!-- FOOTER -->
+  <footer>
+    <div class="page">
+      <div class="foot">
+        <div class="lead">
+          <a class="brand" href="#"><img src="design/logo.png" alt="ELITEFUNS"><span class="word">Elitefuns</span></a>
+          <p>Moving money for the funds building what's next.</p>
+        </div>
+        <div class="col"><h4>Product</h4><a href="#">Payments</a><a href="#">Net terms</a><a href="#">Compliance</a><a href="#">Pricing</a></div>
+        <div class="col"><h4>Company</h4><a href="#">About</a><a href="#">Newsroom</a><a href="#">Careers</a><a href="#">Contact</a></div>
+        <div class="col"><h4>Resources</h4><a href="#">Docs</a><a href="#">For Accountants</a><a href="#">Security</a><a href="#">Status</a></div>
+      </div>
+    </div>
+    <div class="footbar">
+      <div class="page">
+        <span>© 2025 ELITEFUNS. A designMD design-system demonstration.</span>
+        <span>Privacy · Terms · Cookies</span>
+      </div>
+    </div>
+  </footer>
+
+  <template id="__bundler_thumbnail">
+    <svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg"><rect width="100" height="100" fill="#121110"/><circle cx="50" cy="50" r="22" fill="url(#g)"/><defs><radialGradient id="g" cx="38%" cy="32%"><stop offset="0" stop-color="#FDEFC9"/><stop offset="0.55" stop-color="#EFA225"/><stop offset="1" stop-color="#5E3704"/></radialGradient></defs></svg>
+  </template>
+
+  <script src="https://unpkg.com/react@18.3.1/umd/react.development.js" integrity="sha384-hD6/rw4ppMLGNu3tX5cjIb+uRZ7UkRJ6BPkLpg4hAu/6onKUg4lLsHAs9EBPT82L" crossorigin="anonymous"></script>
+  <script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.development.js" integrity="sha384-u6aeetuaXnQ38mYT8rp6sbXaQe3NL9t+IBXmnYxwkUI2Hw4bsp2Wvmx4yRQF1uAm" crossorigin="anonymous"></script>
+  <script src="https://unpkg.com/@babel/standalone@7.29.0/babel.min.js" integrity="sha384-m08KidiNqLdpJqLq95G/LEi8Qvjl/xUYll3QILypMoQ65QorJ9Lvtp2RXYGBFj1y" crossorigin="anonymous"></script>
+  <script src="design/_ds_bundle.js"></script>
+  <script type="text/babel">
+    const { Button } = window.DesignMDDesignSystem_9cde88;
+    const A = () => <span>&#8594;</span>;
+
+    // ---- request modal ----
+    const modal = document.getElementById('req-modal');
+    const frame = document.getElementById('req-frame');
+    let loaded = false;
+    function openReq() {
+      if (!loaded) { frame.src = 'design/claim-port.html'; loaded = true; }
+      modal.classList.add('open');
+      modal.setAttribute('aria-hidden', 'false');
+      document.body.style.overflow = 'hidden';
+    }
+    function closeReq() {
+      modal.classList.remove('open');
+      modal.setAttribute('aria-hidden', 'true');
+      document.body.style.overflow = '';
+    }
+    document.getElementById('req-close').addEventListener('click', closeReq);
+    modal.addEventListener('click', (e) => { if (e.target === modal) closeReq(); });
+    document.addEventListener('keydown', (e) => { if (e.key === 'Escape') closeReq(); });
+
+    ReactDOM.createRoot(document.getElementById('nav-cta')).render(
+      <React.Fragment>
+        <a href="/login/" style={{
+          color: 'var(--text-secondary)', textDecoration: 'none',
+          fontSize: '15px', fontWeight: 450, padding: '0 6px', whiteSpace: 'nowrap'
+        }}>Check status</a>
+        <a href="#" onClick={(e) => { e.preventDefault(); openReq(); }} style={{
+          color: 'var(--text-secondary)', textDecoration: 'none',
+          fontSize: '15px', fontWeight: 450, padding: '0 6px', whiteSpace: 'nowrap'
+        }}>Request</a>
+        <Button variant="primary" size="sm" onClick={() => window.location.href = '/login/'}>Login</Button>
+      </React.Fragment>);
+    ReactDOM.createRoot(document.getElementById('hero-cta')).render(
+      <Button variant="primary" size="lg" iconRight={<A/>}
+        onClick={() => window.location.href = '/login/?mode=register'}>Get started</Button>);
+    ReactDOM.createRoot(document.getElementById('band-cta')).render(
+      <Button variant="primary" size="lg" iconRight={<A/>}
+        onClick={() => window.location.href = '/login/?mode=register'}>Get started</Button>);
+  </script>
+</body>
+</html>

@@ -1,0 +1,35 @@
+/* ============================================================
+   designMD — Typography tokens
+   ------------------------------------------------------------
+   One-font system. MarkForMC in production; Sofia Sans here.
+   Contrast comes from SCALE + WEIGHT + LETTER-SPACING, never
+   from a second typeface. Two load-bearing oddities:
+     • body weight is 450 (softer than 500, firmer than 400)
+     • headlines carry -2% negative tracking (editorial density)
+   ============================================================ */
+
+:root {
+  /* families */
+  --font-sans: 'Sofia Sans', 'SofiaSans', Arial, sans-serif;
+  --font-display: var(--font-sans); /* same family — display is scale, not face */
+
+  /* weights */
+  --fw-body:    450; /* @kind font */  /* signature half-step — do not flatten to 400 */
+  --fw-medium:  500; /* @kind font */  /* headlines, nav links, buttons */
+  --fw-bold:    700; /* @kind font */  /* eyebrows, footer heads, subheads */
+
+  /* type scale — size / line-height / tracking */
+  --h1-size: 64px;  --h1-lh: 64px;     --h1-track: -1.28px;  /* hero — 1:1 */
+  --h2-size: 36px;  --h2-lh: 44px;     --h2-track: -0.72px;  /* section / ghost */
+  --h3-size: 24px;  --h3-lh: 28.8px;   --h3-track: -0.48px;  /* card title */
+  --h4-size: 14px;  --h4-lh: 18.2px;   --h4-track: normal; /* @kind font */
+  --eyebrow-size: 14px; --eyebrow-lh: 14px; --eyebrow-track: 0.56px; /* +4% UPPER */
+  --body-size: 16px;  --body-lh: 22.4px; --body-track: normal; /* @kind font */
+  --label-size: 16px; --label-lh: 16px;  --label-track: -0.48px;     /* nav/btn */
+  --small-size: 14px; --small-lh: 20px;  --small-track: normal; /* @kind font */
+  --micro-size: 12px; --micro-lh: 14px;  --micro-track: 0.48px;      /* col heads */
+
+  /* ghost watermark display */
+  --ghost-size: clamp(72px, 12vw, 128px);
+  --ghost-track: -2.56px;
+}

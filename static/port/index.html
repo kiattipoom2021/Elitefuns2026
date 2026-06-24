@@ -1,0 +1,1764 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Port Detail — ELITEFUNS</title>
+
+  <link rel="stylesheet" href="/design/styles.css">
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            bg:       { DEFAULT: '#121110', elevated: '#1A1815', card: '#1A1815', muted: '#232019' },
+            fg:       { DEFAULT: '#F6F2EC', muted: '#C8C1B5', subtle: '#908A7E' },
+            accent:   '#10B981',
+            danger:   '#F87171',
+            warning:  '#F9A826',
+            info:     '#F9A826',
+            'border-subtle': 'rgba(255,255,255,0.09)',
+          },
+          fontFamily: {
+            sans:  ["'Sofia Sans'", 'SofiaSans', 'Arial', 'sans-serif'],
+            mono:  ["'JetBrains Mono'", 'monospace'],
+          },
+        },
+      },
+    };
+  </script>
+
+  <style>
+    /* ═══════════ Base (mirror of /dashboard/) ═══════════ */
+    html, body { margin: 0; }
+    body {
+      font-family: var(--font-sans);
+      background:
+        radial-gradient(120% 60% at 50% -10%, rgba(249,168,38,0.06), transparent 55%),
+        var(--surface-canvas);
+      color: var(--text-primary);
+      -webkit-font-smoothing: antialiased;
+    }
+
+    .tabular-nums { font-variant-numeric: tabular-nums; }
+
+    /* Tailwind utility shim — re-tone palette to design tokens */
+    .bg-bg            { background-color: var(--surface-canvas) !important; }
+    .bg-bg-elevated   { background-color: var(--surface-lifted) !important; }
+    .bg-bg-card       { background-color: var(--surface-lifted) !important; }
+    .bg-bg-muted      { background-color: var(--surface-raised) !important; }
+    .bg-bg-muted\/50  { background-color: rgba(35,32,25,0.55) !important; }
+
+    .text-fg          { color: var(--text-primary) !important; }
+    .text-fg-muted    { color: var(--text-secondary) !important; }
+    .text-fg-subtle   { color: var(--text-muted) !important; }
+
+    .bg-fg-subtle     { background-color: var(--text-muted) !important; }
+    .text-info        { color: var(--accent) !important; }
+    .text-warning     { color: var(--accent) !important; }
+    .text-accent      { color: #10B981 !important; }
+    .text-danger      { color: #F87171 !important; }
+    .text-danger\/70  { color: rgba(248,113,113,0.75) !important; }
+
+    .border-border-subtle { border-color: var(--border-soft) !important; }
+    .bg-border-subtle     { background-color: var(--border-soft) !important; }
+
+    .bg-info {
+      background-color: var(--cta-bg) !important;
+      color: var(--cta-text) !important;
+    }
+    .bg-info:hover,
+    .hover\:bg-blue-500:hover,
+    .active\:bg-blue-700:active {
+      background-color: var(--accent-hover) !important;
+      color: var(--cta-text) !important;
+    }
+    .bg-info\/10  { background-color: rgba(249,168,38,0.10) !important; }
+    .bg-info\/20  { background-color: rgba(249,168,38,0.20) !important; }
+    .border-info\/30 { border-color: rgba(249,168,38,0.30) !important; }
+
+    .bg-accent       { background-color: #10B981 !important; }
+    .bg-accent\/10   { background-color: rgba(16,185,129,0.12) !important; }
+    .border-accent\/30 { border-color: rgba(16,185,129,0.35) !important; }
+
+    .bg-warning      { background-color: var(--accent) !important; color: var(--cta-text) !important; }
+    .bg-warning\/5   { background-color: rgba(249,168,38,0.06) !important; }
+    .bg-warning\/10  { background-color: rgba(249,168,38,0.12) !important; }
+    .bg-warning\/20  { background-color: rgba(249,168,38,0.22) !important; }
+    .border-warning\/30 { border-color: rgba(249,168,38,0.30) !important; }
+    .border-warning\/40 { border-color: rgba(249,168,38,0.45) !important; }
+
+    .bg-danger        { background-color: #F87171 !important; color: var(--cta-text) !important; }
+    .bg-danger\/10    { background-color: rgba(248,113,113,0.10) !important; }
+    .border-danger\/30 { border-color: rgba(248,113,113,0.30) !important; }
+    .hover\:text-danger:hover { color: #F87171 !important; }
+
+    @keyframes pulse-dot { 0%,100% { opacity: 1; } 50% { opacity: 0.4; } }
+    .animate-pulse { animation: pulse-dot 1.6s ease-in-out infinite; }
+
+    .font-mono { font-family: 'JetBrains Mono', monospace !important; }
+
+    /* Sidebar nav-link */
+    .nav-link {
+      display: flex; align-items: center; gap: 0.625rem;
+      padding: 0.55rem 0.75rem; border-radius: 12px;
+      color: var(--text-secondary);
+      font-family: var(--font-sans);
+      font-size: 0.875rem; font-weight: 500;
+      letter-spacing: -0.1px;
+      transition: background-color .15s ease, color .15s ease;
+    }
+    .nav-link:hover { background: var(--surface-raised); color: var(--text-primary); }
+    .nav-link.active {
+      background: rgba(249,168,38,0.10);
+      color: var(--text-primary);
+    }
+    .nav-link.active svg { color: var(--accent); }
+
+    .brand-mark {
+      display: inline-flex; align-items: center; gap: 11px;
+      text-decoration: none;
+    }
+    .brand-mark img { height: 26px; width: auto; display: block; }
+    .brand-mark .word {
+      font-family: var(--font-display);
+      font-weight: 700;
+      font-size: 18px;
+      letter-spacing: 1px;
+      text-transform: uppercase;
+      color: var(--text-primary);
+      line-height: 1;
+    }
+
+    @keyframes spin { to { transform: rotate(360deg); } }
+    .spin { animation: spin 0.8s linear infinite; }
+    @keyframes pulse-skel { 0%,100% { opacity: 0.5; } 50% { opacity: 0.8; } }
+    .skeleton {
+      background: var(--surface-raised);
+      border-radius: 8px;
+      animation: pulse-skel 1.4s ease-in-out infinite;
+    }
+
+    /* Metric tiles */
+    .metric-tile {
+      background: var(--surface-raised);
+      border: 1px solid var(--border-soft);
+      border-radius: 12px;
+      padding: 0.5rem 0.625rem;
+    }
+    .metric-label {
+      font-family: var(--font-sans);
+      font-size: 10px; font-weight: 600;
+      letter-spacing: 0.06em; text-transform: uppercase;
+      color: var(--text-secondary);
+      margin-bottom: 0.125rem;
+    }
+    .metric-value {
+      font-family: 'JetBrains Mono', monospace;
+      font-variant-numeric: tabular-nums;
+      font-size: 0.8125rem; font-weight: 600;
+      color: var(--text-primary);
+    }
+
+    input[type="number"]:focus,
+    input[type="text"]:focus {
+      outline: none;
+      border-color: var(--accent) !important;
+    }
+
+    h1, h2, h3 { font-family: var(--font-display); letter-spacing: -0.01em; }
+
+    /* ═══════════ Risk bar (HP / Stamina) — bigger on detail page ═══════════ */
+    .risk-bar {
+      position: relative;
+      height: 14px;
+      border-radius: 9999px;
+      background-color: rgba(255,255,255,0.06);
+      overflow: hidden;
+    }
+    .risk-bar-fill {
+      /* anchor RIGHT — bar depletes from LEFT side (left→right shrink) */
+      position: absolute; top: 0; right: 0; bottom: 0;
+      border-radius: 9999px;
+      transition: width 350ms cubic-bezier(0.4, 0, 0.2, 1),
+                  background-color 200ms ease;
+    }
+    .risk-bar-fill.healthy  { background-color: #10B981; }
+    .risk-bar-fill.warning  { background-color: #F9A826; }
+    .risk-bar-fill.danger   { background-color: #F87171; }
+    .risk-bar-fill.critical { background-color: #F87171; }
+
+    @keyframes risk-pulse {
+      0%, 100% { opacity: 1; }
+      50%      { opacity: 0.55; }
+    }
+    .risk-bar-fill.critical { animation: risk-pulse 1.5s ease-in-out infinite; }
+
+    /* Limits editor input */
+    .limit-input {
+      width: 100%;
+      background-color: var(--surface-raised);
+      border: 1px solid var(--border-soft);
+      border-radius: 8px;
+      padding: 8px 12px;
+      font-family: 'JetBrains Mono', monospace;
+      font-variant-numeric: tabular-nums;
+      font-size: 13px;
+      color: var(--text-primary);
+      transition: border-color .15s ease, opacity .15s ease;
+    }
+    .limit-input:focus {
+      outline: none;
+      border-color: var(--accent);
+    }
+    .limit-input.is-disabled {
+      opacity: 0.45;
+      cursor: not-allowed;
+      text-decoration: line-through;
+    }
+    .limit-input.is-invalid {
+      border-color: #F87171 !important;
+    }
+
+    .limit-toggle-btn {
+      flex-shrink: 0;
+      display: inline-flex; align-items: center; gap: 4px;
+      padding: 6px 10px;
+      border-radius: 8px;
+      font-size: 11px; font-weight: 600;
+      letter-spacing: 0.05em; text-transform: uppercase;
+      border: 1px solid var(--border-soft);
+      background-color: transparent;
+      color: var(--text-muted);
+      cursor: pointer;
+      transition: background-color .15s ease, color .15s ease, border-color .15s ease;
+    }
+    .limit-toggle-btn:hover { color: var(--text-primary); background: var(--surface-raised); }
+    .limit-toggle-btn.is-off {
+      color: var(--text-muted);
+      border-style: dashed;
+    }
+
+    /* ═══════════ Positions History ═══════════ */
+    .th-select {
+      background-color: var(--surface-raised);
+      border: 1px solid var(--border-soft);
+      border-radius: 8px;
+      padding: 6px 10px;
+      padding-right: 26px;
+      font-family: var(--font-sans);
+      font-size: 12px;
+      color: var(--text-primary);
+      cursor: pointer;
+      appearance: none;
+      -webkit-appearance: none;
+      background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='10' height='10' viewBox='0 0 24 24' fill='none' stroke='%23908A7E' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'><polyline points='6 9 12 15 18 9'/></svg>");
+      background-repeat: no-repeat;
+      background-position: right 8px center;
+      transition: border-color .15s ease;
+    }
+    .th-select:hover  { border-color: var(--accent); }
+    .th-select:focus  { outline: none; border-color: var(--accent); }
+
+    /* segmented control (source filter) */
+    .th-seg {
+      display: inline-flex;
+      gap: 0;
+      background: var(--surface-raised);
+      border: 1px solid var(--border-soft);
+      border-radius: 8px;
+      padding: 2px;
+    }
+    .th-seg-btn {
+      display: inline-flex; align-items: center; gap: 5px;
+      padding: 4px 10px;
+      border-radius: 6px;
+      font-family: var(--font-sans);
+      font-size: 11px;
+      font-weight: 500;
+      color: var(--text-secondary);
+      background: transparent;
+      border: none;
+      cursor: pointer;
+      transition: background-color .15s ease, color .15s ease;
+      white-space: nowrap;
+    }
+    .th-seg-btn:hover:not(.is-active) {
+      color: var(--text-primary);
+      background: rgba(255,255,255,0.025);
+    }
+    .th-seg-btn.is-active {
+      color: var(--text-primary);
+      background: var(--surface-base);
+      box-shadow: 0 1px 2px rgba(0,0,0,0.25);
+    }
+    .th-seg-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+
+    /* table */
+    .trades-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 12px;
+    }
+    .trades-table thead th {
+      text-align: left;
+      font-family: var(--font-sans);
+      font-size: 10px;
+      font-weight: 600;
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+      color: var(--text-secondary);
+      padding: 8px 10px;
+      border-bottom: 1px solid var(--border-soft);
+      background: rgba(255,255,255,0.015);
+      white-space: nowrap;
+    }
+    .trades-table tbody td {
+      padding: 8px 10px;
+      border-bottom: 1px solid var(--border-soft);
+      vertical-align: top;
+      line-height: 1.35;
+    }
+    .trades-table tbody tr:last-child td { border-bottom: none; }
+    .trades-table tbody tr.open-row { background: rgba(249,168,38,0.045); }
+    .trades-table tbody tr.open-row:hover { background: rgba(249,168,38,0.075); }
+    .trades-table tbody tr:not(.open-row):hover { background: rgba(255,255,255,0.025); }
+
+    /* col widths — let body breathe */
+    .trades-table th.col-time   { width: 15%; }
+    .trades-table th.col-sym    { width: 16%; }
+    .trades-table th.col-src    { width: 11%; }
+    .trades-table th.col-vol    { width: 8%; }
+    .trades-table th.col-px-open  { width: 12%; }
+    .trades-table th.col-px-close { width: 14%; }
+    .trades-table th.col-pnl    { width: 24%; text-align: right; }
+    .trades-table td.col-pnl    { text-align: right; }
+    .trades-table td.col-vol    { font-family: 'JetBrains Mono', monospace; font-variant-numeric: tabular-nums; }
+    .trades-table td.col-px-open,
+    .trades-table td.col-px-close { font-family: 'JetBrains Mono', monospace; font-variant-numeric: tabular-nums; }
+    .trades-table td.col-pnl    { font-family: 'JetBrains Mono', monospace; font-variant-numeric: tabular-nums; }
+
+    /* pills */
+    .type-pill {
+      display: inline-flex; align-items: center; gap: 4px;
+      padding: 1px 7px;
+      border-radius: 6px;
+      font-size: 10px;
+      font-weight: 600;
+      letter-spacing: 0.04em;
+      text-transform: uppercase;
+      border: 1px solid;
+      white-space: nowrap;
+    }
+    .type-pill.buy  { color: #10B981; background: rgba(16,185,129,0.10); border-color: rgba(16,185,129,0.30); }
+    .type-pill.sell { color: #F87171; background: rgba(248,113,113,0.10); border-color: rgba(248,113,113,0.30); }
+
+    .src-pill {
+      display: inline-flex; align-items: center; gap: 4px;
+      padding: 1px 7px;
+      border-radius: 6px;
+      font-size: 10px;
+      font-weight: 500;
+      border: 1px solid;
+      white-space: nowrap;
+    }
+    .src-pill.bot {
+      color: var(--accent);
+      background: rgba(249,168,38,0.10);
+      border-color: rgba(249,168,38,0.30);
+    }
+    .src-pill.manual {
+      color: var(--text-muted);
+      background: var(--surface-raised);
+      border-color: var(--border-soft);
+    }
+
+    .open-badge {
+      display: inline-flex; align-items: center; gap: 4px;
+      padding: 1px 6px;
+      border-radius: 5px;
+      font-size: 9px;
+      font-weight: 600;
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+      color: var(--accent);
+      background: rgba(249,168,38,0.10);
+      border: 1px solid rgba(249,168,38,0.30);
+      animation: pulse-dot 1.8s ease-in-out infinite;
+    }
+
+    .trades-overlay {
+      position: absolute; inset: 0;
+      background: rgba(18,17,16,0.55);
+      backdrop-filter: blur(1px);
+      display: flex; align-items: center; justify-content: center;
+      gap: 10px;
+      z-index: 5;
+      border-radius: 12px;
+    }
+    .trades-overlay-spin {
+      width: 18px; height: 18px;
+      border: 2px solid var(--border-soft);
+      border-top-color: var(--accent);
+      border-radius: 50%;
+      animation: spin 0.8s linear infinite;
+    }
+  </style>
+</head>
+<body class="theme-dark bg-bg text-fg antialiased">
+
+  <div class="flex min-h-screen">
+
+    <!-- ═════════ Sidebar ═════════ -->
+    <aside class="w-60 border-r border-border-subtle bg-bg-elevated flex flex-col flex-shrink-0">
+      <div class="px-5 py-5 border-b border-border-subtle">
+        <a href="/dashboard/" class="brand-mark">
+          <img src="/design/logo.png" alt="ELITEFUNS">
+          <span class="word">Elitefuns</span>
+        </a>
+      </div>
+
+      <nav class="flex-1 px-3 py-4 space-y-0.5">
+        <div class="px-2 mb-1.5 text-[10px] uppercase tracking-wider font-medium text-fg-subtle">เมนูหลัก</div>
+
+        <a href="/dashboard/" class="nav-link active">
+          <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"/></svg>
+          Dashboard
+        </a>
+
+        <a href="/connect-mt5/" class="nav-link">
+          <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/><path stroke-linecap="round" stroke-linejoin="round" d="M12 3v9l6 3"/></svg>
+          พอร์ต MT5
+        </a>
+
+        <a href="/optimize/" class="nav-link">
+          <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M3 6h13M3 12h9m-9 6h6M17 14l4 4m0 0l-4 4m4-4H13"/></svg>
+          Optimize
+        </a>
+
+        <a href="/bot-trade/" class="nav-link">
+          <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M9 3v2m6-2v2M9 19v2m6-2v2M5 9H3m2 6H3m18-6h-2m2 6h-2M7 19h10a2 2 0 002-2V7a2 2 0 00-2-2H7a2 2 0 00-2 2v10a2 2 0 002 2zM9 9h6v6H9V9z"/></svg>
+          Bot Trade
+        </a>
+
+        <a href="/arbitrage/" class="nav-link">
+          <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M7 16V4m0 0L3 8m4-4l4 4m6 0v12m0 0l4-4m-4 4l-4-4"/>
+          </svg>
+          Arbitrage
+        </a>
+
+        <a id="nav-admin-link" href="/admin/" class="nav-link admin-only">
+          <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"/>
+          </svg>
+          Admin
+        </a>
+      </nav>
+
+      <div class="p-3 border-t border-border-subtle">
+        <div class="flex items-center gap-2.5 px-2 py-2">
+          <div id="avatar" class="w-8 h-8 rounded-full bg-info flex items-center justify-center font-semibold text-xs flex-shrink-0" style="color: var(--cta-text);">?</div>
+          <div class="flex-1 min-w-0">
+            <div id="user-email" class="text-fg text-xs font-medium truncate">กำลังโหลด...</div>
+            <div class="text-fg-subtle text-[10px]">Free plan</div>
+          </div>
+          <button id="logout-btn" title="ออกจากระบบ"
+            class="text-fg-muted hover:text-danger transition-colors p-1 rounded">
+            <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"/>
+            </svg>
+          </button>
+        </div>
+      </div>
+    </aside>
+
+    <!-- ═════════ Main ═════════ -->
+    <main class="flex-1 flex flex-col min-w-0">
+      <header class="h-14 border-b border-border-subtle bg-bg-elevated flex items-center justify-between px-6">
+        <div class="flex items-center gap-2 text-sm">
+          <a href="/dashboard/" class="text-fg-subtle hover:text-fg transition-colors">หน้าหลัก</a>
+          <span class="text-fg-subtle">›</span>
+          <a href="/dashboard/" class="text-fg-subtle hover:text-fg transition-colors">Dashboard</a>
+          <span class="text-fg-subtle">›</span>
+          <span class="text-fg font-medium" id="crumb-port">Port…</span>
+        </div>
+        <div class="flex items-center gap-2">
+          <button class="w-8 h-8 rounded-lg hover:bg-bg-muted flex items-center justify-center text-fg-muted hover:text-fg transition-colors" title="แจ้งเตือน">
+            <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"/>
+            </svg>
+          </button>
+        </div>
+      </header>
+
+      <div class="flex-1 p-6 overflow-auto">
+
+        <!-- Top action bar -->
+        <div class="mb-5 flex items-center justify-between gap-3 flex-wrap">
+          <a href="/dashboard/"
+            class="inline-flex items-center gap-1.5 text-fg-muted hover:text-fg transition-colors text-sm">
+            <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M15 19l-7-7 7-7"/>
+            </svg>
+            กลับสู่ Dashboard
+          </a>
+          <button id="refresh-btn"
+            class="inline-flex items-center gap-1.5 bg-bg-muted hover:bg-bg-elevated border border-border-subtle text-fg font-medium px-3 py-1.5 rounded-lg text-sm transition-colors disabled:opacity-50 disabled:cursor-not-allowed">
+            <svg class="w-4 h-4" id="refresh-icon" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/>
+            </svg>
+            Sync จาก MT5
+          </button>
+        </div>
+
+        <!-- Loading skeleton -->
+        <div id="detail-loading" class="space-y-4">
+          <div class="skeleton h-24 w-full"></div>
+          <div class="skeleton h-20 w-full"></div>
+          <div class="skeleton h-44 w-full"></div>
+        </div>
+
+        <!-- Error state -->
+        <div id="detail-error" class="hidden bg-bg-card border border-border-subtle rounded-xl px-5 py-8 text-center">
+          <div class="text-danger text-sm font-medium">โหลดข้อมูล port ไม่สำเร็จ</div>
+          <div id="detail-error-msg" class="text-fg-subtle text-xs mt-1 mb-4">—</div>
+          <div class="flex items-center justify-center gap-2">
+            <a href="/dashboard/"
+              class="bg-bg-muted hover:bg-bg-elevated border border-border-subtle text-fg font-medium px-3 py-1.5 rounded-lg text-xs transition-colors">
+              กลับสู่ Dashboard
+            </a>
+            <button id="detail-retry-btn"
+              class="bg-info hover:bg-blue-500 text-white font-medium px-3 py-1.5 rounded-lg text-xs transition-colors">
+              ลองอีกครั้ง
+            </button>
+          </div>
+        </div>
+
+        <!-- Content -->
+        <div id="detail-content" class="hidden space-y-5">
+
+          <!-- ── Port Header ── -->
+          <section id="port-header" class="bg-bg-card border border-border-subtle rounded-xl p-5">
+            <!-- Filled by JS -->
+          </section>
+
+          <!-- ── USC warning banner ── -->
+          <div id="usc-banner" class="hidden bg-warning/5 border border-warning/30 rounded-xl px-4 py-3 flex items-start gap-2">
+            <svg class="w-4 h-4 text-warning flex-shrink-0 mt-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/>
+            </svg>
+            <div class="text-warning text-sm leading-relaxed">
+              <strong>Cent account (USC)</strong> — risk scaling has known 100× mismatch issue. ระมัดระวังตอนตั้ง multiplier และ safety cut
+            </div>
+          </div>
+
+          <!-- ── Account State ── -->
+          <section id="account-state" class="bg-bg-card border border-border-subtle rounded-xl p-5">
+            <!-- Filled by JS -->
+          </section>
+
+          <!-- ── Risk Budget (HP/Stamina) ── -->
+          <section id="risk-budget" class="bg-bg-card border border-border-subtle rounded-xl p-5">
+            <!-- Filled by JS -->
+          </section>
+
+          <!-- ── Positions History ── -->
+          <section id="trade-history" class="bg-bg-card border border-border-subtle rounded-xl p-5 relative">
+
+            <!-- Header: title + filters + sync -->
+            <div class="flex items-center justify-between gap-3 mb-3 flex-wrap">
+              <div>
+                <h3 class="text-fg font-semibold text-sm">Positions History</h3>
+                <div class="text-fg-subtle text-[11px] mt-0.5">อ่านจาก cache — กด <span class="text-fg-muted">Sync from MT5</span> เพื่อดึงล่าสุด</div>
+              </div>
+
+              <div class="flex items-center gap-2 flex-wrap">
+                <select id="th-days" class="th-select" aria-label="Days back">
+                  <option value="7">7 วัน</option>
+                  <option value="30" selected>30 วัน</option>
+                  <option value="90">90 วัน</option>
+                  <option value="365">1 ปี</option>
+                </select>
+
+                <select id="th-limit" class="th-select" aria-label="Limit rows">
+                  <option value="25">25 latest</option>
+                  <option value="50" selected>50 latest</option>
+                  <option value="100">100 latest</option>
+                  <option value="500">500 latest</option>
+                </select>
+
+                <button id="th-sync" type="button" title="ดึง positions ล่าสุดจาก MT5 (ใช้เวลา ~2-5s)"
+                  class="inline-flex items-center gap-1.5 bg-bg-muted hover:bg-bg-elevated border border-border-subtle text-fg font-medium px-3 py-1.5 rounded-lg text-xs transition-colors disabled:opacity-50 disabled:cursor-not-allowed">
+                  <svg id="th-sync-icon" class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/>
+                  </svg>
+                  <span>Sync from MT5</span>
+                </button>
+              </div>
+            </div>
+
+            <!-- Source filter (segmented) -->
+            <div class="flex items-center justify-between gap-3 mb-3 flex-wrap">
+              <div id="th-source-group" class="th-seg" role="tablist" aria-label="Source filter">
+                <button type="button" class="th-seg-btn is-active" data-source="all"    role="tab" aria-selected="true">All</button>
+                <button type="button" class="th-seg-btn"           data-source="bot"    role="tab" aria-selected="false"><span aria-hidden="true">🤖</span> Bot</button>
+                <button type="button" class="th-seg-btn"           data-source="manual" role="tab" aria-selected="false"><span aria-hidden="true">👤</span> Manual</button>
+              </div>
+
+              <div id="th-last-sync" class="text-fg-subtle text-[11px] flex items-center gap-1.5" title="">
+                <span class="inline-block w-1.5 h-1.5 rounded-full bg-border-subtle" id="th-last-sync-dot" aria-hidden="true"></span>
+                <span id="th-last-sync-text">Never synced — กด Sync from MT5</span>
+              </div>
+            </div>
+
+            <!-- Slow warning (during sync) -->
+            <div id="th-slow-warn" class="hidden mb-3 text-warning text-[11px] flex items-center gap-1.5">
+              <span aria-hidden="true">⏳</span>
+              <span>กำลังดึง positions จาก MT5 — ใช้เวลา ~2-5s</span>
+            </div>
+
+            <!-- Body: skeleton / error / empty / table -->
+            <div id="th-body" class="relative">
+
+              <!-- Skeleton (initial) -->
+              <div id="th-skeleton" class="space-y-2">
+                <div class="skeleton h-8 w-full"></div>
+                <div class="skeleton h-8 w-full"></div>
+                <div class="skeleton h-8 w-full"></div>
+                <div class="skeleton h-8 w-full"></div>
+                <div class="skeleton h-8 w-full"></div>
+              </div>
+
+              <!-- Error -->
+              <div id="th-error" class="hidden bg-danger/10 border border-danger/30 rounded-lg px-4 py-3 text-sm">
+                <div class="text-danger font-medium">โหลด positions history ไม่สำเร็จ</div>
+                <div id="th-error-msg" class="text-fg-muted text-xs mt-1">—</div>
+              </div>
+
+              <!-- Empty -->
+              <div id="th-empty" class="hidden bg-bg-muted/50 border border-border-subtle rounded-lg px-4 py-6 text-center">
+                <div id="th-empty-title" class="text-fg-muted text-sm">ยังไม่มี position ใน window นี้</div>
+                <div id="th-empty-help" class="text-fg-subtle text-[11px] mt-1">ลองขยาย days back หรือ verify port ก่อน</div>
+              </div>
+
+              <!-- Table wrapper -->
+              <div id="th-table-wrap" class="hidden overflow-x-auto">
+                <table class="trades-table">
+                  <thead>
+                    <tr>
+                      <th class="col-time">Time</th>
+                      <th class="col-sym">Symbol / Type</th>
+                      <th class="col-src">Source</th>
+                      <th class="col-vol">Lot</th>
+                      <th class="col-px-open">Open</th>
+                      <th class="col-px-close">Close</th>
+                      <th class="col-pnl">Profit</th>
+                    </tr>
+                  </thead>
+                  <tbody id="th-tbody"></tbody>
+                </table>
+              </div>
+
+              <!-- Overlay (during reload over existing table) -->
+              <div id="th-overlay" class="hidden trades-overlay">
+                <div class="trades-overlay-spin"></div>
+                <div class="text-fg-muted text-xs">กำลังโหลด…</div>
+              </div>
+            </div>
+
+            <!-- Footer summary -->
+            <div id="th-footer" class="hidden mt-3 pt-3 border-t border-border-subtle text-fg-subtle text-[11px] flex items-center justify-between gap-3 flex-wrap">
+              <span id="th-footer-count">—</span>
+              <span id="th-footer-window">—</span>
+            </div>
+          </section>
+
+        </div>
+
+      </div>
+    </main>
+
+  </div>
+
+  <script>
+    // ─── Auth gate ──────────────────────────────────────────────────────
+    const token = localStorage.getItem('jwt_token');
+    if (!token) { window.location.href = '/login/'; }
+
+    const AUTH_HEADERS = {
+      'Authorization': `Bearer ${token}`,
+      'Content-Type': 'application/json',
+    };
+
+    function handleUnauth() {
+      localStorage.removeItem('jwt_token');
+      localStorage.removeItem('is_admin');
+      window.location.href = '/login/';
+    }
+
+    // ─── Optimistic admin reveal ────────────────────────────────────────
+    if (localStorage.getItem('is_admin') === 'true') {
+      document.body.classList.add('user-is-admin');
+    }
+
+    // ─── Port id from query string ──────────────────────────────────────
+    const portId = new URLSearchParams(window.location.search).get('id');
+    if (!portId) {
+      // No id — bounce back
+      window.location.href = '/dashboard/';
+    }
+
+    // ─── Logout ─────────────────────────────────────────────────────────
+    document.getElementById('logout-btn').addEventListener('click', () => {
+      localStorage.removeItem('jwt_token');
+      localStorage.removeItem('is_admin');
+      window.location.href = '/';
+    });
+
+    // ─── Load current user ──────────────────────────────────────────────
+    fetch('/auth/me', { headers: { 'Authorization': `Bearer ${token}` } })
+      .then(r => {
+        if (r.status === 401) { handleUnauth(); return; }
+        if (!r.ok) throw new Error('unauthorized');
+        return r.json();
+      })
+      .then(d => {
+        if (!d) return;
+        const email   = d.email || 'user';
+        const name    = email.split('@')[0];
+        const initial = name.charAt(0).toUpperCase();
+        document.getElementById('user-email').textContent = email;
+        document.getElementById('avatar').textContent     = initial;
+        // sync is_admin
+        const isAdmin = Boolean(d.is_admin);
+        localStorage.setItem('is_admin', String(isAdmin));
+        document.body.classList.toggle('user-is-admin', isAdmin);
+      })
+      .catch(() => handleUnauth());
+
+    // ─── Helpers ────────────────────────────────────────────────────────
+    const $ = (id) => document.getElementById(id);
+
+    function escapeHtml(str) {
+      return String(str ?? '')
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#39;');
+    }
+
+    function fmtMoneyCcy(n, currency) {
+      if (n === null || n === undefined || isNaN(n)) return '—';
+      const num = Number(n);
+      if (currency === 'USC') {
+        const abs = Math.abs(num);
+        const sign = num < 0 ? '-' : '';
+        return sign + abs.toLocaleString('en-US', { maximumFractionDigits: 0 }) + ' USC';
+      }
+      const sign = num < 0 ? '-' : '';
+      const abs = Math.abs(num);
+      return sign + '$' + abs.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+    }
+
+    function fmtSignedMoneyCcy(n, currency) {
+      if (n === null || n === undefined || isNaN(n)) return '—';
+      const num = Number(n);
+      if (num === 0) return currency === 'USC' ? '0 USC' : '$0.00';
+      const sign = num > 0 ? '+' : '-';
+      const abs = Math.abs(num);
+      if (currency === 'USC') {
+        return sign + abs.toLocaleString('en-US', { maximumFractionDigits: 0 }) + ' USC';
+      }
+      return sign + '$' + abs.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+    }
+
+    const relTime = (iso) => {
+      if (!iso) return 'ยังไม่มีสัญญาณ';
+      const norm = /[zZ]|[+-]\d{2}:?\d{2}$/.test(iso) ? iso : iso + 'Z';
+      const t = new Date(norm).getTime();
+      if (isNaN(t)) return '—';
+      const diff = Math.floor((Date.now() - t) / 1000);
+      if (diff < 5) return 'เพิ่งนี้';
+      if (diff < 60) return diff + ' วินาทีที่แล้ว';
+      if (diff < 3600) return Math.floor(diff / 60) + ' นาทีที่แล้ว';
+      if (diff < 86400) return Math.floor(diff / 3600) + ' ชั่วโมงที่แล้ว';
+      if (diff < 86400 * 7) return Math.floor(diff / 86400) + ' วันที่แล้ว';
+      return new Date(norm).toLocaleDateString('th-TH');
+    };
+
+    function showAlert(kind, msg) {
+      const palette = {
+        info:    { bg: 'bg-info/10',    fg: 'text-info',    bd: 'border-info/30' },
+        success: { bg: 'bg-accent/10',  fg: 'text-accent',  bd: 'border-accent/30' },
+        error:   { bg: 'bg-danger/10',  fg: 'text-danger',  bd: 'border-danger/30' },
+        warn:    { bg: 'bg-warning/10', fg: 'text-warning', bd: 'border-warning/30' },
+      };
+      const c = palette[kind] || palette.info;
+      const div = document.createElement('div');
+      div.className = `fixed top-4 right-4 z-[60] ${c.bg} ${c.fg} border ${c.bd} px-4 py-2.5 rounded-lg text-sm font-medium shadow-lg transition-opacity duration-300`;
+      div.textContent = msg;
+      document.body.appendChild(div);
+      setTimeout(() => { div.style.opacity = '0'; }, 2500);
+      setTimeout(() => { div.remove(); }, 2900);
+    }
+
+    async function apiRequest(path, options = {}) {
+      const res = await fetch(path, {
+        ...options,
+        headers: { ...AUTH_HEADERS, ...(options.headers || {}) },
+      });
+      if (res.status === 401) {
+        handleUnauth();
+        throw new Error('unauthorized');
+      }
+      let body = null;
+      const text = await res.text();
+      if (text) {
+        try { body = JSON.parse(text); } catch { body = { detail: text }; }
+      }
+      if (!res.ok) {
+        const msg = (body && (body.detail || body.message || body.error)) || `เกิดข้อผิดพลาด (${res.status})`;
+        const err = new Error(typeof msg === 'string' ? msg : JSON.stringify(msg));
+        err.status = res.status;
+        err.body = body;
+        throw err;
+      }
+      return body;
+    }
+
+    // ─── State ──────────────────────────────────────────────────────────
+    let portData = null;             // Port detail from /api/bots/ports/stats (filtered)
+    let syncing = false;
+    let syncSlowTimer = null;
+    let syncAbortTimer = null;
+    const SYNC_TIMEOUT_MS = 60_000;
+    const SYNC_SLOW_MS    = 30_000;
+
+    // ─── Sentiment color helpers ───────────────────────────────────────
+    function pnlClass(n) {
+      if (n === null || n === undefined || isNaN(n)) return 'text-fg-muted';
+      const v = Number(n);
+      if (v > 0) return 'text-accent';
+      if (v < 0) return 'text-danger';
+      return 'text-fg-muted';
+    }
+
+    // ═════════ Section renderers ═══════════════════════════════════════
+    function renderPortHeader() {
+      const p = portData;
+      const ccy = p.currency || '';
+      const account = p.account || {};
+      const verified = p.verified !== false;
+      const verifiedBadge = verified
+        ? `<span class="inline-flex items-center gap-1.5 px-2 py-0.5 rounded text-[10px] font-medium bg-accent/10 text-accent border border-accent/30">
+            <span class="w-1.5 h-1.5 bg-accent rounded-full"></span> Verified
+          </span>`
+        : `<span class="inline-flex items-center gap-1.5 px-2 py-0.5 rounded text-[10px] font-medium bg-bg-muted text-fg-subtle border border-border-subtle">
+            <span class="w-1.5 h-1.5 bg-fg-subtle rounded-full"></span> Unverified
+          </span>`;
+
+      const lastSync = account.last_sync || null;
+      const lastSyncRel = lastSync ? relTime(lastSync) : 'ยังไม่เคย sync';
+
+      const nameHtml = p.name
+        ? `<div class="text-fg text-xl font-semibold mb-1 truncate" title="${escapeHtml(p.name)}">${escapeHtml(p.name)}</div>`
+        : '';
+
+      $('crumb-port').textContent = p.name || `Port ${p.login || ''}`;
+      document.title = `${p.name || 'Port ' + (p.login || '')} — ELITEFUNS`;
+
+      $('port-header').innerHTML = `
+        <div class="flex items-start justify-between gap-3 flex-wrap">
+          <div class="min-w-0 flex-1">
+            ${nameHtml}
+            <div class="flex items-center gap-2 flex-wrap text-sm">
+              <span class="font-mono text-fg font-semibold">${escapeHtml(String(p.login ?? '—'))}</span>
+              <span class="text-fg-subtle">·</span>
+              <span class="text-fg-muted truncate" title="${escapeHtml(p.server || '')}">${escapeHtml(p.server || '—')}</span>
+              <span class="text-fg-subtle">·</span>
+              <span class="text-fg-muted text-xs font-mono uppercase tracking-wider">${escapeHtml(ccy || '—')}</span>
+              ${verifiedBadge}
+            </div>
+            <div class="text-fg-subtle text-[11px] mt-2" title="${escapeHtml(lastSync || '')}">
+              Last sync: <span id="port-last-sync">${escapeHtml(lastSyncRel)}</span>
+              <span id="sync-slow-warn" class="hidden ml-2 text-warning">⏳ Sync ใช้เวลานานกว่าปกติ…</span>
+            </div>
+          </div>
+        </div>
+      `;
+
+      // USC banner
+      const uscBanner = $('usc-banner');
+      if (ccy === 'USC') uscBanner.classList.remove('hidden');
+      else uscBanner.classList.add('hidden');
+
+      // Refresh button — disable if not verified
+      const rb = $('refresh-btn');
+      rb.disabled = !verified;
+      rb.title = verified ? 'Sync จาก MT5' : 'Port ยังไม่ verified — sync ไม่ได้';
+    }
+
+    function renderAccountState() {
+      const p = portData;
+      const ccy = p.currency || '';
+      const account = p.account || {};
+      const balance  = account.balance;
+      const equity   = account.equity;
+      const floating = (account.floating_pnl !== null && account.floating_pnl !== undefined)
+                        ? Number(account.floating_pnl)
+                        : (Number.isFinite(Number(equity)) && Number.isFinite(Number(balance))
+                            ? Number(equity) - Number(balance) : null);
+
+      let floatingHtml = '<span class="text-fg-muted">—</span>';
+      if (floating !== null && !isNaN(floating)) {
+        if (floating > 0) {
+          floatingHtml = `<span class="text-accent">↑ ${escapeHtml(fmtSignedMoneyCcy(floating, ccy))}</span>`;
+        } else if (floating < 0) {
+          floatingHtml = `<span class="text-danger">↓ ${escapeHtml(fmtSignedMoneyCcy(floating, ccy))}</span>`;
+        } else {
+          floatingHtml = `<span class="text-fg-muted">${escapeHtml(fmtSignedMoneyCcy(0, ccy))}</span>`;
+        }
+      }
+
+      $('account-state').innerHTML = `
+        <div class="flex items-center justify-between mb-3">
+          <h3 class="text-fg font-semibold text-sm">สถานะบัญชี</h3>
+          <span class="text-fg-subtle text-[11px]">Account State</span>
+        </div>
+        <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
+          <div class="metric-tile">
+            <div class="metric-label">Balance</div>
+            <div class="metric-value text-lg">${escapeHtml(fmtMoneyCcy(balance, ccy))}</div>
+          </div>
+          <div class="metric-tile">
+            <div class="metric-label">Equity</div>
+            <div class="metric-value text-lg">${escapeHtml(fmtMoneyCcy(equity, ccy))}</div>
+          </div>
+          <div class="metric-tile">
+            <div class="metric-label">Floating P/L</div>
+            <div class="metric-value text-lg">${floatingHtml}</div>
+          </div>
+        </div>
+      `;
+    }
+
+    // ─── Risk budget (HP + Stamina + Set Limits editor) ─────────────────
+    function riskTierFromPct(remainingPct) {
+      if (remainingPct === null || remainingPct === undefined || isNaN(remainingPct)) return 'healthy';
+      const v = Number(remainingPct);
+      if (v > 0.80) return 'healthy';
+      if (v > 0.50) return 'warning';
+      if (v > 0.20) return 'danger';
+      return 'critical';
+    }
+    function riskTierLabel(tier) {
+      switch (tier) {
+        case 'healthy':  return 'Healthy';
+        case 'warning':  return 'Warning';
+        case 'danger':   return 'Danger';
+        case 'critical': return 'Critical';
+        default:         return '—';
+      }
+    }
+    function riskTierTextClass(tier) {
+      switch (tier) {
+        case 'healthy':  return 'text-accent';
+        case 'warning':  return 'text-warning';
+        case 'danger':   return 'text-danger';
+        case 'critical': return 'text-danger font-semibold';
+        default:         return 'text-fg-muted';
+      }
+    }
+
+    function renderRiskBarRow(opts) {
+      const { kind, label, glyph, bar, ccy, emptyMsg } = opts;
+      if (!bar) {
+        return `
+          <div class="opacity-70">
+            <div class="flex items-center justify-between gap-3 mb-2">
+              <div class="flex items-center gap-2 text-xs uppercase tracking-wider font-semibold text-fg-muted">
+                <span aria-hidden="true" class="text-base">${glyph}</span>
+                <span>${escapeHtml(label)}</span>
+              </div>
+              <span class="text-fg-subtle text-[10px]">ไม่ได้ตั้ง limit</span>
+            </div>
+            <div class="risk-bar" role="img" aria-label="${escapeHtml(label)} — disabled">
+              <div class="risk-bar-fill" style="width: 0%;"></div>
+            </div>
+            <div class="text-fg-subtle text-xs mt-2">${escapeHtml(emptyMsg || 'ตั้ง limit ใน Set Limits ด้านล่าง')}</div>
+          </div>`;
+      }
+      const limit       = Number(bar.limit) || 0;
+      const used        = Number(bar.used)  || 0;
+      const remaining   = Number(bar.remaining) || 0;
+      const pct         = (bar.remaining_pct === null || bar.remaining_pct === undefined)
+                            ? 0 : Number(bar.remaining_pct);
+      const tier        = bar.status || riskTierFromPct(pct);
+      const tierLabel   = riskTierLabel(tier);
+      const tierCls     = riskTierTextClass(tier);
+      const widthPct    = Math.max(0, Math.min(100, pct * 100));
+      const widthLabel  = (pct * 100).toFixed(0) + '%';
+
+      let statusLine;
+      const overBudget = used > limit + 0.0001;
+      if (overBudget) {
+        const over = used - limit;
+        statusLine = `<span class="text-danger font-semibold">เกินงบ ${escapeHtml(fmtMoneyCcy(over, ccy))}</span>`;
+      } else if (kind === 'hp') {
+        statusLine = `แผลสะสม <span class="${pnlClass(-used)} font-mono tabular-nums">-${escapeHtml(fmtMoneyCcy(used, ccy))}</span>
+                      · เหลือให้เสียได้อีก <span class="text-fg font-mono tabular-nums">${escapeHtml(fmtMoneyCcy(remaining, ccy))}</span>`;
+      } else {
+        statusLine = `วันนี้เสียไปแล้ว <span class="${pnlClass(-used)} font-mono tabular-nums">-${escapeHtml(fmtMoneyCcy(used, ccy))}</span>
+                      · เหลือโควตา <span class="text-fg font-mono tabular-nums">${escapeHtml(fmtMoneyCcy(remaining, ccy))}</span>`;
+      }
+
+      return `
+        <div>
+          <div class="flex items-center justify-between gap-3 mb-2 flex-wrap">
+            <div class="flex items-center gap-2 text-xs uppercase tracking-wider font-semibold text-fg">
+              <span aria-hidden="true" class="text-base">${glyph}</span>
+              <span>${escapeHtml(label)}</span>
+              <span class="text-fg-subtle font-mono normal-case tracking-normal text-[11px]">
+                · ${escapeHtml(fmtMoneyCcy(limit, ccy))} limit
+              </span>
+            </div>
+            <div class="flex items-center gap-2 flex-shrink-0">
+              <span class="font-mono tabular-nums text-sm ${tierCls}">${widthLabel}</span>
+              <span class="px-1.5 py-0.5 rounded text-[10px] font-semibold uppercase tracking-wider ${tierCls}"
+                    style="background-color: rgba(255,255,255,0.04); border: 1px solid var(--border-soft);">
+                ${escapeHtml(tierLabel)}
+              </span>
+            </div>
+          </div>
+          <div class="risk-bar" role="img" aria-label="${escapeHtml(label)} ${widthLabel} remaining">
+            <div class="risk-bar-fill ${tier}" style="width: ${widthPct}%;"></div>
+          </div>
+          <div class="text-fg-muted text-xs mt-2">${statusLine}</div>
+        </div>`;
+    }
+
+    function renderRiskBudget() {
+      const p = portData;
+      const ccy = p.currency || '';
+      const rb  = p.risk_budget || {};
+      const hp        = rb.hp || null;
+      const stamina   = rb.stamina || null;
+      const initAt    = rb.initial_balance_at || null;
+      const verified  = p.verified !== false;
+
+      const hpEmptyMsg = (!hp && !initAt && verified)
+        ? 'ต้อง verify port ใหม่ก่อนเปิด HP tracking'
+        : 'ตั้ง HP Limit ใน Set Limits ด้านล่าง';
+      const stEmptyMsg = 'ตั้ง Stamina Limit ใน Set Limits ด้านล่าง';
+
+      const hpLimitVal      = hp ? Number(hp.limit) : '';
+      const stLimitVal      = stamina ? Number(stamina.limit) : '';
+      const hpEnabled       = hp != null;
+      const stEnabled       = stamina != null;
+      const initAtRel = initAt ? relTime(initAt) : null;
+
+      $('risk-budget').innerHTML = `
+        <div class="flex items-center justify-between mb-4">
+          <h3 class="text-fg font-semibold text-sm">งบความเสี่ยง — Risk Budget</h3>
+          <span class="text-fg-subtle text-[11px]">HP / Stamina</span>
+        </div>
+
+        <div class="space-y-5">
+          ${renderRiskBarRow({ kind: 'hp',      label: 'HP: TOTAL LIFE', glyph: '⚔',  bar: hp,      ccy, emptyMsg: hpEmptyMsg })}
+          ${renderRiskBarRow({ kind: 'stamina', label: 'STAMINA: DAILY', glyph: '🌟', bar: stamina, ccy, emptyMsg: stEmptyMsg })}
+          ${initAt ? `<div class="text-fg-subtle text-[11px] -mt-2">Initial balance snapshot: ${escapeHtml(initAtRel)}</div>` : ''}
+        </div>
+
+        <div class="mt-5 pt-4 border-t border-border-subtle">
+          <button id="limits-toggle-btn" type="button"
+                  class="inline-flex items-center gap-1.5 text-sm font-medium text-fg-muted hover:text-fg transition-colors"
+                  aria-expanded="false">
+            <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"/>
+              <path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
+            </svg>
+            <span>Set Limits</span>
+            <svg class="w-3.5 h-3.5 transition-transform" id="limits-chevron" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M19 9l-7 7-7-7"/>
+            </svg>
+          </button>
+
+          <div id="limits-form" class="hidden mt-4 bg-bg-muted/50 border border-border-subtle rounded-lg p-4 space-y-3">
+            <div class="grid grid-cols-[7rem_1fr_auto] gap-3 items-center">
+              <label class="text-xs text-fg-muted font-medium">HP Limit</label>
+              <input id="hp-input" type="number" min="0" step="0.01"
+                     class="limit-input ${hpEnabled ? '' : 'is-disabled'}"
+                     value="${hpEnabled ? hpLimitVal : ''}" placeholder="3000.00"
+                     data-enabled="${hpEnabled ? '1' : '0'}"
+                     ${hpEnabled ? '' : 'disabled'}>
+              <button id="hp-toggle-btn" type="button" class="limit-toggle-btn ${hpEnabled ? '' : 'is-off'}"
+                      data-enabled="${hpEnabled ? '1' : '0'}">
+                <span id="hp-toggle-glyph">${hpEnabled ? '⊘' : '+'}</span>
+                <span id="hp-toggle-label">${hpEnabled ? 'Disable' : 'Enable'}</span>
+              </button>
+            </div>
+
+            <div class="grid grid-cols-[7rem_1fr_auto] gap-3 items-center">
+              <label class="text-xs text-fg-muted font-medium">Stamina</label>
+              <input id="st-input" type="number" min="0" step="0.01"
+                     class="limit-input ${stEnabled ? '' : 'is-disabled'}"
+                     value="${stEnabled ? stLimitVal : ''}" placeholder="300.00"
+                     data-enabled="${stEnabled ? '1' : '0'}"
+                     ${stEnabled ? '' : 'disabled'}>
+              <button id="st-toggle-btn" type="button" class="limit-toggle-btn ${stEnabled ? '' : 'is-off'}"
+                      data-enabled="${stEnabled ? '1' : '0'}">
+                <span id="st-toggle-glyph">${stEnabled ? '⊘' : '+'}</span>
+                <span id="st-toggle-label">${stEnabled ? 'Disable' : 'Enable'}</span>
+              </button>
+            </div>
+
+            <div id="limits-error" class="hidden text-danger text-[11px] pt-1"></div>
+
+            <div class="flex items-center justify-end gap-2 pt-2">
+              <button id="limits-cancel-btn" type="button"
+                      class="text-fg-muted hover:text-fg font-medium px-3 py-1.5 rounded-lg text-sm transition-colors">
+                ยกเลิก
+              </button>
+              <button id="limits-save-btn" type="button"
+                      class="bg-info hover:bg-blue-500 text-white font-semibold px-4 py-1.5 rounded-lg text-sm transition-colors inline-flex items-center gap-1.5">
+                <svg id="limits-save-spinner" class="w-3.5 h-3.5 hidden spin" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                  <path stroke-linecap="round" stroke-linejoin="round" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/>
+                </svg>
+                <span>Save</span>
+              </button>
+            </div>
+          </div>
+        </div>
+      `;
+
+      // Disable editor when not verified
+      if (!verified) {
+        $('limits-toggle-btn').disabled = true;
+        $('limits-toggle-btn').classList.add('opacity-50', 'cursor-not-allowed');
+        $('limits-toggle-btn').setAttribute('title', 'Port ยังไม่ verified');
+      } else {
+        wireLimitsEditor();
+      }
+    }
+
+    function wireLimitsEditor() {
+      $('limits-toggle-btn').addEventListener('click', toggleLimitsForm);
+      $('limits-cancel-btn').addEventListener('click', closeLimitsForm);
+      $('limits-save-btn').addEventListener('click', saveLimits);
+      $('hp-toggle-btn').addEventListener('click', () =>
+        toggleLimitField($('hp-input'), $('hp-toggle-btn'), $('hp-toggle-glyph'), $('hp-toggle-label')));
+      $('st-toggle-btn').addEventListener('click', () =>
+        toggleLimitField($('st-input'), $('st-toggle-btn'), $('st-toggle-glyph'), $('st-toggle-label')));
+    }
+
+    function toggleLimitsForm() {
+      const form = $('limits-form');
+      const chevron = $('limits-chevron');
+      const open = form.classList.contains('hidden');
+      form.classList.toggle('hidden', !open);
+      $('limits-toggle-btn').setAttribute('aria-expanded', open ? 'true' : 'false');
+      if (chevron) chevron.style.transform = open ? 'rotate(180deg)' : '';
+      const err = $('limits-error');
+      err.classList.add('hidden');
+      err.textContent = '';
+    }
+    function closeLimitsForm() {
+      $('limits-form').classList.add('hidden');
+      $('limits-toggle-btn').setAttribute('aria-expanded', 'false');
+      const chevron = $('limits-chevron');
+      if (chevron) chevron.style.transform = '';
+      const err = $('limits-error');
+      err.classList.add('hidden');
+      err.textContent = '';
+    }
+    function toggleLimitField(input, button, glyphEl, labelEl) {
+      const enabled = button.dataset.enabled === '1';
+      const next = !enabled;
+      button.dataset.enabled = next ? '1' : '0';
+      input.dataset.enabled  = next ? '1' : '0';
+      input.disabled = !next;
+      input.classList.toggle('is-disabled', !next);
+      input.classList.remove('is-invalid');
+      if (glyphEl) glyphEl.textContent = next ? '⊘' : '+';
+      if (labelEl) labelEl.textContent = next ? 'Disable' : 'Enable';
+      button.classList.toggle('is-off', !next);
+      if (next && !input.value) input.focus();
+    }
+
+    async function saveLimits() {
+      const hpInput = $('hp-input');
+      const stInput = $('st-input');
+      const saveBtn = $('limits-save-btn');
+      const spinner = $('limits-save-spinner');
+      const errEl   = $('limits-error');
+
+      const hpEnabled = hpInput.dataset.enabled === '1';
+      const stEnabled = stInput.dataset.enabled === '1';
+
+      hpInput.classList.remove('is-invalid');
+      stInput.classList.remove('is-invalid');
+      const errs = [];
+      let hpVal = null, stVal = null;
+      if (hpEnabled) {
+        hpVal = parseFloat(hpInput.value);
+        if (!isFinite(hpVal) || hpVal <= 0) {
+          hpInput.classList.add('is-invalid');
+          errs.push('HP Limit ต้อง > 0');
+        }
+      }
+      if (stEnabled) {
+        stVal = parseFloat(stInput.value);
+        if (!isFinite(stVal) || stVal <= 0) {
+          stInput.classList.add('is-invalid');
+          errs.push('Stamina Limit ต้อง > 0');
+        }
+      }
+      if (errs.length) {
+        errEl.textContent = errs.join(' · ');
+        errEl.classList.remove('hidden');
+        return;
+      }
+      errEl.classList.add('hidden');
+      errEl.textContent = '';
+
+      saveBtn.disabled = true;
+      saveBtn.style.opacity = '0.7';
+      if (spinner) spinner.classList.remove('hidden');
+      try {
+        const updated = await apiRequest(`/api/bots/ports/${encodeURIComponent(portId)}/limits`, {
+          method: 'PATCH',
+          body: JSON.stringify({
+            hp_limit_usd:      hpEnabled ? hpVal : null,
+            stamina_limit_usd: stEnabled ? stVal : null,
+          }),
+        });
+        if (updated && updated.port_id) {
+          portData = updated;
+          renderRiskBudget();
+        }
+        showAlert('success', 'บันทึก limits เรียบร้อย');
+      } catch (err) {
+        if (err.message === 'unauthorized') return;
+        errEl.textContent = err.message || 'บันทึกไม่สำเร็จ';
+        errEl.classList.remove('hidden');
+        showAlert('error', err.message || 'บันทึก limits ไม่สำเร็จ');
+      } finally {
+        saveBtn.disabled = false;
+        saveBtn.style.opacity = '';
+        if (spinner) spinner.classList.add('hidden');
+      }
+    }
+
+    // ═════════ Trade History ═══════════════════════════════════════════
+    // Two-mode flow:
+    //   loadTrades()  → GET /trades?days_back&limit&source  (fast, DB read)
+    //   syncTrades()  → POST /trades/sync (slow, MT5)  then loadTrades(silent)
+    const TH_FILTER = { days_back: 30, limit: 50, source: 'all' };
+    let tradesLoading = false;
+    let syncingTrades = false;
+    let tradesHasData = false;          // เคยโหลดสำเร็จแล้วหรือยัง
+    let lastSyncedAt = null;            // ISO string จาก backend
+    let lastSyncedTimer = null;         // re-render relative time every 30s
+    let thSlowTimer = null;
+    const TH_SLOW_MS = 3000;
+
+    // Format helpers (compact for table)
+    function fmtTimeTwoLine(iso) {
+      if (!iso) return { rel: '—', sub: '' };
+      const norm = /[zZ]|[+-]\d{2}:?\d{2}$/.test(iso) ? iso : iso + 'Z';
+      const t = new Date(norm).getTime();
+      if (isNaN(t)) return { rel: '—', sub: '' };
+      const diff = Math.floor((Date.now() - t) / 1000);
+      let rel;
+      if (diff < 5) rel = 'เพิ่งนี้';
+      else if (diff < 60) rel = diff + 'วิ.';
+      else if (diff < 3600) rel = Math.floor(diff / 60) + ' นาที';
+      else if (diff < 86400) rel = Math.floor(diff / 3600) + ' ชม.';
+      else if (diff < 86400 * 7) rel = Math.floor(diff / 86400) + ' วัน';
+      else rel = new Date(norm).toLocaleDateString('th-TH', { day: '2-digit', month: 'short' });
+      const d = new Date(norm);
+      const sub = d.toLocaleString('th-TH', {
+        day: '2-digit', month: '2-digit',
+        hour: '2-digit', minute: '2-digit',
+      });
+      return { rel, sub };
+    }
+    function fmtDurationShort(openIso, closeIso) {
+      if (!openIso || !closeIso) return '';
+      const norm = (s) => /[zZ]|[+-]\d{2}:?\d{2}$/.test(s) ? s : s + 'Z';
+      const a = new Date(norm(openIso)).getTime();
+      const b = new Date(norm(closeIso)).getTime();
+      if (isNaN(a) || isNaN(b)) return '';
+      const sec = Math.max(0, Math.floor((b - a) / 1000));
+      if (sec < 60) return sec + 's';
+      if (sec < 3600) return Math.floor(sec / 60) + 'm';
+      if (sec < 86400) {
+        const h = Math.floor(sec / 3600);
+        const m = Math.floor((sec % 3600) / 60);
+        return m ? `${h}h ${m}m` : `${h}h`;
+      }
+      const d = Math.floor(sec / 86400);
+      const h = Math.floor((sec % 86400) / 3600);
+      return h ? `${d}d ${h}h` : `${d}d`;
+    }
+    function fmtPrice(n) {
+      if (n === null || n === undefined || isNaN(n)) return '—';
+      const num = Number(n);
+      // up to 5 decimals (forex), strip trailing zeros
+      return num.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 5 });
+    }
+
+    function showTradesLoading(initial) {
+      // initial = true → skeleton (first ever load)
+      // initial = false → overlay over existing table (reload from DB)
+      // NOTE: ไม่มี slow-warn ตรงนี้เพราะ GET DB เร็ว (<50ms).
+      //       slow-warn ใช้เฉพาะตอน syncTrades() (POST → MT5) เท่านั้น
+      $('th-error').classList.add('hidden');
+      $('th-empty').classList.add('hidden');
+      if (initial || !tradesHasData) {
+        $('th-skeleton').classList.remove('hidden');
+        $('th-table-wrap').classList.add('hidden');
+        $('th-overlay').classList.add('hidden');
+        $('th-footer').classList.add('hidden');
+      } else {
+        $('th-skeleton').classList.add('hidden');
+        // keep table visible underneath, dim it
+        $('th-overlay').classList.remove('hidden');
+      }
+    }
+
+    function clearTradesLoading() {
+      $('th-overlay').classList.add('hidden');
+      $('th-skeleton').classList.add('hidden');
+    }
+
+    // ── Sync (POST /trades/sync) UI helpers ──────────────────────────────
+    function setSyncBusy(busy) {
+      const btn = $('th-sync');
+      const icon = $('th-sync-icon');
+      if (!btn) return;
+      btn.disabled = busy;
+      if (busy) icon?.classList.add('spin');
+      else      icon?.classList.remove('spin');
+    }
+    function showSyncSlowWarning() {
+      $('th-slow-warn')?.classList.remove('hidden');
+    }
+    function hideSyncSlowWarning() {
+      $('th-slow-warn')?.classList.add('hidden');
+    }
+
+    function showTradesError(msg) {
+      clearTradesLoading();
+      $('th-table-wrap').classList.add('hidden');
+      $('th-empty').classList.add('hidden');
+      $('th-footer').classList.add('hidden');
+      $('th-error-msg').textContent = msg || 'โหลดไม่สำเร็จ';
+      $('th-error').classList.remove('hidden');
+    }
+
+    function showTradesEmpty(totalInWindow, hasFilteredAll) {
+      clearTradesLoading();
+      $('th-table-wrap').classList.add('hidden');
+      $('th-error').classList.add('hidden');
+      if (hasFilteredAll) {
+        $('th-empty-title').textContent = 'Filter ตัดออกหมด';
+        $('th-empty-help').textContent  = TH_FILTER.source !== 'all'
+          ? `ไม่มี position ประเภท "${TH_FILTER.source}" ในช่วงนี้ — ลอง All`
+          : 'เพิ่ม limit หรือเปลี่ยน days back';
+      } else {
+        $('th-empty-title').textContent = 'ยังไม่มี position ใน window นี้';
+        const verified = portData && portData.verified !== false;
+        $('th-empty-help').textContent = verified
+          ? (lastSyncedAt
+              ? 'ลองขยาย days back — หรือกด Sync from MT5 อีกครั้ง'
+              : 'ยังไม่เคย sync — กด Sync from MT5 เพื่อดึงข้อมูลครั้งแรก')
+          : 'Port ยังไม่ verified — verify ก่อนจึงจะดึง positions ได้';
+      }
+      $('th-empty').classList.remove('hidden');
+      // footer summary
+      $('th-footer-count').textContent =
+        `Showing 0 of ${totalInWindow || 0} positions`;
+      $('th-footer-window').textContent =
+        `Last ${TH_FILTER.days_back} days · limit ${TH_FILTER.limit}${TH_FILTER.source !== 'all' ? ` · ${TH_FILTER.source}` : ''}`;
+      $('th-footer').classList.remove('hidden');
+    }
+
+    function renderTrades(res) {
+      clearTradesLoading();
+      const trades = Array.isArray(res?.trades) ? res.trades : [];
+      const totalInWindow = Number(res?.total_in_window || 0);
+
+      // sync indicator from GET response
+      updateLastSyncedAt(res?.last_synced_at ?? null);
+
+      if (totalInWindow === 0) {
+        showTradesEmpty(0, false);
+        tradesHasData = true;
+        return;
+      }
+      if (trades.length === 0) {
+        showTradesEmpty(totalInWindow, true);
+        tradesHasData = true;
+        return;
+      }
+
+      const ccy = (portData && portData.currency) || '';
+      const rows = trades.map(t => renderTradeRow(t, ccy)).join('');
+      $('th-tbody').innerHTML = rows;
+
+      $('th-error').classList.add('hidden');
+      $('th-empty').classList.add('hidden');
+      $('th-table-wrap').classList.remove('hidden');
+
+      $('th-footer-count').textContent =
+        `Showing ${trades.length} of ${totalInWindow} positions`;
+      $('th-footer-window').textContent =
+        `Last ${TH_FILTER.days_back} days · limit ${TH_FILTER.limit}${TH_FILTER.source !== 'all' ? ` · ${TH_FILTER.source}` : ''}`;
+      $('th-footer').classList.remove('hidden');
+
+      tradesHasData = true;
+    }
+
+    // ── Last-synced indicator ────────────────────────────────────────────
+    function renderLastSyncedLabel() {
+      const textEl = $('th-last-sync-text');
+      const dotEl  = $('th-last-sync-dot');
+      const wrap   = $('th-last-sync');
+      if (!textEl || !dotEl || !wrap) return;
+
+      if (!lastSyncedAt) {
+        textEl.textContent = 'Never synced — กด Sync from MT5';
+        dotEl.style.backgroundColor = '';
+        dotEl.classList.add('bg-border-subtle');
+        wrap.title = '';
+        return;
+      }
+      const norm = /[zZ]|[+-]\d{2}:?\d{2}$/.test(lastSyncedAt) ? lastSyncedAt : lastSyncedAt + 'Z';
+      const t = new Date(norm).getTime();
+      let rel = '—';
+      if (!isNaN(t)) {
+        const diff = Math.floor((Date.now() - t) / 1000);
+        if (diff < 5)        rel = 'เพิ่งนี้';
+        else if (diff < 60)  rel = diff + ' วินาทีที่แล้ว';
+        else if (diff < 3600) rel = Math.floor(diff / 60) + ' นาทีที่แล้ว';
+        else if (diff < 86400) rel = Math.floor(diff / 3600) + ' ชั่วโมงที่แล้ว';
+        else if (diff < 86400 * 7) rel = Math.floor(diff / 86400) + ' วันที่แล้ว';
+        else                 rel = new Date(norm).toLocaleDateString('th-TH', { day: '2-digit', month: 'short' });
+      }
+      textEl.textContent = `Last synced: ${rel}`;
+      dotEl.classList.remove('bg-border-subtle');
+      dotEl.style.backgroundColor = '#10B981';   // green = fresh
+      wrap.title = isNaN(t) ? '' : new Date(norm).toLocaleString('th-TH');
+    }
+
+    function updateLastSyncedAt(iso) {
+      // only update if backend returned a value; preserve previous if null/undefined
+      if (iso) lastSyncedAt = iso;
+      renderLastSyncedLabel();
+
+      // Periodic re-render so "N นาทีที่แล้ว" stays accurate
+      if (!lastSyncedTimer && lastSyncedAt) {
+        lastSyncedTimer = setInterval(renderLastSyncedLabel, 30_000);
+      }
+    }
+
+    function renderTradeRow(t, ccy) {
+      const isOpen   = t.status === 'open';
+      const isBuy    = String(t.type || '').toUpperCase() === 'BUY';
+      const isBot    = t.source === 'bot';
+
+      const tm = fmtTimeTwoLine(t.open_time);
+      const dur = isOpen ? '' : fmtDurationShort(t.open_time, t.close_time);
+
+      const typePill = isBuy
+        ? `<span class="type-pill buy">↑ BUY</span>`
+        : `<span class="type-pill sell">↓ SELL</span>`;
+      const srcPill = isBot
+        ? `<span class="src-pill bot" title="Bot position (magic=${escapeHtml(String(t.magic ?? '—'))})"><span aria-hidden="true">🤖</span>Bot</span>`
+        : `<span class="src-pill manual" title="Manual position"><span aria-hidden="true">👤</span>Manual</span>`;
+
+      // Price columns: open (separate) | close (separate)
+      const openPxHtml  = fmtPrice(t.open_price);
+      const closePxHtml = isOpen
+        ? `<span class="open-badge">OPEN</span><div class="text-fg-subtle text-[10px] mt-0.5">floating</div>`
+        : `${escapeHtml(fmtPrice(t.close_price))}${dur ? `<div class="text-fg-subtle text-[10px] mt-0.5">${escapeHtml(dur)}</div>` : ''}`;
+
+      // Profit column
+      const profitNum = (t.profit === null || t.profit === undefined) ? null : Number(t.profit);
+      let profitHtml;
+      if (profitNum === null || isNaN(profitNum)) {
+        profitHtml = `<span class="text-fg-muted">—</span>`;
+      } else {
+        const cls = pnlClass(profitNum);
+        const signed = fmtSignedMoneyCcy(profitNum, ccy);
+        if (isOpen) {
+          profitHtml = `<div class="${cls}">${escapeHtml(signed)}</div>
+                        <div class="text-fg-subtle text-[10px] mt-0.5">floating</div>`;
+        } else {
+          profitHtml = `<span class="${cls}">${escapeHtml(signed)}</span>`;
+        }
+      }
+
+      const commentTitle = t.comment
+        ? ` title="${escapeHtml(t.comment)}"`
+        : '';
+
+      const rowCls = isOpen ? 'open-row' : '';
+
+      return `
+        <tr class="${rowCls}"${commentTitle}>
+          <td>
+            <div class="text-fg">${escapeHtml(tm.rel)}</div>
+            <div class="text-fg-subtle text-[10px]">${escapeHtml(tm.sub)}</div>
+          </td>
+          <td>
+            <div class="flex items-center gap-1.5 flex-wrap">
+              <span class="font-mono text-fg text-[12px]">${escapeHtml(t.symbol || '—')}</span>
+              ${typePill}
+            </div>
+          </td>
+          <td>${srcPill}</td>
+          <td class="col-vol text-fg">${escapeHtml(Number(t.volume || 0).toFixed(2))}</td>
+          <td class="col-px-open">
+            <div class="text-fg">${escapeHtml(openPxHtml)}</div>
+          </td>
+          <td class="col-px-close">
+            <div class="text-fg">${closePxHtml}</div>
+          </td>
+          <td class="col-pnl">${profitHtml}</td>
+        </tr>
+      `;
+    }
+
+    // ── GET /trades — fast DB read (used on page load + filter change) ────
+    async function loadTrades(opts = {}) {
+      const { initial = false, silent = false } = opts;
+      if (tradesLoading) return;
+      // Block if port not verified
+      if (!portData || portData.verified === false) {
+        showTradesEmpty(0, false);
+        return;
+      }
+      tradesLoading = true;
+      if (!silent) showTradesLoading(initial);
+      try {
+        const qs = new URLSearchParams({
+          days_back: String(TH_FILTER.days_back),
+          limit: String(TH_FILTER.limit),
+          source: TH_FILTER.source || 'all',
+        });
+        const res = await apiRequest(
+          `/api/bots/ports/${encodeURIComponent(portId)}/trades?${qs.toString()}`
+        );
+        renderTrades(res);
+      } catch (err) {
+        if (err.message === 'unauthorized') return;
+        showTradesError(err.message || 'โหลด positions history ไม่สำเร็จ');
+      } finally {
+        tradesLoading = false;
+      }
+    }
+
+    // ── POST /trades/sync — slow MT5 pull → upsert → return summary ───────
+    async function syncTrades() {
+      if (syncingTrades) return;
+      if (!portData || portData.verified === false) {
+        showAlert('warn', 'Port ยังไม่ verified — verify ก่อน');
+        return;
+      }
+      syncingTrades = true;
+      setSyncBusy(true);
+      hideSyncSlowWarning();
+      clearTimeout(thSlowTimer);
+      thSlowTimer = setTimeout(showSyncSlowWarning, TH_SLOW_MS);
+
+      try {
+        const result = await apiRequest(
+          `/api/bots/ports/${encodeURIComponent(portId)}/trades/sync`,
+          {
+            method: 'POST',
+            body: JSON.stringify({
+              days_back: TH_FILTER.days_back,
+              limit: TH_FILTER.limit,
+            }),
+          }
+        );
+
+        const newCnt = Number(result?.new || 0);
+        const updCnt = Number(result?.updated || 0);
+        if (newCnt === 0 && updCnt === 0) {
+          showAlert('info', 'ไม่มี position ใหม่');
+        } else {
+          showAlert('success', `Sync เรียบร้อย: +${newCnt} ใหม่, ${updCnt} อัปเดต`);
+        }
+
+        // capture timestamp from sync response so the indicator updates
+        // immediately even if the follow-up GET is delayed
+        if (result?.synced_at) updateLastSyncedAt(result.synced_at);
+
+        // Refresh table from DB (silent — table stays + spinner overlay UX
+        // already cleared since we set silent=true)
+        await loadTrades({ silent: true });
+      } catch (err) {
+        if (err.message === 'unauthorized') return;
+        showAlert('error', err.message || 'Sync positions history ไม่สำเร็จ');
+      } finally {
+        clearTimeout(thSlowTimer);
+        hideSyncSlowWarning();
+        setSyncBusy(false);
+        syncingTrades = false;
+      }
+    }
+
+    // Wire trade-history controls
+    let tradesControlsWired = false;
+    function wireTradesControls() {
+      if (tradesControlsWired) return;
+      tradesControlsWired = true;
+      const daysSel  = $('th-days');
+      const limitSel = $('th-limit');
+      // Set initial selection
+      daysSel.value  = String(TH_FILTER.days_back);
+      limitSel.value = String(TH_FILTER.limit);
+
+      // Filter changes now hit DB (fast) — reload immediately
+      daysSel.addEventListener('change', () => {
+        TH_FILTER.days_back = parseInt(daysSel.value, 10) || 30;
+        loadTrades({ initial: false });
+      });
+      limitSel.addEventListener('change', () => {
+        TH_FILTER.limit = parseInt(limitSel.value, 10) || 50;
+        loadTrades({ initial: false });
+      });
+
+      // Source segmented filter (All / Bot / Manual)
+      const sourceGroup = $('th-source-group');
+      if (sourceGroup) {
+        sourceGroup.addEventListener('click', (e) => {
+          const btn = e.target.closest('.th-seg-btn');
+          if (!btn || btn.disabled) return;
+          const src = btn.dataset.source || 'all';
+          if (src === TH_FILTER.source) return;
+          TH_FILTER.source = src;
+          // update active state + aria
+          sourceGroup.querySelectorAll('.th-seg-btn').forEach(b => {
+            const on = b === btn;
+            b.classList.toggle('is-active', on);
+            b.setAttribute('aria-selected', on ? 'true' : 'false');
+          });
+          loadTrades({ initial: false });
+        });
+      }
+
+      $('th-sync').addEventListener('click', syncTrades);
+    }
+
+    // ─── Data loading ──────────────────────────────────────────────────
+    async function loadPortDetail() {
+      $('detail-loading').classList.remove('hidden');
+      $('detail-error').classList.add('hidden');
+      $('detail-content').classList.add('hidden');
+
+      try {
+        const list = await apiRequest('/api/bots/ports/stats');
+        const arr = Array.isArray(list) ? list : (list?.items || []);
+        portData = arr.find(p => String(p.port_id) === String(portId));
+        if (!portData) {
+          $('detail-error-msg').textContent = 'ไม่พบ port นี้ — อาจถูกลบหรือคุณไม่มีสิทธิ์เข้าถึง';
+          $('detail-loading').classList.add('hidden');
+          $('detail-error').classList.remove('hidden');
+          showAlert('error', 'ไม่พบ port นี้');
+          return;
+        }
+
+        renderPortHeader();
+        renderAccountState();
+        renderRiskBudget();
+
+        $('detail-loading').classList.add('hidden');
+        $('detail-content').classList.remove('hidden');
+
+        // Wire trade-history controls once content is in DOM, then auto-fetch
+        wireTradesControls();
+        loadTrades({ initial: true });
+      } catch (err) {
+        if (err.message === 'unauthorized') return;
+        $('detail-error-msg').textContent = err.message || 'โหลดข้อมูล port ไม่สำเร็จ';
+        $('detail-loading').classList.add('hidden');
+        $('detail-error').classList.remove('hidden');
+      }
+    }
+
+    $('detail-retry-btn').addEventListener('click', () => {
+      loadPortDetail();
+    });
+
+    // ─── Refresh (Sync) ────────────────────────────────────────────────
+    $('refresh-btn').addEventListener('click', async () => {
+      if (syncing) return;
+      if ($('refresh-btn').disabled) return;
+      syncing = true;
+      $('refresh-btn').disabled = true;
+      $('refresh-icon').classList.add('spin');
+
+      syncSlowTimer = setTimeout(() => {
+        $('sync-slow-warn')?.classList.remove('hidden');
+      }, SYNC_SLOW_MS);
+
+      const ctrl = new AbortController();
+      syncAbortTimer = setTimeout(() => ctrl.abort(), SYNC_TIMEOUT_MS);
+
+      try {
+        const res = await apiRequest(`/api/bots/ports/${encodeURIComponent(portId)}/sync`, {
+          method: 'POST',
+          signal: ctrl.signal,
+        });
+        const fresh = res?.stats;
+        if (fresh && fresh.port_id) {
+          portData = fresh;
+          renderPortHeader();
+          renderAccountState();
+          renderRiskBudget();
+        }
+        const warn = res?.sync_result?.warning;
+        if (warn) {
+          showAlert('warn', `Sync เสร็จแต่มีคำเตือน: ${warn}`);
+        } else {
+          showAlert('success', 'Sync เรียบร้อย');
+        }
+        // NOTE: top-level [Sync] only refreshes port stats (fast).
+        // It does NOT trigger MT5 trade-history sync (slow, separate cost) —
+        // user must click "Sync from MT5" in the Trade History card for that.
+        // We still re-read from DB silently so any background updates surface.
+        loadTrades({ silent: true });
+      } catch (err) {
+        if (err.message === 'unauthorized') return;
+        const isAbort = err.name === 'AbortError' || /aborted/i.test(err.message || '');
+        const msg = isAbort
+          ? 'Sync timeout (60s) — ลองอีกครั้ง'
+          : (err.message || 'Sync ไม่สำเร็จ');
+        showAlert('error', msg);
+      } finally {
+        clearTimeout(syncSlowTimer);
+        clearTimeout(syncAbortTimer);
+        syncing = false;
+        $('refresh-btn').disabled = !(portData && portData.verified !== false);
+        $('refresh-icon').classList.remove('spin');
+        $('sync-slow-warn')?.classList.add('hidden');
+      }
+    });
+
+    // ─── Initial load ──────────────────────────────────────────────────
+    loadPortDetail();
+  </script>
+</body>
+</html>

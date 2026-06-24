@@ -1,0 +1,29 @@
+/* ============================================================
+   designMD — Webfonts
+   ------------------------------------------------------------
+   The original brand calls for MarkForMC (a proprietary,
+   licensed geometric sans). It is NOT redistributable, so this
+   system ships SOFIA SANS — the closest open-source match and
+   the typeface named in the brand's own fallback stack.
+
+   Sofia Sans is a variable font (weight 1..1000), which lets us
+   reproduce the load-bearing 450 body weight exactly.
+
+   Substitution flagged in readme.md → VISUAL FOUNDATIONS.
+   Swap these @font-face URLs for licensed MarkForMC binaries
+   in production.
+   ============================================================ */
+
+@import url('https://fonts.googleapis.com/css2?family=Sofia+Sans:ital,wght@0,1..1000;1,1..1000&display=swap');
+
+/* Local @font-face mirrors so the compiler can resolve a font
+   family even before the remote sheet loads. These point at the
+   Google static CDN (variable woff2). */
+@font-face {
+  font-family: 'Sofia Sans';
+  font-style: normal;
+  font-weight: 1 1000;
+  font-display: swap;
+  src: url('https://fonts.gstatic.com/s/sofiasans/v18/Yq6E-LCVXSLy9uPBwlAThu1SY8Cx8rlT69B6sk.woff2') format('woff2');
+  unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+2074, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+}

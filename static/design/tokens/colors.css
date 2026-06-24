@@ -1,0 +1,89 @@
+/* ============================================================
+   designMD — Color tokens
+   ------------------------------------------------------------
+   "onlyYellow" variant: the burnt-orange / red signals of the
+   source language are collapsed into a single warm YELLOW ramp.
+   Yellow is the one brand accent — arcs, dots, signal pills,
+   active states. Everything structural is warm ink + cream.
+   ============================================================ */
+
+:root {
+  /* — Warm surfaces (never pure white as a page bg) — */
+  --cream-canvas:  #F3F0EE; /* default body canvas — warm putty */
+  --cream-lifted:  #FCFBFA; /* one step lighter — "paper on paper" */
+  --cream-ghost:   #E8E2DA; /* cream-on-cream watermark headlines */
+  --white:         #FFFFFF; /* nav pill, modals, satellite CTAs only */
+  --bone:          #F4F4F4; /* cool-gray alt surface, subregions */
+
+  /* — Warm ink + neutrals — */
+  --ink:           #141413; /* primary text, CTAs, footer (warm near-black) */
+  --charcoal:      #262627; /* softer black alternate */
+  --granite:       #555555; /* secondary body text / inline accents */
+  --slate:         #696969; /* muted secondary text, disabled */
+  --taupe:         #D1CDC7; /* "whisper" low-contrast text */
+
+  /* — Yellow ramp (the only brand accent) — */
+  --yellow-50:   #FDF8EC;  /* palest tint surface */
+  --yellow-100:  #FCF0D2;
+  --yellow-200:  #F9DC9C;
+  --yellow-300:  #F7C45E;
+  --yellow-400:  #F79E1B;  /* ★ brand yellow — signature accent */
+  --yellow-500:  #E2870C;  /* hover / pressed */
+  --yellow-600:  #C2700A;  /* deep amber — borders, active rails */
+  --yellow-700:  #8F5206;  /* deepest — text on pale-yellow tint */
+
+  /* — Semantic: links — */
+  --link:          #3860BE; /* deep dusty blue — inline links only */
+
+  /* — Brand mark lockup (identity art, NOT a UI palette) — */
+  --mark-sun:      #F79E1B; /* the single yellow disc of the designMD mark */
+  --mark-ink:      #141413;
+}
+
+/* ============================================================
+   Semantic aliases — reference THESE in components, not raw ramp
+   ============================================================ */
+:root {
+  /* surfaces */
+  --surface-canvas:   var(--cream-canvas);
+  --surface-lifted:   var(--cream-lifted);
+  --surface-raised:   var(--white);
+  --surface-bone:     var(--bone);
+  --surface-ink:      var(--ink);
+  --surface-tint:     var(--yellow-50);
+
+  /* text */
+  --text-primary:     var(--ink);
+  --text-secondary:   var(--granite);
+  --text-muted:       var(--slate);
+  --text-whisper:     var(--taupe);
+  --text-on-ink:      var(--white);
+  --text-on-yellow:   var(--ink);
+  --text-inverse:     var(--cream-canvas);
+  --text-link:        var(--link);
+
+  /* accent */
+  --accent:           var(--yellow-400);
+  --accent-hover:     var(--yellow-500);
+  --accent-deep:      var(--yellow-600);
+  --accent-arc:       var(--yellow-400); /* orbital decorative lines */
+  --accent-dot:       var(--yellow-400); /* eyebrow accent dot */
+
+  /* call to action — ink pill is the primary marketing CTA */
+  --cta-bg:           var(--ink);
+  --cta-text:         var(--cream-canvas);
+  --cta-border:       var(--ink);
+
+  /* signal — yellow pill w/ ink text (consent / legal / utility) */
+  --signal-bg:        var(--yellow-400);
+  --signal-text:      var(--ink);
+
+  /* borders */
+  --border-ink:       var(--ink);                 /* 1.5px pill outlines */
+  --border-soft:      rgba(20, 20, 19, 0.14);     /* hairline delineation */
+  --border-on-ink:    rgba(255, 255, 255, 0.40);  /* outlines on footer */
+  --divider-on-ink:   rgba(255, 255, 255, 0.16);
+
+  /* watermark */
+  --ghost-text:       var(--cream-ghost);
+}

@@ -1,0 +1,2014 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Dashboard — ELITEFUNS</title>
+
+  <link rel="stylesheet" href="/design/styles.css">
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            // semantic aliases — map to ELITEFUNS design tokens at runtime via CSS shim below
+            bg:       { DEFAULT: '#121110', elevated: '#1A1815', card: '#1A1815', muted: '#232019' },
+            fg:       { DEFAULT: '#F6F2EC', muted: '#C8C1B5', subtle: '#908A7E' },
+            accent:   '#10B981',  // P&L positive — warm green
+            danger:   '#F87171',
+            warning:  '#F9A826',
+            info:     '#F9A826',  // ELITEFUNS amber accent
+            'border-subtle': 'rgba(255,255,255,0.09)',
+          },
+          fontFamily: {
+            sans:  ["'Sofia Sans'", 'SofiaSans', 'Arial', 'sans-serif'],
+            mono:  ["'JetBrains Mono'", 'monospace'],
+          },
+        },
+      },
+    };
+  </script>
+
+  <style>
+    /* ═══════════ Base ═══════════ */
+    html, body { margin: 0; }
+    body {
+      font-family: var(--font-sans);
+      background:
+        radial-gradient(120% 60% at 50% -10%, rgba(249,168,38,0.06), transparent 55%),
+        var(--surface-canvas);
+      color: var(--text-primary);
+      -webkit-font-smoothing: antialiased;
+    }
+
+    /* Tabular-numeric helper preserved from Tailwind */
+    .tabular-nums { font-variant-numeric: tabular-nums; }
+
+    /* ═══════════ Tailwind utility shim ═══════════ */
+    /* Honour DOM intent without rewriting markup: re-tone palette to design tokens. */
+    .bg-bg            { background-color: var(--surface-canvas) !important; }
+    .bg-bg-elevated   { background-color: var(--surface-lifted) !important; }
+    .bg-bg-card       { background-color: var(--surface-lifted) !important; }
+    .bg-bg-muted      { background-color: var(--surface-raised) !important; }
+    .bg-bg-muted\/50  { background-color: rgba(35,32,25,0.55) !important; }
+
+    .text-fg          { color: var(--text-primary) !important; }
+    .text-fg-muted    { color: var(--text-secondary) !important; }
+    .text-fg-subtle   { color: var(--text-muted) !important; }
+
+    .bg-fg-subtle     { background-color: var(--text-muted) !important; }
+    .text-info        { color: var(--accent) !important; }
+    .text-warning     { color: var(--accent) !important; }
+    .text-accent      { color: #10B981 !important; }
+    .text-danger      { color: #F87171 !important; }
+    .text-danger\/70  { color: rgba(248,113,113,0.75) !important; }
+
+    .border-border-subtle { border-color: var(--border-soft) !important; }
+    .bg-border-subtle     { background-color: var(--border-soft) !important; }
+
+    /* Amber primary buttons (formerly blue .bg-info) */
+    .bg-info {
+      background-color: var(--cta-bg) !important;
+      color: var(--cta-text) !important;
+    }
+    .bg-info:hover,
+    .hover\:bg-blue-500:hover,
+    .active\:bg-blue-700:active {
+      background-color: var(--accent-hover) !important;
+      color: var(--cta-text) !important;
+    }
+    .bg-info\/10  { background-color: rgba(249,168,38,0.10) !important; }
+    .bg-info\/20  { background-color: rgba(249,168,38,0.20) !important; }
+    .border-info\/30 { border-color: rgba(249,168,38,0.30) !important; }
+
+    /* Green = P&L / Active badges */
+    .bg-accent       { background-color: #10B981 !important; }
+    .bg-accent\/10   { background-color: rgba(16,185,129,0.12) !important; }
+    .border-accent\/30 { border-color: rgba(16,185,129,0.35) !important; }
+
+    /* Amber warning family */
+    .bg-warning      { background-color: var(--accent) !important; color: var(--cta-text) !important; }
+    .bg-warning\/5   { background-color: rgba(249,168,38,0.06) !important; }
+    .bg-warning\/10  { background-color: rgba(249,168,38,0.12) !important; }
+    .bg-warning\/20  { background-color: rgba(249,168,38,0.22) !important; }
+    .border-warning\/30 { border-color: rgba(249,168,38,0.30) !important; }
+    .border-warning\/40 { border-color: rgba(249,168,38,0.45) !important; }
+    .hover\:bg-warning\/20:hover { background-color: rgba(249,168,38,0.20) !important; }
+    .hover\:bg-amber-500:hover { background-color: var(--accent-hover) !important; }
+    .active\:bg-amber-600:active { background-color: var(--accent-deep) !important; }
+
+    /* Danger reds — warmer tone */
+    .bg-danger        { background-color: #F87171 !important; color: var(--cta-text) !important; }
+    .bg-danger\/5     { background-color: rgba(248,113,113,0.06) !important; }
+    .bg-danger\/10    { background-color: rgba(248,113,113,0.10) !important; }
+    .bg-danger\/15    { background-color: rgba(248,113,113,0.15) !important; }
+    .bg-danger\/20    { background-color: rgba(248,113,113,0.20) !important; }
+    .hover\:bg-danger\/15:hover { background-color: rgba(248,113,113,0.15) !important; }
+    .hover\:bg-danger\/20:hover { background-color: rgba(248,113,113,0.20) !important; }
+    .border-danger\/30 { border-color: rgba(248,113,113,0.30) !important; }
+    .border-danger\/40 { border-color: rgba(248,113,113,0.45) !important; }
+    .hover\:border-danger\/60:hover { border-color: rgba(248,113,113,0.65) !important; }
+    .hover\:bg-red-500:hover { background-color: #FCA5A5 !important; }
+    .active\:bg-red-700:active { background-color: #EF4444 !important; }
+    .hover\:text-danger:hover { color: #F87171 !important; }
+
+    /* Pulse helper for "Active" status dot */
+    @keyframes pulse-dot { 0%,100% { opacity: 1; } 50% { opacity: 0.4; } }
+    .animate-pulse { animation: pulse-dot 1.6s ease-in-out infinite; }
+
+    /* Mono helper */
+    .font-mono { font-family: 'JetBrains Mono', monospace !important; }
+
+    /* ═══════════ Sidebar nav-link ═══════════ */
+    .nav-link {
+      display: flex; align-items: center; gap: 0.625rem;
+      padding: 0.55rem 0.75rem; border-radius: 12px;
+      color: var(--text-secondary);
+      font-family: var(--font-sans);
+      font-size: 0.875rem; font-weight: 500;
+      letter-spacing: -0.1px;
+      transition: background-color .15s ease, color .15s ease;
+    }
+    .nav-link:hover { background: var(--surface-raised); color: var(--text-primary); }
+    .nav-link.active {
+      background: rgba(249,168,38,0.10);
+      color: var(--text-primary);
+    }
+    .nav-link.active svg { color: var(--accent); }
+
+    /* ═══════════ Brand (sidebar header) ═══════════ */
+    .brand-mark {
+      display: inline-flex; align-items: center; gap: 11px;
+      text-decoration: none;
+    }
+    .brand-mark img { height: 26px; width: auto; display: block; }
+    .brand-mark .word {
+      font-family: var(--font-display);
+      font-weight: 700;
+      font-size: 18px;
+      letter-spacing: 1px;
+      text-transform: uppercase;
+      color: var(--text-primary);
+      line-height: 1;
+    }
+
+    /* ═══════════ Spinner / skeleton ═══════════ */
+    @keyframes spin { to { transform: rotate(360deg); } }
+    .spin { animation: spin 0.8s linear infinite; }
+    @keyframes pulse-skel { 0%,100% { opacity: 0.5; } 50% { opacity: 0.8; } }
+    .skeleton {
+      background: var(--surface-raised);
+      border-radius: 8px;
+      animation: pulse-skel 1.4s ease-in-out infinite;
+    }
+
+    /* ═══════════ Data table ═══════════ */
+    .data-table { width: 100%; border-collapse: collapse; }
+    .data-table thead th {
+      text-align: left;
+      font-family: var(--font-sans);
+      font-size: 10px; font-weight: 600;
+      letter-spacing: 0.06em; text-transform: uppercase;
+      color: var(--text-secondary);
+      padding: 0.625rem 0.75rem;
+      border-bottom: 1px solid var(--border-soft);
+      background: rgba(255,255,255,0.025);
+      white-space: nowrap;
+    }
+    .data-table tbody td {
+      padding: 0.7rem 0.75rem;
+      border-bottom: 1px solid var(--border-soft);
+      font-size: 0.8125rem;
+      color: var(--text-primary);
+      vertical-align: middle;
+      white-space: nowrap;
+    }
+    .data-table tbody tr:last-child td { border-bottom: 0; }
+    .data-table tbody tr:hover { background: rgba(255,255,255,0.03); }
+
+    /* Row near safety-cut trigger (DD >= 80% of safety_cut) */
+    .data-table tbody tr.row-near-cut td:first-child {
+      border-left: 2px solid #F87171;
+    }
+    .data-table tbody tr.row-near-cut {
+      background: rgba(248,113,113,0.06);
+    }
+    .data-table tbody tr.row-near-cut:hover {
+      background: rgba(248,113,113,0.09);
+    }
+
+    /* ═══════════ Icon button ═══════════ */
+    .icon-btn {
+      width: 28px; height: 28px; border-radius: 8px;
+      display: inline-flex; align-items: center; justify-content: center;
+      color: var(--text-muted);
+      background: transparent;
+      border: 0;
+      cursor: pointer;
+      transition: background-color .15s ease, color .15s ease;
+    }
+    .icon-btn:hover { background: var(--surface-raised); color: var(--text-primary); }
+    .icon-btn.danger:hover { color: #F87171; }
+    .icon-btn:disabled { cursor: not-allowed; }
+
+    /* ═══════════ Modal ═══════════ */
+    .modal-backdrop {
+      position: fixed; inset: 0; z-index: 50;
+      background: rgba(8,7,6,0.72);
+      backdrop-filter: blur(8px);
+      -webkit-backdrop-filter: blur(8px);
+      display: flex; align-items: center; justify-content: center;
+      padding: 1rem;
+    }
+    .modal-card {
+      background: var(--surface-lifted);
+      border: 1.5px solid var(--border-soft);
+      border-radius: 24px;
+      padding: 28px;
+      width: 100%; max-width: 28rem;
+      box-shadow: var(--elev-2);
+    }
+
+    /* ═══════════ Metric tiles (inside modal) ═══════════ */
+    .metric-tile {
+      background: var(--surface-raised);
+      border: 1px solid var(--border-soft);
+      border-radius: 12px;
+      padding: 0.5rem 0.625rem;
+    }
+    .metric-label {
+      font-family: var(--font-sans);
+      font-size: 10px; font-weight: 600;
+      letter-spacing: 0.06em; text-transform: uppercase;
+      color: var(--text-secondary);
+      margin-bottom: 0.125rem;
+    }
+    .metric-value {
+      font-family: 'JetBrains Mono', monospace;
+      font-variant-numeric: tabular-nums;
+      font-size: 0.8125rem; font-weight: 600;
+      color: var(--text-primary);
+    }
+
+    /* ═══════════ Safety-cut input states inside edit modal ═══════════ */
+    .input-disabled-look {
+      opacity: 0.45;
+      cursor: not-allowed;
+      text-decoration: line-through;
+    }
+    .field-label-pill {
+      font-family: var(--font-sans);
+      font-size: 9px;
+      font-weight: 700;
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+      padding: 1px 6px;
+      border-radius: 999px;
+    }
+    .field-label-pill.on  {
+      color: var(--accent);
+      background: rgba(249,168,38,0.12);
+      border: 1px solid rgba(249,168,38,0.30);
+    }
+    .field-label-pill.off {
+      color: var(--text-muted);
+      background: rgba(255,255,255,0.04);
+      border: 1px solid var(--border-soft);
+    }
+
+    /* ═══════════ Inputs inside cards/modal ═══════════ */
+    /* The dashboard uses inline Tailwind classes like
+       `bg-bg border border-border-subtle rounded-lg ... focus:border-info`.
+       Re-tone the focus border via the shim above; this rule just nudges
+       the resting state to feel cohesive with login's .ctrl. */
+    input[type="number"]:focus,
+    input[type="text"]:focus {
+      outline: none;
+      border-color: var(--accent) !important;
+    }
+
+    /* Headings */
+    h1, h2, h3 { font-family: var(--font-display); letter-spacing: -0.01em; }
+
+    /* ═══════════ Port card — clickable hover hint ═══════════ */
+    .port-card {
+      cursor: pointer;
+      transition: border-color 150ms ease, background-color 150ms ease, box-shadow 150ms ease;
+    }
+    .port-card:hover {
+      border-color: rgba(249,168,38,0.35) !important;
+      background-color: rgba(255,255,255,0.015);
+    }
+    .port-card .port-chevron-hint {
+      transition: transform 150ms ease, color 150ms ease;
+      color: var(--text-muted);
+    }
+    .port-card:hover .port-chevron-hint {
+      transform: translateX(2px);
+      color: var(--accent);
+    }
+  </style>
+</head>
+<body class="theme-dark bg-bg text-fg antialiased">
+
+  <div class="flex min-h-screen">
+
+    <!-- ═════════ Sidebar ═════════ -->
+    <aside class="w-60 border-r border-border-subtle bg-bg-elevated flex flex-col flex-shrink-0">
+      <div class="px-5 py-5 border-b border-border-subtle">
+        <a href="/dashboard/" class="brand-mark">
+          <img src="/design/logo.png" alt="ELITEFUNS">
+          <span class="word">Elitefuns</span>
+        </a>
+      </div>
+
+      <nav class="flex-1 px-3 py-4 space-y-0.5">
+        <div class="px-2 mb-1.5 text-[10px] uppercase tracking-wider font-medium text-fg-subtle">เมนูหลัก</div>
+
+        <a href="/dashboard/" class="nav-link active">
+          <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"/></svg>
+          Dashboard
+        </a>
+
+        <a href="/connect-mt5/" class="nav-link">
+          <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/><path stroke-linecap="round" stroke-linejoin="round" d="M12 3v9l6 3"/></svg>
+          พอร์ต MT5
+        </a>
+
+        <a href="/optimize/" class="nav-link">
+          <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M3 6h13M3 12h9m-9 6h6M17 14l4 4m0 0l-4 4m4-4H13"/></svg>
+          Optimize
+        </a>
+
+        <a href="/bot-trade/" class="nav-link">
+          <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M9 3v2m6-2v2M9 19v2m6-2v2M5 9H3m2 6H3m18-6h-2m2 6h-2M7 19h10a2 2 0 002-2V7a2 2 0 00-2-2H7a2 2 0 00-2 2v10a2 2 0 002 2zM9 9h6v6H9V9z"/></svg>
+          Bot Trade
+        </a>
+
+        <a href="/arbitrage/" class="nav-link">
+          <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M7 16V4m0 0L3 8m4-4l4 4m6 0v12m0 0l4-4m-4 4l-4-4"/>
+          </svg>
+          Arbitrage
+        </a>
+
+        <a id="nav-admin-link" href="/admin/" class="nav-link admin-only">
+          <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"/>
+          </svg>
+          Admin
+        </a>
+      </nav>
+
+      <div class="p-3 border-t border-border-subtle">
+        <div class="flex items-center gap-2.5 px-2 py-2">
+          <div id="avatar" class="w-8 h-8 rounded-full bg-info flex items-center justify-center font-semibold text-xs flex-shrink-0" style="color: var(--cta-text);">?</div>
+          <div class="flex-1 min-w-0">
+            <div id="user-email" class="text-fg text-xs font-medium truncate">กำลังโหลด...</div>
+            <div class="text-fg-subtle text-[10px]">Free plan</div>
+          </div>
+          <button id="logout-btn" title="ออกจากระบบ"
+            class="text-fg-muted hover:text-danger transition-colors p-1 rounded">
+            <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"/>
+            </svg>
+          </button>
+        </div>
+      </div>
+    </aside>
+
+    <!-- ═════════ Main ═════════ -->
+    <main class="flex-1 flex flex-col min-w-0">
+      <header class="h-14 border-b border-border-subtle bg-bg-elevated flex items-center justify-between px-6">
+        <div class="flex items-center gap-2 text-sm">
+          <span class="text-fg-subtle">หน้าหลัก</span>
+          <span class="text-fg-subtle">›</span>
+          <span class="text-fg font-medium">Dashboard</span>
+        </div>
+        <div class="flex items-center gap-2">
+          <button class="w-8 h-8 rounded-lg hover:bg-bg-muted flex items-center justify-center text-fg-muted hover:text-fg transition-colors" title="แจ้งเตือน">
+            <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"/>
+            </svg>
+          </button>
+        </div>
+      </header>
+
+      <div class="flex-1 p-6 overflow-auto">
+
+        <div class="mb-6">
+          <h1 class="text-2xl font-semibold tracking-tight">สวัสดี <span id="welcome-name" class="text-info">…</span> 👋</h1>
+          <p class="text-fg-muted text-sm mt-1">ภาพรวมระบบ trading bot ของคุณ</p>
+        </div>
+
+        <!-- Stat cards -->
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+
+          <div class="bg-bg-card border border-border-subtle rounded-xl p-4">
+            <div class="flex items-center justify-between mb-2">
+              <span class="text-[11px] uppercase tracking-wider font-medium text-fg-muted">Balance</span>
+              <svg class="w-4 h-4 text-fg-subtle" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z"/></svg>
+            </div>
+            <div class="text-fg text-2xl font-bold font-mono tabular-nums">$<span class="text-fg-subtle">—</span></div>
+            <div class="text-fg-subtle text-[11px] mt-1">ยังไม่ได้เชื่อมต่อ MT5</div>
+          </div>
+
+          <div class="bg-bg-card border border-border-subtle rounded-xl p-4">
+            <div class="flex items-center justify-between mb-2">
+              <span class="text-[11px] uppercase tracking-wider font-medium text-fg-muted">P&L วันนี้</span>
+              <svg class="w-4 h-4 text-fg-subtle" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6"/></svg>
+            </div>
+            <div class="text-fg text-2xl font-bold font-mono tabular-nums">$<span class="text-fg-subtle">—</span></div>
+            <div class="text-fg-subtle text-[11px] mt-1">รอข้อมูลแรก</div>
+          </div>
+
+          <div class="bg-bg-card border border-border-subtle rounded-xl p-4">
+            <div class="flex items-center justify-between mb-2">
+              <span class="text-[11px] uppercase tracking-wider font-medium text-fg-muted">Strategies Active</span>
+              <svg class="w-4 h-4 text-fg-subtle" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/></svg>
+            </div>
+            <div class="text-fg text-2xl font-bold font-mono tabular-nums" id="stat-active-count">—</div>
+            <div class="text-fg-subtle text-[11px] mt-1" id="stat-active-label">กำลังโหลด…</div>
+          </div>
+
+          <div class="bg-bg-card border border-border-subtle rounded-xl p-4">
+            <div class="flex items-center justify-between mb-2">
+              <span class="text-[11px] uppercase tracking-wider font-medium text-fg-muted">ใกล้ Safety Cut</span>
+              <svg class="w-4 h-4 text-fg-subtle" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/></svg>
+            </div>
+            <div id="stat-near-cut-count" class="text-fg text-2xl font-bold font-mono tabular-nums">—</div>
+            <div id="stat-near-cut-label" class="text-fg-subtle text-[11px] mt-1">strategies ≥ 80% threshold</div>
+          </div>
+
+        </div>
+
+        <!-- ═════════ Port Stats Section ═════════ -->
+        <section id="ports-section" class="mb-6">
+          <div class="flex items-end justify-between mb-3">
+            <div>
+              <h3 class="text-fg font-semibold text-sm">พอร์ต MT5 — ภาพรวม</h3>
+              <p class="text-fg-subtle text-[11px] mt-0.5">balance, equity, realized PnL ของแต่ละบัญชี — กด <span class="font-mono">⟳</span> เพื่อ sync จาก broker</p>
+            </div>
+          </div>
+
+          <!-- Loading -->
+          <div id="ports-loading" class="grid grid-cols-1 lg:grid-cols-2 gap-4">
+            <div class="skeleton h-44 w-full"></div>
+            <div class="skeleton h-44 w-full"></div>
+          </div>
+
+          <!-- Error -->
+          <div id="ports-error" class="hidden bg-bg-card border border-border-subtle rounded-xl px-5 py-6 text-center">
+            <div class="text-danger text-sm font-medium">โหลด port stats ไม่สำเร็จ</div>
+            <div id="ports-error-msg" class="text-fg-subtle text-xs mt-1 mb-3">—</div>
+            <button id="ports-retry-btn"
+              class="bg-bg-muted hover:bg-bg-elevated border border-border-subtle text-fg font-medium px-3 py-1.5 rounded-lg text-xs inline-flex items-center gap-1.5 transition-colors">
+              ลองอีกครั้ง
+            </button>
+          </div>
+
+          <!-- Empty -->
+          <div id="ports-empty" class="hidden bg-bg-card border border-border-subtle rounded-xl px-5 py-10 text-center">
+            <div class="w-12 h-12 mx-auto mb-3 rounded-2xl bg-bg-muted flex items-center justify-center">
+              <svg class="w-6 h-6 text-fg-subtle" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                <path stroke-linecap="round" stroke-linejoin="round" d="M12 3v9l6 3"/>
+              </svg>
+            </div>
+            <div class="text-fg text-sm font-medium">ยังไม่มี MT5 port ที่ verified</div>
+            <div class="text-fg-subtle text-xs mt-1">เชื่อม MT5 ที่หน้า "พอร์ต MT5" ก่อน — เพื่อเริ่ม sync ข้อมูล</div>
+            <a href="/connect-mt5/"
+              class="inline-flex items-center gap-1.5 mt-4 bg-info hover:bg-blue-500 text-white font-medium px-3 py-1.5 rounded-lg text-xs transition-colors">
+              ไปที่หน้า MT5
+            </a>
+          </div>
+
+          <!-- Cards grid -->
+          <div id="ports-grid" class="hidden grid grid-cols-1 lg:grid-cols-2 gap-4"></div>
+        </section>
+
+        <!-- ═════════ Bot Subscriptions Section ═════════ -->
+        <section id="subs-section" class="bg-bg-card border border-border-subtle rounded-xl mb-6">
+          <div class="px-5 py-4 border-b border-border-subtle flex items-center justify-between gap-3 flex-wrap">
+            <div>
+              <h3 class="text-fg font-semibold text-sm">Bot Subscriptions</h3>
+              <p class="text-fg-subtle text-[11px] mt-0.5">รายการ strategy ที่ bot รันแทน — ปรับ multiplier / pause / stop ได้</p>
+            </div>
+            <a href="/bot-trade/"
+              class="inline-flex items-center gap-1.5 bg-info hover:bg-blue-500 text-white font-medium px-3 py-1.5 rounded-lg text-xs transition-colors">
+              <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4"/>
+              </svg>
+              เพิ่ม Strategy
+            </a>
+          </div>
+
+          <!-- Loading -->
+          <div id="subs-loading" class="px-5 py-6 space-y-2">
+            <div class="skeleton h-10 w-full"></div>
+            <div class="skeleton h-10 w-full"></div>
+          </div>
+
+          <!-- Error -->
+          <div id="subs-error" class="hidden px-5 py-10 text-center">
+            <div class="text-danger text-sm font-medium">โหลด subscriptions ไม่สำเร็จ</div>
+            <div id="subs-error-msg" class="text-fg-subtle text-xs mt-1 mb-3">—</div>
+            <button id="subs-retry-btn"
+              class="bg-bg-muted hover:bg-bg-elevated border border-border-subtle text-fg font-medium px-3 py-1.5 rounded-lg text-xs inline-flex items-center gap-1.5 transition-colors">
+              ลองอีกครั้ง
+            </button>
+          </div>
+
+          <!-- Empty -->
+          <div id="subs-empty" class="hidden px-5 py-12 text-center">
+            <div class="w-14 h-14 mx-auto mb-4 rounded-2xl bg-bg-muted flex items-center justify-center">
+              <svg class="w-7 h-7 text-fg-subtle" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M13 10V3L4 14h7v7l9-11h-7z"/>
+              </svg>
+            </div>
+            <div class="text-fg text-base font-semibold">ยังไม่มี strategy ใน bot</div>
+            <div class="text-fg-muted text-sm mt-1 max-w-md mx-auto">เลือก combo จากผล optimize แล้วเพิ่มเข้า bot — ระบบจะรันแทนคุณทุก 15 นาที</div>
+            <a href="/bot-trade/"
+              class="inline-flex items-center gap-2 mt-5 bg-info hover:bg-blue-500 active:bg-blue-700 text-white font-semibold px-5 py-2.5 rounded-lg text-sm transition-colors">
+              เริ่มต้น Bot Trade
+            </a>
+          </div>
+
+          <!-- Table -->
+          <div id="subs-table-wrap" class="hidden overflow-x-auto">
+            <table class="data-table">
+              <thead>
+                <tr>
+                  <th>Code</th>
+                  <th>Symbol / TF</th>
+                  <th>Mult</th>
+                  <th title="Current Drawdown / Safety Cut threshold">DD / Safety</th>
+                  <th>Status</th>
+                  <th class="hidden md:table-cell">Last Signal</th>
+                  <th class="hidden lg:table-cell">PnL Update</th>
+                  <th class="text-right">Actions</th>
+                </tr>
+              </thead>
+              <tbody id="subs-tbody"></tbody>
+            </table>
+          </div>
+        </section>
+
+        <!-- Recent activity (empty state) -->
+        <div class="bg-bg-card border border-border-subtle rounded-xl">
+          <div class="px-5 py-4 border-b border-border-subtle flex items-center justify-between">
+            <h3 class="text-fg font-semibold text-sm">กิจกรรมล่าสุด</h3>
+            <button class="text-fg-subtle hover:text-fg-muted text-xs transition-colors">ดูทั้งหมด</button>
+          </div>
+          <div class="px-5 py-12 text-center">
+            <div class="text-fg-subtle text-sm">ยังไม่มีกิจกรรม</div>
+            <div class="text-fg-subtle text-xs mt-1">กิจกรรมจะปรากฏที่นี่หลังเริ่ม bot</div>
+          </div>
+        </div>
+
+      </div>
+    </main>
+
+  </div>
+
+  <!-- ═════════ Edit Strategy Settings Modal ═════════ -->
+  <div id="edit-mult-modal" class="hidden modal-backdrop">
+    <div class="modal-card">
+
+      <!-- ── View A: edit settings ─────────────────────────────────── -->
+      <div id="edit-view-main">
+      <div class="flex items-start justify-between mb-3">
+        <div>
+          <h3 class="text-fg text-base font-semibold">แก้ Strategy Settings</h3>
+          <p class="text-fg-muted text-sm mt-0.5"><span id="edit-mult-code" class="font-mono text-info">—</span></p>
+        </div>
+        <button id="edit-mult-close-btn" class="icon-btn">
+          <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/>
+          </svg>
+        </button>
+      </div>
+
+      <!-- Multiplier -->
+      <label class="block text-fg text-sm font-medium mb-1">Risk Multiplier <span class="text-fg-subtle text-xs">(0.1 – 10.0)</span></label>
+      <input id="edit-mult-input" type="number" min="0.1" max="10" step="0.1" value="1.0"
+        class="w-full bg-bg border border-border-subtle rounded-lg px-3 py-2 text-fg font-mono tabular-nums text-sm focus:outline-none focus:border-info mb-3" />
+
+      <div class="grid grid-cols-2 gap-2 mb-4">
+        <div class="metric-tile">
+          <div class="metric-label">Risk ใหม่</div>
+          <div id="edit-preview-risk" class="metric-value text-info">—</div>
+        </div>
+        <div class="metric-tile">
+          <div class="metric-label">DD ที่อาจเสีย</div>
+          <div id="edit-preview-dd" class="metric-value">—</div>
+        </div>
+      </div>
+
+      <!-- Safety Cut DD -->
+      <div class="flex items-center justify-between mb-1">
+        <label class="text-fg text-sm font-medium">Safety Cut DD <span class="text-fg-subtle text-xs">(USD)</span></label>
+        <div class="flex items-center gap-2">
+          <span id="edit-sc-badge" class="field-label-pill on">เปิด</span>
+          <button id="edit-sc-toggle" type="button"
+            class="text-fg-muted hover:text-fg text-[11px] font-medium px-2 py-1 rounded border border-border-subtle hover:bg-bg-muted transition-colors inline-flex items-center gap-1">
+            <svg class="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M18.364 18.364A9 9 0 005.636 5.636m12.728 12.728L5.636 5.636m12.728 12.728L5.636 5.636"/>
+            </svg>
+            <span id="edit-sc-toggle-label">ปิด</span>
+          </button>
+        </div>
+      </div>
+      <input id="edit-sc-input" type="number" min="0" step="1" placeholder="เช่น 500"
+        class="w-full bg-bg border border-border-subtle rounded-lg px-3 py-2 text-fg font-mono tabular-nums text-sm focus:outline-none focus:border-info" />
+      <div id="edit-sc-error" class="hidden text-danger text-[11px] mt-1">ค่าต้อง > 0 (หรือกดปิดถ้าไม่ต้องการใช้)</div>
+      <div id="edit-sc-help" class="text-fg-subtle text-[11px] mt-1">
+        ถ้า drawdown ของ strategy เกินค่านี้ — bot จะปิด positions ทันที (Safety Cut)
+      </div>
+
+      <!-- Current DD preview -->
+      <div id="edit-sc-current" class="hidden mt-3 bg-bg-muted/50 border border-border-subtle rounded-lg px-3 py-2 text-[11px]">
+        <div class="flex items-center justify-between">
+          <span class="text-fg-muted">DD ปัจจุบัน</span>
+          <span id="edit-sc-current-value" class="font-mono tabular-nums text-fg">—</span>
+        </div>
+        <div class="flex items-center justify-between mt-1">
+          <span class="text-fg-muted">สัดส่วนกับ threshold</span>
+          <span id="edit-sc-current-ratio" class="font-mono tabular-nums">—</span>
+        </div>
+      </div>
+
+      <!-- ── Peak Tracking section ───────────────────────────────── -->
+      <div class="mt-5 pt-4 border-t border-border-subtle">
+        <div class="flex items-center justify-between mb-2">
+          <div>
+            <div class="text-fg text-sm font-medium">Peak Tracking</div>
+            <div class="text-fg-subtle text-[11px] mt-0.5">ระบบจะนับ DD จากจุดสูงสุดของ PnL ที่เคยทำได้</div>
+          </div>
+        </div>
+
+        <div class="grid grid-cols-3 gap-2 mb-3">
+          <div class="metric-tile">
+            <div class="metric-label">Peak PnL</div>
+            <div id="edit-peak-value" class="metric-value">—</div>
+          </div>
+          <div class="metric-tile">
+            <div class="metric-label">Current PnL</div>
+            <div id="edit-peak-current-pnl" class="metric-value">—</div>
+          </div>
+          <div class="metric-tile">
+            <div class="metric-label">Current DD</div>
+            <div id="edit-peak-current-dd" class="metric-value">—</div>
+          </div>
+        </div>
+
+        <div class="bg-warning/5 border border-warning/30 rounded-lg p-3">
+          <button id="edit-reset-peak-btn" type="button"
+            class="w-full inline-flex items-center justify-center gap-1.5 bg-warning/10 hover:bg-warning/20 text-warning border border-warning/40 font-semibold px-3 py-2 rounded-lg text-sm transition-colors">
+            <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+              <circle cx="12" cy="12" r="9" stroke-linecap="round" stroke-linejoin="round"/>
+              <path stroke-linecap="round" stroke-linejoin="round" d="M5.636 5.636l12.728 12.728"/>
+            </svg>
+            Reset Peak
+          </button>
+          <div class="text-fg-muted text-[11px] mt-2 leading-relaxed">
+            ตั้ง peak = current (DD กลับเป็น $0)<br>
+            ใช้หลัง safety_cut trip + พร้อม resume
+          </div>
+          <div id="edit-reset-peak-help-nosc" class="hidden text-fg-subtle text-[11px] mt-1 italic">
+            ไม่มี threshold — reset peak นี้ไม่ส่งผลต่อ trigger
+          </div>
+        </div>
+      </div>
+
+      <div class="flex items-center justify-end gap-2 mt-5">
+        <button id="edit-mult-cancel-btn"
+          class="text-fg-muted hover:text-fg font-medium px-4 py-2 rounded-lg text-sm transition-colors">
+          ยกเลิก
+        </button>
+        <button id="edit-mult-save-btn"
+          class="bg-info hover:bg-blue-500 text-white font-semibold px-4 py-2 rounded-lg text-sm transition-colors">
+          บันทึก
+        </button>
+      </div>
+      </div>
+
+      <!-- ── View B: confirm reset peak ────────────────────────────── -->
+      <div id="edit-view-reset-confirm" class="hidden">
+        <div class="flex items-start gap-3 mb-3">
+          <div class="w-10 h-10 rounded-lg bg-warning/10 border border-warning/30 flex items-center justify-center flex-shrink-0">
+            <svg class="w-5 h-5 text-warning" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+              <circle cx="12" cy="12" r="9" stroke-linecap="round" stroke-linejoin="round"/>
+              <path stroke-linecap="round" stroke-linejoin="round" d="M5.636 5.636l12.728 12.728"/>
+            </svg>
+          </div>
+          <div class="min-w-0 flex-1">
+            <h3 class="text-fg text-base font-semibold">ยืนยัน Reset Peak?</h3>
+            <p class="text-fg-muted text-sm mt-1"><span id="edit-reset-code" class="font-mono text-info">—</span></p>
+          </div>
+        </div>
+
+        <div class="bg-warning/5 border border-warning/30 rounded-lg px-3 py-3 mb-3">
+          <div class="text-fg text-sm leading-relaxed">
+            Peak จะถูก set = current
+            (<span id="edit-reset-current-pnl" class="font-mono tabular-nums text-warning font-semibold">—</span>)
+            → DD = <span class="font-mono tabular-nums text-warning font-semibold">$0</span>
+          </div>
+          <div class="text-fg-muted text-xs mt-2">
+            ใช้ตอนต้องการให้ safety_cut เริ่มนับใหม่ — เช่น หลัง resume จาก trip
+          </div>
+        </div>
+
+        <div class="flex items-center justify-end gap-2">
+          <button id="edit-reset-cancel-btn"
+            class="text-fg-muted hover:text-fg font-medium px-4 py-2 rounded-lg text-sm transition-colors">
+            ยกเลิก
+          </button>
+          <button id="edit-reset-confirm-btn"
+            class="bg-warning hover:bg-amber-500 active:bg-amber-600 text-white font-semibold px-4 py-2 rounded-lg text-sm transition-colors inline-flex items-center gap-1.5 disabled:opacity-50 disabled:cursor-not-allowed">
+            <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+              <circle cx="12" cy="12" r="9" stroke-linecap="round" stroke-linejoin="round"/>
+              <path stroke-linecap="round" stroke-linejoin="round" d="M5.636 5.636l12.728 12.728"/>
+            </svg>
+            <span id="edit-reset-confirm-label">Reset</span>
+          </button>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- ═════════ Stop Confirmation Modal ═════════ -->
+  <div id="stop-modal" class="hidden modal-backdrop">
+    <div class="modal-card">
+
+      <!-- ── View A: choose stop mode ───────────────────────────── -->
+      <div id="stop-view-choose">
+        <div class="flex items-start gap-3 mb-3">
+          <div class="w-10 h-10 rounded-lg bg-danger/10 border border-danger/30 flex items-center justify-center flex-shrink-0">
+            <svg class="w-5 h-5 text-danger" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/>
+            </svg>
+          </div>
+          <div class="min-w-0 flex-1">
+            <h3 class="text-fg text-base font-semibold">หยุด Strategy นี้?</h3>
+            <p class="text-fg-muted text-sm mt-1"><span id="stop-code" class="font-mono text-info">—</span></p>
+          </div>
+        </div>
+
+        <p class="text-fg-muted text-xs mb-4">เลือกวิธีจัดการ open positions ของ strategy นี้:</p>
+
+        <div class="space-y-2 mb-3">
+          <button id="stop-immediate-btn"
+            class="w-full text-left bg-danger/10 hover:bg-danger/20 border border-danger/30 rounded-lg px-3 py-3 transition-colors group">
+            <div class="flex items-start gap-2">
+              <svg class="w-4 h-4 text-danger flex-shrink-0 mt-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M12 9v2m0 4h.01M5.07 19h13.86c1.54 0 2.5-1.67 1.73-3L13.73 4c-.77-1.33-2.69-1.33-3.46 0L3.34 16c-.77 1.33.19 3 1.73 3z"/>
+              </svg>
+              <div class="min-w-0">
+                <div class="text-danger text-sm font-semibold">ปิด positions ทันที (Safety Cut)</div>
+                <div class="text-fg-muted text-xs mt-0.5">bot จะส่ง close order ทุก position ที่ค้างของ strategy นี้</div>
+              </div>
+            </div>
+          </button>
+
+          <button id="stop-leave-btn"
+            class="w-full text-left bg-bg-muted hover:bg-bg-elevated border border-border-subtle rounded-lg px-3 py-3 transition-colors">
+            <div class="flex items-start gap-2">
+              <svg class="w-4 h-4 text-fg-muted flex-shrink-0 mt-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/>
+              </svg>
+              <div class="min-w-0">
+                <div class="text-fg text-sm font-semibold">ปล่อยตาม SL/TP</div>
+                <div class="text-fg-muted text-xs mt-0.5">positions ค้างต่อจนกว่าจะปิดตาม SL/TP ที่ตั้งไว้ — bot จะหยุดยิง order ใหม่</div>
+              </div>
+            </div>
+          </button>
+        </div>
+
+        <!-- Danger zone divider -->
+        <div class="flex items-center gap-2 my-3">
+          <div class="flex-1 h-px bg-border-subtle"></div>
+          <span class="text-[10px] uppercase tracking-wider font-medium text-danger/70">ทางเลือกอันตราย</span>
+          <div class="flex-1 h-px bg-border-subtle"></div>
+        </div>
+
+        <button id="stop-hard-btn"
+          class="w-full text-left bg-danger/5 hover:bg-danger/15 border-2 border-danger/40 hover:border-danger/60 rounded-lg px-3 py-3 transition-colors mb-1">
+          <div class="flex items-start gap-2">
+            <svg class="w-4 h-4 text-danger flex-shrink-0 mt-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
+            </svg>
+            <div class="min-w-0">
+              <div class="text-danger text-sm font-semibold">ลบถาวร (Hard Delete)</div>
+              <div class="text-fg-muted text-xs mt-0.5">ลบ subscription + order history ออกจากระบบทั้งหมด — กู้คืนไม่ได้</div>
+            </div>
+          </div>
+        </button>
+
+        <div class="flex items-center justify-end gap-2 mt-4">
+          <button id="stop-cancel-btn"
+            class="text-fg-muted hover:text-fg font-medium px-4 py-2 rounded-lg text-sm transition-colors">
+            ยกเลิก
+          </button>
+        </div>
+      </div>
+
+      <!-- ── View B: hard-delete impact preview ─────────────────── -->
+      <div id="stop-view-hard" class="hidden">
+        <div class="flex items-start gap-3 mb-3">
+          <div class="w-10 h-10 rounded-lg bg-danger/15 border border-danger/40 flex items-center justify-center flex-shrink-0">
+            <svg class="w-5 h-5 text-danger" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
+            </svg>
+          </div>
+          <div class="min-w-0 flex-1">
+            <h3 class="text-danger text-base font-semibold">ยืนยันการลบถาวร?</h3>
+            <p class="text-fg-muted text-sm mt-1"><span id="stop-hard-code" class="font-mono text-info">—</span></p>
+          </div>
+        </div>
+
+        <!-- Order count preview -->
+        <div id="stop-hard-preview" class="bg-danger/5 border border-danger/30 rounded-lg px-3 py-3 mb-3">
+          <div id="stop-hard-counting" class="flex items-center gap-2 text-fg-muted text-sm">
+            <svg class="w-4 h-4 spin" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/>
+            </svg>
+            <span>กำลังนับ orders ที่จะถูกลบ…</span>
+          </div>
+          <div id="stop-hard-impact" class="hidden">
+            <div class="flex items-start gap-2">
+              <svg class="w-4 h-4 text-warning flex-shrink-0 mt-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/>
+              </svg>
+              <div class="min-w-0 text-sm">
+                <div class="text-fg" id="stop-hard-impact-line">—</div>
+                <div class="text-fg-muted text-xs mt-1">การลบถาวรกู้คืนไม่ได้ — โปรดยืนยันอีกครั้ง</div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="flex items-center justify-between gap-2">
+          <button id="stop-hard-back-btn"
+            class="text-fg-muted hover:text-fg font-medium px-3 py-2 rounded-lg text-sm transition-colors inline-flex items-center gap-1">
+            <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M15 19l-7-7 7-7"/>
+            </svg>
+            ย้อนกลับ
+          </button>
+          <div class="flex items-center gap-2">
+            <button id="stop-hard-cancel-btn"
+              class="text-fg-muted hover:text-fg font-medium px-3 py-2 rounded-lg text-sm transition-colors">
+              ยกเลิก
+            </button>
+            <button id="stop-hard-confirm-btn"
+              class="bg-danger hover:bg-red-500 active:bg-red-700 text-white font-semibold px-4 py-2 rounded-lg text-sm transition-colors inline-flex items-center gap-1.5 disabled:opacity-50 disabled:cursor-not-allowed"
+              disabled>
+              <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
+              </svg>
+              <span id="stop-hard-confirm-label">ยืนยันลบทั้งหมด</span>
+            </button>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <script>
+    // ─── Auth gate ──────────────────────────────────────────────────────
+    const token = localStorage.getItem('jwt_token');
+    if (!token) { window.location.href = '/login/'; }
+
+    const AUTH_HEADERS = {
+      'Authorization': `Bearer ${token}`,
+      'Content-Type': 'application/json',
+    };
+
+    function handleUnauth() {
+      localStorage.removeItem('jwt_token');
+      localStorage.removeItem('is_admin');
+      window.location.href = '/login/';
+    }
+
+    // ─── Optimistic admin reveal จาก localStorage ──────────────────────
+    // ลด flicker — แสดงทันทีถ้า flag เป็น admin (จะถูก re-sync จาก /auth/me อีกที)
+    if (localStorage.getItem('is_admin') === 'true') {
+      document.body.classList.add('user-is-admin');
+    }
+
+    // ─── Logout ─────────────────────────────────────────────────────────
+    document.getElementById('logout-btn').addEventListener('click', () => {
+      localStorage.removeItem('jwt_token');
+      localStorage.removeItem('is_admin');
+      window.location.href = '/';
+    });
+
+    // ─── Load current user ──────────────────────────────────────────────
+    fetch('/auth/me', { headers: { 'Authorization': `Bearer ${token}` } })
+      .then(r => {
+        if (r.status === 401) { handleUnauth(); return; }
+        if (!r.ok) throw new Error('unauthorized');
+        return r.json();
+      })
+      .then(d => {
+        if (!d) return;
+        const email   = d.email || 'user';
+        const name    = email.split('@')[0];
+        const initial = name.charAt(0).toUpperCase();
+        document.getElementById('user-email').textContent   = email;
+        document.getElementById('welcome-name').textContent = name;
+        document.getElementById('avatar').textContent       = initial;
+        // sync is_admin จาก server (จัดการ stale flag + demoted user)
+        const isAdmin = Boolean(d.is_admin);
+        localStorage.setItem('is_admin', String(isAdmin));
+        document.body.classList.toggle('user-is-admin', isAdmin);
+      })
+      .catch(() => handleUnauth());
+
+    // ─── Helpers ────────────────────────────────────────────────────────
+    const $ = (id) => document.getElementById(id);
+
+    function escapeHtml(str) {
+      return String(str ?? '')
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#39;');
+    }
+
+    const fmtMoney = (n) => {
+      if (n === null || n === undefined || isNaN(n)) return '—';
+      const num = Number(n);
+      const sign = num < 0 ? '-' : '';
+      const abs = Math.abs(num);
+      return sign + '$' + abs.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+    };
+
+    const relTime = (iso) => {
+      if (!iso) return 'ยังไม่มีสัญญาณ';
+      const norm = /[zZ]|[+-]\d{2}:?\d{2}$/.test(iso) ? iso : iso + 'Z';
+      const t = new Date(norm).getTime();
+      if (isNaN(t)) return '—';
+      const diff = Math.floor((Date.now() - t) / 1000);
+      if (diff < 5) return 'เพิ่งนี้';
+      if (diff < 60) return diff + ' วินาทีที่แล้ว';
+      if (diff < 3600) return Math.floor(diff / 60) + ' นาทีที่แล้ว';
+      if (diff < 86400) return Math.floor(diff / 3600) + ' ชั่วโมงที่แล้ว';
+      if (diff < 86400 * 7) return Math.floor(diff / 86400) + ' วันที่แล้ว';
+      return new Date(norm).toLocaleDateString('th-TH');
+    };
+
+    function showAlert(kind, msg) {
+      const palette = {
+        info:    { bg: 'bg-info/10',    fg: 'text-info',    bd: 'border-info/30' },
+        success: { bg: 'bg-accent/10',  fg: 'text-accent',  bd: 'border-accent/30' },
+        error:   { bg: 'bg-danger/10',  fg: 'text-danger',  bd: 'border-danger/30' },
+        warn:    { bg: 'bg-warning/10', fg: 'text-warning', bd: 'border-warning/30' },
+      };
+      const c = palette[kind] || palette.info;
+      const div = document.createElement('div');
+      div.className = `fixed top-4 right-4 z-[60] ${c.bg} ${c.fg} border ${c.bd} px-4 py-2.5 rounded-lg text-sm font-medium shadow-lg transition-opacity duration-300`;
+      div.textContent = msg;
+      document.body.appendChild(div);
+      setTimeout(() => { div.style.opacity = '0'; }, 2500);
+      setTimeout(() => { div.remove(); }, 2900);
+    }
+
+    async function apiRequest(path, options = {}) {
+      const res = await fetch(path, {
+        ...options,
+        headers: { ...AUTH_HEADERS, ...(options.headers || {}) },
+      });
+      if (res.status === 401) {
+        handleUnauth();
+        throw new Error('unauthorized');
+      }
+      let body = null;
+      const text = await res.text();
+      if (text) {
+        try { body = JSON.parse(text); } catch { body = { detail: text }; }
+      }
+      if (!res.ok) {
+        const msg = (body && (body.detail || body.message || body.error)) || `เกิดข้อผิดพลาด (${res.status})`;
+        const err = new Error(typeof msg === 'string' ? msg : JSON.stringify(msg));
+        err.status = res.status;
+        err.body = body;
+        throw err;
+      }
+      return body;
+    }
+
+    // ─── State ──────────────────────────────────────────────────────────
+    let subscriptions = [];
+    let editingSub = null;
+    // edit-modal safety-cut state
+    let editSc = {
+      disabled: false,    // true → send null
+      lastValue: null,    // remember last value when toggled off, restore on toggle on
+    };
+
+    // ─── DD vs Safety-Cut helpers ───────────────────────────────────────
+    // Returns { ratio, severity } where severity ∈ 'muted'|'warning'|'danger'|'neutral'
+    function ddSeverity(currentDd, safetyCut) {
+      const dd = Number(currentDd) || 0;
+      const sc = (safetyCut === null || safetyCut === undefined) ? null : Number(safetyCut);
+      if (sc === null || !(sc > 0)) {
+        // no threshold → neutral
+        return { ratio: null, severity: 'neutral' };
+      }
+      const ratio = dd / sc;
+      if (ratio >= 0.80) return { ratio, severity: 'danger' };
+      if (ratio >= 0.50) return { ratio, severity: 'warning' };
+      return { ratio, severity: 'muted' };
+    }
+
+    function renderDdSafetyCell(sub) {
+      const ddNum = Number(sub.current_dd_usd) || 0;
+      const sc = (sub.safety_cut_dd === null || sub.safety_cut_dd === undefined)
+        ? null : Number(sub.safety_cut_dd);
+      const { ratio, severity } = ddSeverity(ddNum, sc);
+
+      let colorCls = 'text-fg-muted';
+      let weight = '';
+      if (severity === 'warning') colorCls = 'text-warning';
+      else if (severity === 'danger') { colorCls = 'text-danger'; weight = 'font-semibold'; }
+      else if (severity === 'neutral') colorCls = 'text-fg-muted';
+
+      const ddStr = '$' + ddNum.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+      const scStr = sc === null ? '—' : '$' + sc.toLocaleString('en-US', { minimumFractionDigits: 0, maximumFractionDigits: 0 });
+      const ratioStr = (ratio === null) ? '' :
+        ` <span class="text-fg-subtle">(${Math.round(ratio * 100)}%)</span>`;
+
+      return `<span class="font-mono tabular-nums ${colorCls} ${weight}">${ddStr} / ${scStr}${ratioStr}</span>`;
+    }
+
+    function isNearCut(sub) {
+      const sc = (sub.safety_cut_dd === null || sub.safety_cut_dd === undefined)
+        ? null : Number(sub.safety_cut_dd);
+      if (sc === null || !(sc > 0)) return false;
+      const dd = Number(sub.current_dd_usd) || 0;
+      return dd / sc >= 0.80;
+    }
+
+    // ─── Subscription render ────────────────────────────────────────────
+    function statusBadge(status) {
+      if (status === 'active') {
+        return `<span class="inline-flex items-center gap-1.5 px-2 py-0.5 rounded text-[10px] font-medium bg-accent/10 text-accent border border-accent/30">
+          <span class="w-1.5 h-1.5 bg-accent rounded-full animate-pulse"></span> Active
+        </span>`;
+      }
+      if (status === 'paused') {
+        return `<span class="inline-flex items-center gap-1.5 px-2 py-0.5 rounded text-[10px] font-medium bg-warning/10 text-warning border border-warning/30">
+          <span class="w-1.5 h-1.5 bg-warning rounded-full"></span> Paused
+        </span>`;
+      }
+      return `<span class="inline-flex items-center gap-1.5 px-2 py-0.5 rounded text-[10px] font-medium bg-bg-muted text-fg-subtle border border-border-subtle">
+        <span class="w-1.5 h-1.5 bg-fg-subtle rounded-full"></span> Stopped
+      </span>`;
+    }
+
+    function showSubState(which) {
+      $('subs-loading').classList.toggle('hidden',    which !== 'loading');
+      $('subs-error').classList.toggle('hidden',      which !== 'error');
+      $('subs-empty').classList.toggle('hidden',      which !== 'empty');
+      $('subs-table-wrap').classList.toggle('hidden', which !== 'table');
+    }
+
+    function renderSubscriptions() {
+      const visible = subscriptions; // include all for now
+      if (visible.length === 0) {
+        showSubState('empty');
+        $('stat-active-count').textContent = '0';
+        $('stat-active-label').textContent = 'ยังไม่มี strategy';
+        $('stat-near-cut-count').textContent = '0';
+        $('stat-near-cut-label').textContent = 'ยังไม่มีใครตั้ง threshold';
+        return;
+      }
+
+      const activeCount = visible.filter(s => s.status === 'active').length;
+      $('stat-active-count').textContent = String(activeCount);
+      $('stat-active-label').textContent = `${visible.length} subscriptions total`;
+
+      // Near safety-cut count (skip rows w/ null safety_cut)
+      const nearCutCount = visible.filter(isNearCut).length;
+      const totalWithSc = visible.filter(s => s.safety_cut_dd !== null && s.safety_cut_dd !== undefined && Number(s.safety_cut_dd) > 0).length;
+      $('stat-near-cut-count').textContent = String(nearCutCount);
+      if (totalWithSc === 0) {
+        $('stat-near-cut-label').textContent = 'ยังไม่มีใครตั้ง threshold';
+      } else {
+        $('stat-near-cut-label').textContent = `จาก ${totalWithSc} ที่ตั้ง threshold (≥ 80%)`;
+      }
+
+      const rows = visible.map(s => {
+        const code = s.run_code || '—';
+        const symTf = `${s.symbol || '—'} / ${s.timeframe || '—'}`;
+        const mult = `×${Number(s.risk_multiplier || 1).toFixed(1)}`;
+        const status = s.status || 'stopped';
+        const lastSignal = relTime(s.last_signal_at);
+        const lastPnlUpdate = s.last_pnl_update_at ? relTime(s.last_pnl_update_at) : '—';
+        const isStopped = status === 'stopped';
+        const rowCls = isNearCut(s) ? 'row-near-cut' : '';
+        const ddSafetyCell = renderDdSafetyCell(s);
+
+        const pauseResumeBtn = status === 'paused'
+          ? `<button class="icon-btn" title="Resume" data-action="resume" data-id="${escapeHtml(s.id)}">
+              <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z"/>
+                <path stroke-linecap="round" stroke-linejoin="round" d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+              </svg>
+            </button>`
+          : `<button class="icon-btn" title="Pause" data-action="pause" data-id="${escapeHtml(s.id)}" ${isStopped ? 'disabled style="opacity:0.4;cursor:not-allowed"' : ''}>
+              <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M10 9v6m4-6v6m7-3a9 9 0 11-18 0 9 9 0 0118 0z"/>
+              </svg>
+            </button>`;
+
+        return `
+          <tr data-id="${escapeHtml(s.id)}" class="${rowCls}">
+            <td>
+              <button class="font-mono text-info text-xs hover:underline cursor-pointer" data-action="copy" data-code="${escapeHtml(code)}" title="คลิกเพื่อคัดลอก">${escapeHtml(code)}</button>
+            </td>
+            <td class="font-mono text-fg-muted">${escapeHtml(symTf)}</td>
+            <td class="font-mono">
+              <span class="text-fg">${mult}</span>
+              <button class="icon-btn ml-1 align-middle" title="แก้ Strategy Settings" data-action="edit-mult" data-id="${escapeHtml(s.id)}" ${isStopped ? 'disabled style="opacity:0.4;cursor:not-allowed"' : ''}>
+                <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                  <path stroke-linecap="round" stroke-linejoin="round" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/>
+                </svg>
+              </button>
+            </td>
+            <td>${ddSafetyCell}</td>
+            <td>${statusBadge(status)}</td>
+            <td class="hidden md:table-cell text-fg-muted text-xs" title="${escapeHtml(s.last_signal_at || '')}">${lastSignal}</td>
+            <td class="hidden lg:table-cell text-fg-muted text-xs" title="${escapeHtml(s.last_pnl_update_at || '')}">${lastPnlUpdate}</td>
+            <td class="text-right">
+              <div class="inline-flex items-center gap-1">
+                ${pauseResumeBtn}
+                <button class="icon-btn danger" title="หยุด strategy" data-action="stop" data-id="${escapeHtml(s.id)}" ${isStopped ? 'disabled style="opacity:0.4;cursor:not-allowed"' : ''}>
+                  <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
+                  </svg>
+                </button>
+              </div>
+            </td>
+          </tr>
+        `;
+      }).join('');
+      $('subs-tbody').innerHTML = rows;
+
+      // wire actions
+      $('subs-tbody').querySelectorAll('[data-action]').forEach(btn => {
+        btn.addEventListener('click', onSubAction);
+      });
+
+      showSubState('table');
+    }
+
+    function onSubAction(e) {
+      const btn = e.currentTarget;
+      const action = btn.dataset.action;
+      const id = btn.dataset.id;
+      const sub = subscriptions.find(s => s.id === id);
+
+      if (action === 'copy') {
+        navigator.clipboard?.writeText(btn.dataset.code).then(() => {
+          showAlert('success', 'คัดลอก code แล้ว');
+        });
+        return;
+      }
+      if (!sub) return;
+      if (action === 'pause')      patchStatus(sub, 'paused');
+      else if (action === 'resume') patchStatus(sub, 'active');
+      else if (action === 'edit-mult') openEditMult(sub);
+      else if (action === 'stop')   openStopModal(sub);
+    }
+
+    async function patchStatus(sub, newStatus) {
+      try {
+        await apiRequest(`/api/bots/subscriptions/${sub.id}`, {
+          method: 'PATCH',
+          body: JSON.stringify({ status: newStatus }),
+        });
+        showAlert('success', newStatus === 'paused' ? 'หยุดชั่วคราวแล้ว' : 'รันต่อแล้ว');
+        loadSubscriptions();
+      } catch (err) {
+        showAlert('error', err.message || 'อัปเดตไม่สำเร็จ');
+      }
+    }
+
+    // ─── Edit strategy-settings modal ───────────────────────────────────
+    function openEditMult(sub) {
+      editingSub = sub;
+      $('edit-mult-code').textContent = sub.run_code || '—';
+      $('edit-mult-input').value = Number(sub.risk_multiplier || 1).toFixed(1);
+
+      // Initialise safety-cut state from sub
+      const sc = (sub.safety_cut_dd === null || sub.safety_cut_dd === undefined)
+        ? null : Number(sub.safety_cut_dd);
+      editSc.disabled = (sc === null);
+      editSc.lastValue = sc === null ? '' : String(sc);
+      $('edit-sc-input').value = editSc.lastValue;
+      renderEditScState();
+      renderEditScCurrent();
+      hideEditScError();
+      updateEditPreview();
+      renderEditPeak();
+
+      // Always reset to main view
+      $('edit-view-main').classList.remove('hidden');
+      $('edit-view-reset-confirm').classList.add('hidden');
+
+      $('edit-mult-modal').classList.remove('hidden');
+      setTimeout(() => $('edit-mult-input').focus(), 50);
+    }
+
+    function closeEditMult() {
+      $('edit-mult-modal').classList.add('hidden');
+      editingSub = null;
+      // Reset confirm-view button label in case it was left in "กำลัง reset…"
+      $('edit-reset-confirm-btn').disabled = false;
+      $('edit-reset-confirm-label').textContent = 'Reset';
+    }
+
+    // Render Peak Tracking section using current editingSub
+    function renderEditPeak() {
+      if (!editingSub) return;
+      const peak = Number(editingSub.peak_pnl_usd);
+      const curPnl = Number(editingSub.current_pnl_usd);
+      const dd = Number(editingSub.current_dd_usd) || 0;
+      $('edit-peak-value').textContent       = isNaN(peak)   ? '—' : fmtMoney(peak);
+      $('edit-peak-current-pnl').textContent = isNaN(curPnl) ? '—' : fmtMoney(curPnl);
+      $('edit-peak-current-dd').textContent  = fmtMoney(dd);
+      // Show "no threshold" help if safety_cut_dd is null
+      const hasSc = !(editingSub.safety_cut_dd === null || editingSub.safety_cut_dd === undefined);
+      $('edit-reset-peak-help-nosc').classList.toggle('hidden', hasSc);
+    }
+
+    function updateEditPreview() {
+      if (!editingSub) return;
+      const mult = Math.max(0.1, Math.min(10, Number($('edit-mult-input').value) || 1));
+      const baseRisk = editingSub.params?.risk_per_trade_usd ?? 10;
+      $('edit-preview-risk').textContent = fmtMoney(baseRisk * mult);
+      $('edit-preview-dd').textContent = '—';
+      renderEditScCurrent();
+    }
+
+    function renderEditScState() {
+      const input = $('edit-sc-input');
+      const badge = $('edit-sc-badge');
+      const toggleLabel = $('edit-sc-toggle-label');
+      if (editSc.disabled) {
+        input.disabled = true;
+        input.classList.add('input-disabled-look');
+        badge.textContent = 'ปิด';
+        badge.className = 'field-label-pill off';
+        toggleLabel.textContent = 'เปิด';
+      } else {
+        input.disabled = false;
+        input.classList.remove('input-disabled-look');
+        badge.textContent = 'เปิด';
+        badge.className = 'field-label-pill on';
+        toggleLabel.textContent = 'ปิด';
+      }
+    }
+
+    function renderEditScCurrent() {
+      if (!editingSub) return;
+      const dd = Number(editingSub.current_dd_usd) || 0;
+      // Only show panel when sub has a value or user enabled it
+      const scVal = editSc.disabled ? null : parseFloat($('edit-sc-input').value);
+      if (editSc.disabled || isNaN(scVal) || scVal <= 0) {
+        // Show DD only when there is meaningful data
+        if (dd > 0) {
+          $('edit-sc-current').classList.remove('hidden');
+          $('edit-sc-current-value').textContent = fmtMoney(dd);
+          $('edit-sc-current-ratio').innerHTML = '<span class="text-fg-muted">— (ไม่มี threshold)</span>';
+        } else {
+          $('edit-sc-current').classList.add('hidden');
+        }
+        return;
+      }
+      $('edit-sc-current').classList.remove('hidden');
+      $('edit-sc-current-value').textContent = fmtMoney(dd);
+      const ratio = dd / scVal;
+      const pct = Math.round(ratio * 100);
+      let cls = 'text-fg-muted';
+      if (ratio >= 0.80) cls = 'text-danger font-semibold';
+      else if (ratio >= 0.50) cls = 'text-warning';
+      $('edit-sc-current-ratio').innerHTML = `<span class="${cls}">${pct}%</span>`;
+    }
+
+    function showEditScError(msg) {
+      const el = $('edit-sc-error');
+      el.textContent = msg;
+      el.classList.remove('hidden');
+    }
+    function hideEditScError() {
+      $('edit-sc-error').classList.add('hidden');
+    }
+
+    $('edit-mult-input').addEventListener('input', updateEditPreview);
+    $('edit-sc-input').addEventListener('input', () => {
+      hideEditScError();
+      renderEditScCurrent();
+    });
+    $('edit-sc-toggle').addEventListener('click', () => {
+      if (editSc.disabled) {
+        // Re-enable: restore last value
+        editSc.disabled = false;
+        $('edit-sc-input').value = editSc.lastValue || '';
+      } else {
+        // Disable: remember current value
+        editSc.lastValue = $('edit-sc-input').value;
+        editSc.disabled = true;
+        hideEditScError();
+      }
+      renderEditScState();
+      renderEditScCurrent();
+    });
+
+    $('edit-mult-close-btn').addEventListener('click', closeEditMult);
+    $('edit-mult-cancel-btn').addEventListener('click', closeEditMult);
+
+    // ─── Reset Peak flow ────────────────────────────────────────────────
+    function openResetPeakConfirm() {
+      if (!editingSub) return;
+      $('edit-reset-code').textContent = editingSub.run_code || '—';
+      const curPnl = Number(editingSub.current_pnl_usd);
+      $('edit-reset-current-pnl').textContent = isNaN(curPnl) ? '—' : fmtMoney(curPnl);
+      $('edit-view-main').classList.add('hidden');
+      $('edit-view-reset-confirm').classList.remove('hidden');
+      $('edit-reset-confirm-btn').disabled = false;
+      $('edit-reset-confirm-label').textContent = 'Reset';
+    }
+
+    function cancelResetPeakConfirm() {
+      $('edit-view-reset-confirm').classList.add('hidden');
+      $('edit-view-main').classList.remove('hidden');
+    }
+
+    async function confirmResetPeak() {
+      if (!editingSub) return;
+      const sub = editingSub;
+      const btn = $('edit-reset-confirm-btn');
+      btn.disabled = true;
+      $('edit-reset-confirm-label').textContent = 'กำลัง reset…';
+
+      try {
+        const updated = await apiRequest(
+          `/api/bots/subscriptions/${sub.id}/reset-peak`,
+          { method: 'POST' }
+        );
+        // Replace in local state (no full reload required)
+        if (updated && updated.id) {
+          subscriptions = subscriptions.map(s => s.id === updated.id ? updated : s);
+        }
+        closeEditMult();
+        renderSubscriptions();
+        showAlert('success', 'Reset peak สำเร็จ — DD = $0');
+      } catch (err) {
+        // Modal stays open; restore button + show error toast
+        btn.disabled = false;
+        $('edit-reset-confirm-label').textContent = 'Reset';
+        showAlert('error', err.message || 'Reset peak ไม่สำเร็จ');
+      }
+    }
+
+    $('edit-reset-peak-btn').addEventListener('click', openResetPeakConfirm);
+    $('edit-reset-cancel-btn').addEventListener('click', cancelResetPeakConfirm);
+    $('edit-reset-confirm-btn').addEventListener('click', confirmResetPeak);
+
+    $('edit-mult-save-btn').addEventListener('click', async () => {
+      if (!editingSub) return;
+      // Multiplier
+      let mult = parseFloat($('edit-mult-input').value);
+      if (isNaN(mult) || mult < 0.1) mult = 0.1;
+      if (mult > 10) mult = 10;
+
+      // Safety cut
+      let scPayload; // either null or > 0
+      if (editSc.disabled) {
+        scPayload = null;
+      } else {
+        const v = parseFloat($('edit-sc-input').value);
+        if (isNaN(v) || v <= 0) {
+          showEditScError('ค่าต้อง > 0 (หรือกดปิดถ้าไม่ต้องการใช้)');
+          $('edit-sc-input').focus();
+          return;
+        }
+        scPayload = v;
+      }
+
+      try {
+        await apiRequest(`/api/bots/subscriptions/${editingSub.id}`, {
+          method: 'PATCH',
+          body: JSON.stringify({
+            risk_multiplier: mult,
+            safety_cut_dd: scPayload,
+          }),
+        });
+        showAlert('success', 'อัปเดต strategy settings แล้ว');
+        closeEditMult();
+        loadSubscriptions();
+      } catch (err) {
+        showAlert('error', err.message || 'อัปเดตไม่สำเร็จ');
+      }
+    });
+
+    // ─── Stop modal ─────────────────────────────────────────────────────
+    let stoppingSub = null;
+    let hardOrderCount = null; // null = unknown, number = known
+
+    function openStopModal(sub) {
+      stoppingSub = sub;
+      $('stop-code').textContent = sub.run_code || '—';
+      // Always open on view A (choose)
+      $('stop-view-choose').classList.remove('hidden');
+      $('stop-view-hard').classList.add('hidden');
+      $('stop-modal').classList.remove('hidden');
+    }
+    function closeStopModal() {
+      $('stop-modal').classList.add('hidden');
+      stoppingSub = null;
+      hardOrderCount = null;
+    }
+
+    async function stopSub(mode) {
+      if (!stoppingSub) return;
+      const sub = stoppingSub;
+      closeStopModal();
+      try {
+        await apiRequest(`/api/bots/subscriptions/${sub.id}?stop_mode=${encodeURIComponent(mode)}`, {
+          method: 'DELETE',
+        });
+        showAlert('success', mode === 'immediate' ? 'หยุด + ปิด positions แล้ว' : 'หยุด strategy แล้ว');
+        loadSubscriptions();
+      } catch (err) {
+        showAlert('error', err.message || 'หยุด strategy ไม่สำเร็จ');
+      }
+    }
+
+    // Switch to hard-delete view + fetch order count for preview
+    async function openHardDeleteView() {
+      if (!stoppingSub) return;
+      const sub = stoppingSub;
+
+      $('stop-hard-code').textContent = sub.run_code || '—';
+      $('stop-view-choose').classList.add('hidden');
+      $('stop-view-hard').classList.remove('hidden');
+
+      // Reset preview state
+      $('stop-hard-counting').classList.remove('hidden');
+      $('stop-hard-impact').classList.add('hidden');
+      $('stop-hard-confirm-btn').disabled = true;
+      $('stop-hard-confirm-label').textContent = 'ยืนยันลบทั้งหมด';
+      hardOrderCount = null;
+
+      // Fetch order count (best-effort)
+      try {
+        const orders = await apiRequest(`/api/bots/subscriptions/${sub.id}/orders`);
+        const list = Array.isArray(orders) ? orders : (orders?.items || []);
+        hardOrderCount = list.length;
+      } catch (err) {
+        // fallback — unknown count
+        hardOrderCount = null;
+      }
+
+      // Render impact
+      $('stop-hard-counting').classList.add('hidden');
+      $('stop-hard-impact').classList.remove('hidden');
+      const line = $('stop-hard-impact-line');
+      if (hardOrderCount === null) {
+        line.innerHTML = 'ไม่ทราบจำนวน orders — ลบ subscription + order history ทั้งหมด?';
+      } else if (hardOrderCount === 0) {
+        line.innerHTML = 'ไม่มี order history — ลบเฉพาะ subscription นี้';
+      } else {
+        line.innerHTML = `จะลบ <span class="font-mono text-danger font-semibold">${hardOrderCount}</span> orders ออกจากระบบด้วย — ดำเนินการต่อ?`;
+      }
+      $('stop-hard-confirm-btn').disabled = false;
+    }
+
+    function backToChoose() {
+      $('stop-view-hard').classList.add('hidden');
+      $('stop-view-choose').classList.remove('hidden');
+    }
+
+    async function hardDeleteSub() {
+      if (!stoppingSub) return;
+      const sub = stoppingSub;
+      const btn = $('stop-hard-confirm-btn');
+
+      // Lock UI during request
+      btn.disabled = true;
+      $('stop-hard-confirm-label').textContent = 'กำลังลบ…';
+
+      try {
+        const res = await apiRequest(`/api/bots/subscriptions/${sub.id}?hard=true`, {
+          method: 'DELETE',
+        });
+        const ordersDeleted = (res && typeof res.orders_deleted === 'number') ? res.orders_deleted : (hardOrderCount ?? 0);
+
+        // Optimistic local removal — drop the row from state and re-render
+        subscriptions = subscriptions.filter(s => s.id !== sub.id);
+        closeStopModal();
+        renderSubscriptions();
+
+        showAlert('success', ordersDeleted > 0
+          ? `ลบ strategy + ${ordersDeleted} orders แล้ว`
+          : 'ลบ strategy แล้ว');
+      } catch (err) {
+        // Restore button so user can retry
+        btn.disabled = false;
+        $('stop-hard-confirm-label').textContent = 'ยืนยันลบทั้งหมด';
+        showAlert('error', err.message || 'ลบถาวรไม่สำเร็จ');
+      }
+    }
+
+    $('stop-cancel-btn').addEventListener('click', closeStopModal);
+    $('stop-immediate-btn').addEventListener('click', () => stopSub('immediate'));
+    $('stop-leave-btn').addEventListener('click', () => stopSub('leave'));
+    $('stop-hard-btn').addEventListener('click', openHardDeleteView);
+    $('stop-hard-back-btn').addEventListener('click', backToChoose);
+    $('stop-hard-cancel-btn').addEventListener('click', closeStopModal);
+    $('stop-hard-confirm-btn').addEventListener('click', hardDeleteSub);
+
+    // close modal on backdrop click
+    $('edit-mult-modal').addEventListener('click', (e) => {
+      if (e.target === e.currentTarget) closeEditMult();
+    });
+    $('stop-modal').addEventListener('click', (e) => {
+      if (e.target === e.currentTarget) closeStopModal();
+    });
+
+    // ─── Load subscriptions ─────────────────────────────────────────────
+    async function loadSubscriptions() {
+      showSubState('loading');
+      try {
+        const data = await apiRequest('/api/bots/subscriptions');
+        subscriptions = Array.isArray(data) ? data : (data?.items || []);
+        renderSubscriptions();
+      } catch (err) {
+        if (err.message === 'unauthorized') return;
+        $('subs-error-msg').textContent = err.message || 'โหลด subscriptions ไม่สำเร็จ';
+        showSubState('error');
+        $('stat-active-count').textContent = '—';
+        $('stat-active-label').textContent = 'โหลดไม่สำเร็จ';
+        $('stat-near-cut-count').textContent = '—';
+        $('stat-near-cut-label').textContent = 'โหลดไม่สำเร็จ';
+      }
+    }
+    $('subs-retry-btn').addEventListener('click', loadSubscriptions);
+
+    // ─── Per-port stat cards ────────────────────────────────────────────
+    let portStats = [];                       // list of stat objects (server shape)
+    const portSyncState = new Map();          // portId → { syncing, slowTimer, abortTimer }
+    const PORT_SYNC_TIMEOUT_MS = 60_000;      // hard timeout
+    const PORT_SYNC_SLOW_MS    = 30_000;      // warning at 30s
+
+    function showPortsState(which) {
+      $('ports-loading').classList.toggle('hidden', which !== 'loading');
+      $('ports-error').classList.toggle('hidden',   which !== 'error');
+      $('ports-empty').classList.toggle('hidden',   which !== 'empty');
+      $('ports-grid').classList.toggle('hidden',    which !== 'grid');
+    }
+
+    // ─── Per-port formatting helpers ───────────────────────────────────
+    function fmtMoneyCcy(n, currency) {
+      // USC (cent) → "1,234 USC" (no decimals, suffix), else "$1,234.56"
+      if (n === null || n === undefined || isNaN(n)) return '—';
+      const num = Number(n);
+      if (currency === 'USC') {
+        const abs = Math.abs(num);
+        const sign = num < 0 ? '-' : '';
+        return sign + abs.toLocaleString('en-US', { maximumFractionDigits: 0 }) + ' USC';
+      }
+      // default USD-style
+      const sign = num < 0 ? '-' : '';
+      const abs = Math.abs(num);
+      return sign + '$' + abs.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+    }
+
+    function fmtSignedMoneyCcy(n, currency) {
+      if (n === null || n === undefined || isNaN(n)) return '—';
+      const num = Number(n);
+      if (num === 0) return currency === 'USC' ? '0 USC' : '$0.00';
+      const sign = num > 0 ? '+' : '-';
+      const abs = Math.abs(num);
+      if (currency === 'USC') {
+        return sign + abs.toLocaleString('en-US', { maximumFractionDigits: 0 }) + ' USC';
+      }
+      return sign + '$' + abs.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+    }
+
+    function fmtPct(ratio, digits = 1) {
+      if (ratio === null || ratio === undefined || isNaN(ratio)) return '—';
+      return (Number(ratio) * 100).toFixed(digits) + '%';
+    }
+
+    // Sentiment color for Net P/L style numbers
+    function pnlClass(n) {
+      if (n === null || n === undefined || isNaN(n)) return 'text-fg-muted';
+      const v = Number(n);
+      if (v > 0) return 'text-accent';
+      if (v < 0) return 'text-danger';
+      return 'text-fg-muted';
+    }
+
+    // Profit factor color: > 1.5 green · 1–1.5 amber · < 1 red
+    function pfClass(pf) {
+      if (pf === null || pf === undefined || isNaN(pf)) return 'text-fg-muted';
+      const v = Number(pf);
+      if (v > 1.5) return 'text-accent';
+      if (v >= 1)  return 'text-warning';
+      return 'text-danger';
+    }
+
+    // DD utilization color: < 50% green · 50–80% amber · ≥ 80% red
+    function ddUtilClass(ratio) {
+      if (ratio === null || ratio === undefined || isNaN(ratio)) return 'text-fg-muted';
+      const v = Number(ratio);
+      if (v >= 0.80) return 'text-danger font-semibold';
+      if (v >= 0.50) return 'text-warning';
+      return 'text-accent';
+    }
+
+    // Build the inner HTML for one card (no outer wrapper — that stays stable for flash effects)
+    function renderPortCardInner(p) {
+      const ccy        = p.currency || '';
+      const account    = p.account || {};
+      const realized   = p.realized || {};
+      const open       = p.open || {};
+      const risk       = p.risk || {};
+      const isUsc      = ccy === 'USC';
+      const totalTrades = Number(realized.total_trades) || 0;
+      const hasTrades   = totalTrades > 0;
+
+      const balance    = account.balance;
+      const equity     = account.equity;
+      const floating   = (account.floating_pnl !== null && account.floating_pnl !== undefined)
+                          ? Number(account.floating_pnl)
+                          : (Number.isFinite(Number(equity)) && Number.isFinite(Number(balance))
+                              ? Number(equity) - Number(balance) : null);
+
+      // Floating arrow + tone
+      let floatingHtml = '<span class="text-fg-muted">—</span>';
+      if (floating !== null && !isNaN(floating)) {
+        if (floating > 0) {
+          floatingHtml = `<span class="text-accent">↑ ${escapeHtml(fmtSignedMoneyCcy(floating, ccy))}</span>`;
+        } else if (floating < 0) {
+          floatingHtml = `<span class="text-danger">↓ ${escapeHtml(fmtSignedMoneyCcy(floating, ccy))}</span>`;
+        } else {
+          floatingHtml = `<span class="text-fg-muted">${escapeHtml(fmtSignedMoneyCcy(0, ccy))}</span>`;
+        }
+      }
+
+      // Active strategies badge (top-right of header info)
+      const activeN = Number(risk.active_strategies) || 0;
+      const activeBadge = `
+        <span class="inline-flex items-center gap-1.5 px-2 py-0.5 rounded text-[10px] font-medium
+                     ${activeN > 0
+                        ? 'bg-accent/10 text-accent border border-accent/30'
+                        : 'bg-bg-muted text-fg-subtle border border-border-subtle'}">
+          <span class="w-1.5 h-1.5 rounded-full ${activeN > 0 ? 'bg-accent animate-pulse' : 'bg-fg-subtle'}"></span>
+          Active ${activeN}
+        </span>`;
+
+      // Header row (login · server · ccy · active · refresh)
+      const headerHtml = `
+        <div class="flex items-start justify-between gap-3 mb-3">
+          <div class="min-w-0 flex-1">
+            <div class="flex items-center gap-2 flex-wrap">
+              <span class="font-mono text-fg text-sm font-semibold">${escapeHtml(String(p.login ?? '—'))}</span>
+              <span class="text-fg-subtle text-xs">·</span>
+              <span class="text-fg-muted text-xs truncate" title="${escapeHtml(p.server || '')}">${escapeHtml(p.server || '—')}</span>
+              <span class="text-fg-subtle text-xs">·</span>
+              <span class="text-fg-muted text-[11px] font-mono uppercase tracking-wider">${escapeHtml(ccy || '—')}</span>
+              ${activeBadge}
+            </div>
+            ${p.name ? `<div class="text-fg-subtle text-[11px] mt-0.5 truncate" title="${escapeHtml(p.name)}">${escapeHtml(p.name)}</div>` : ''}
+          </div>
+          <div class="flex items-center gap-1 flex-shrink-0">
+            <button class="icon-btn port-refresh-btn" title="Sync จาก MT5" data-port-id="${escapeHtml(p.port_id)}" aria-label="Refresh port stats">
+              <svg class="w-4 h-4 port-refresh-icon" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/>
+              </svg>
+            </button>
+            <span class="port-chevron-hint inline-flex items-center" aria-hidden="true" title="คลิก card เพื่อดูรายละเอียด">
+              <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7"/>
+              </svg>
+            </span>
+          </div>
+        </div>`;
+
+      // USC warning banner
+      const uscBanner = isUsc ? `
+        <div class="bg-warning/5 border border-warning/30 rounded-lg px-3 py-2 mb-3 flex items-start gap-2">
+          <svg class="w-3.5 h-3.5 text-warning flex-shrink-0 mt-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/>
+          </svg>
+          <div class="text-warning text-[11px] leading-relaxed">
+            Cent account — risk scaling has known 100× mismatch issue
+          </div>
+        </div>` : '';
+
+      // Balance / Equity / Floating row (always rendered)
+      const balanceRow = `
+        <div class="grid grid-cols-3 gap-3 mb-4">
+          <div>
+            <div class="text-[10px] uppercase tracking-wider font-medium text-fg-muted mb-0.5">Balance</div>
+            <div class="font-mono tabular-nums text-fg text-sm font-semibold">${escapeHtml(fmtMoneyCcy(balance, ccy))}</div>
+          </div>
+          <div>
+            <div class="text-[10px] uppercase tracking-wider font-medium text-fg-muted mb-0.5">Equity</div>
+            <div class="font-mono tabular-nums text-fg text-sm font-semibold">${escapeHtml(fmtMoneyCcy(equity, ccy))}</div>
+          </div>
+          <div>
+            <div class="text-[10px] uppercase tracking-wider font-medium text-fg-muted mb-0.5">Floating</div>
+            <div class="font-mono tabular-nums text-sm font-semibold">${floatingHtml}</div>
+          </div>
+        </div>`;
+
+      // Body: empty state vs metrics grid
+      let bodyHtml;
+      if (!hasTrades) {
+        const sc = Number(risk.total_safety_cut) || 0;
+        const dd = Number(risk.current_dd_sum) || 0;
+        const ddPct = sc > 0 ? Math.round((dd / sc) * 100) : 0;
+        const infoLine = `Active: ${activeN} ${activeN === 1 ? 'strategy' : 'strategies'} · Safety Cut: ${fmtMoneyCcy(sc, ccy)} · DD: ${fmtMoneyCcy(dd, ccy)}${sc > 0 ? ` (${ddPct}%)` : ''}`;
+        bodyHtml = `
+          <div class="bg-bg-muted/50 border border-border-subtle rounded-lg px-3 py-4 text-center mb-3">
+            <div class="text-fg-muted text-sm">⏳ ยังไม่มี trade — รอ MA Cross signal เกิดบน market</div>
+            <div class="text-fg-subtle text-[11px] mt-1 font-mono tabular-nums">${escapeHtml(infoLine)}</div>
+          </div>`;
+      } else {
+        const wins      = Number(realized.wins) || 0;
+        const losses    = Number(realized.losses) || 0;
+        const winRate   = (realized.win_rate === null || realized.win_rate === undefined) ? null : Number(realized.win_rate);
+        const netProfit = (realized.net_profit === null || realized.net_profit === undefined) ? null : Number(realized.net_profit);
+        const grossLoss = (realized.gross_loss === null || realized.gross_loss === undefined) ? null : Number(realized.gross_loss);
+        const pfRaw     = (realized.profit_factor === null || realized.profit_factor === undefined) ? null : Number(realized.profit_factor);
+
+        // Profit factor display:
+        //   gross_loss == 0 + wins > 0 → ">10"
+        //   otherwise → 2-decimal value or "—"
+        let pfDisplay = '—';
+        let pfColor   = 'text-fg-muted';
+        if (pfRaw !== null && !isNaN(pfRaw) && isFinite(pfRaw)) {
+          pfDisplay = pfRaw.toFixed(2);
+          pfColor   = pfClass(pfRaw);
+        } else if (grossLoss === 0 && wins > 0) {
+          pfDisplay = '>10';
+          pfColor   = 'text-accent';
+        }
+
+        const positions = Number(open.positions) || 0;
+        const ddUtil    = (risk.dd_utilization === null || risk.dd_utilization === undefined) ? null : Number(risk.dd_utilization);
+        const ddUtilPct = ddUtil === null ? '—' : Math.round(ddUtil * 100) + '%';
+        const scLabel   = (risk.total_safety_cut !== null && risk.total_safety_cut !== undefined && Number(risk.total_safety_cut) > 0)
+                            ? ` / ${fmtMoneyCcy(risk.total_safety_cut, ccy)}` : '';
+
+        bodyHtml = `
+          <div class="grid grid-cols-3 sm:grid-cols-6 gap-2 mb-3">
+            <div class="metric-tile">
+              <div class="metric-label">Trades</div>
+              <div class="metric-value">${totalTrades}<span class="text-fg-subtle text-[10px] ml-1">${wins}/${losses}</span></div>
+            </div>
+            <div class="metric-tile">
+              <div class="metric-label">Win Rate</div>
+              <div class="metric-value">${escapeHtml(fmtPct(winRate))}</div>
+            </div>
+            <div class="metric-tile">
+              <div class="metric-label">Net P/L</div>
+              <div class="metric-value ${pnlClass(netProfit)}">${escapeHtml(fmtSignedMoneyCcy(netProfit, ccy))}</div>
+            </div>
+            <div class="metric-tile">
+              <div class="metric-label">Profit F.</div>
+              <div class="metric-value ${pfColor}">${escapeHtml(pfDisplay)}</div>
+            </div>
+            <div class="metric-tile">
+              <div class="metric-label">Open</div>
+              <div class="metric-value">${positions}</div>
+            </div>
+            <div class="metric-tile">
+              <div class="metric-label">DD Used</div>
+              <div class="metric-value ${ddUtilClass(ddUtil)}">${escapeHtml(ddUtilPct)}${scLabel ? `<span class="text-fg-subtle text-[10px] ml-0.5">${escapeHtml(scLabel)}</span>` : ''}</div>
+            </div>
+          </div>`;
+      }
+
+      // Footer: last sync timestamp
+      const lastSync = account.last_sync || null;
+      const lastSyncRel = lastSync ? relTime(lastSync) : 'ยังไม่เคย sync';
+      const lastSyncAbs = lastSync || '';
+      const footerHtml = `
+        <div class="flex items-center justify-between gap-2 pt-2 border-t border-border-subtle">
+          <span class="text-fg-subtle text-[11px]" title="${escapeHtml(lastSyncAbs)}">
+            Last sync: <span class="port-last-sync">${escapeHtml(lastSyncRel)}</span>
+          </span>
+          <span class="port-slow-warn hidden text-warning text-[11px]">⏳ Sync ใช้เวลานานกว่าปกติ…</span>
+        </div>`;
+
+      return headerHtml + uscBanner + balanceRow + bodyHtml + footerHtml;
+    }
+
+    function renderPortCard(p) {
+      const wrap = document.createElement('div');
+      wrap.className = 'port-card bg-bg-card border border-border-subtle rounded-xl p-5 relative';
+      wrap.dataset.portId = p.port_id;
+      wrap.setAttribute('role', 'link');
+      wrap.setAttribute('tabindex', '0');
+      wrap.setAttribute('aria-label', `ดูรายละเอียดพอร์ต ${p.login || ''}`);
+      wrap.innerHTML = renderPortCardInner(p);
+      return wrap;
+    }
+
+    function wirePortCardInteractions(card) {
+      if (!card) return;
+      const refreshBtn = card.querySelector('.port-refresh-btn');
+      if (refreshBtn) {
+        refreshBtn.addEventListener('click', (e) => {
+          e.stopPropagation();  // don't trigger card navigation
+          onPortRefreshClick(e);
+        });
+      }
+      // Whole-card click → navigate to port detail
+      card.addEventListener('click', () => {
+        const portId = card.dataset.portId;
+        if (portId) window.location.href = `/port/?id=${encodeURIComponent(portId)}`;
+      });
+      // Keyboard activation (Enter / Space)
+      card.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter' || e.key === ' ') {
+          e.preventDefault();
+          const portId = card.dataset.portId;
+          if (portId) window.location.href = `/port/?id=${encodeURIComponent(portId)}`;
+        }
+      });
+    }
+
+    function renderPorts() {
+      const grid = $('ports-grid');
+      if (!portStats || portStats.length === 0) {
+        showPortsState('empty');
+        return;
+      }
+      grid.innerHTML = '';
+      portStats.forEach(p => grid.appendChild(renderPortCard(p)));
+      grid.querySelectorAll('.port-card').forEach(wirePortCardInteractions);
+      showPortsState('grid');
+    }
+
+    function updateSinglePortCard(updatedStats) {
+      const grid = $('ports-grid');
+      const card = grid.querySelector(`.port-card[data-port-id="${CSS.escape(updatedStats.port_id)}"]`);
+      if (!card) return;
+      portStats = portStats.map(p => p.port_id === updatedStats.port_id ? updatedStats : p);
+      card.innerHTML = renderPortCardInner(updatedStats);
+      // Re-bind refresh button only (whole-card click stays on outer node — already wired)
+      const refreshBtn = card.querySelector('.port-refresh-btn');
+      if (refreshBtn) {
+        refreshBtn.addEventListener('click', (e) => {
+          e.stopPropagation();
+          onPortRefreshClick(e);
+        });
+      }
+    }
+
+    function setPortSyncing(card, on) {
+      if (!card) return;
+      const btn = card.querySelector('.port-refresh-btn');
+      const icon = card.querySelector('.port-refresh-icon');
+      if (!btn || !icon) return;
+      if (on) {
+        btn.disabled = true;
+        btn.style.opacity = '0.6';
+        btn.style.cursor = 'not-allowed';
+        icon.classList.add('spin');
+        // dim overlay
+        card.style.opacity = '0.85';
+      } else {
+        btn.disabled = false;
+        btn.style.opacity = '';
+        btn.style.cursor = '';
+        icon.classList.remove('spin');
+        card.style.opacity = '';
+        // Clear any slow-warn label
+        const slow = card.querySelector('.port-slow-warn');
+        if (slow) slow.classList.add('hidden');
+      }
+    }
+
+    function flashCard(card, kind) {
+      if (!card) return;
+      const cls = kind === 'success'
+        ? 'border-accent/30'
+        : 'border-danger/30';
+      // Save & restore border via inline style for ease (avoid losing tailwind base)
+      const prev = card.style.boxShadow;
+      const shadow = kind === 'success'
+        ? '0 0 0 1px rgba(16,185,129,0.40), 0 0 12px rgba(16,185,129,0.20)'
+        : '0 0 0 1px rgba(248,113,113,0.45), 0 0 12px rgba(248,113,113,0.20)';
+      card.style.transition = 'box-shadow 200ms ease';
+      card.style.boxShadow = shadow;
+      setTimeout(() => {
+        card.style.boxShadow = prev || '';
+      }, 500);
+    }
+
+    async function onPortRefreshClick(e) {
+      const btn = e.currentTarget;
+      const portId = btn.dataset.portId;
+      if (!portId) return;
+
+      // Guard double-click via in-flight map
+      const state = portSyncState.get(portId);
+      if (state && state.syncing) return;
+
+      const card = btn.closest('.port-card');
+      portSyncState.set(portId, { syncing: true });
+      setPortSyncing(card, true);
+
+      // Slow-sync warning after 30s (still in-flight)
+      const slowTimer = setTimeout(() => {
+        const slow = card?.querySelector('.port-slow-warn');
+        if (slow) slow.classList.remove('hidden');
+      }, PORT_SYNC_SLOW_MS);
+
+      // Hard timeout via AbortController
+      const ctrl = new AbortController();
+      const abortTimer = setTimeout(() => ctrl.abort(), PORT_SYNC_TIMEOUT_MS);
+
+      portSyncState.set(portId, { syncing: true, slowTimer, abortTimer, ctrl });
+
+      try {
+        const res = await apiRequest(`/api/bots/ports/${encodeURIComponent(portId)}/sync`, {
+          method: 'POST',
+          signal: ctrl.signal,
+        });
+
+        // Server returns { ok, sync_result, stats, synced_at }
+        const fresh = res?.stats;
+        if (fresh && fresh.port_id) {
+          updateSinglePortCard(fresh);
+        }
+
+        const warn = res?.sync_result?.warning;
+        if (warn) {
+          showAlert('warn', `Sync เสร็จแต่มีคำเตือน: ${warn}`);
+        } else {
+          showAlert('success', 'Sync เรียบร้อย');
+        }
+
+        // Update "Last sync" → "just now" inline if no fresh stats came (fallback)
+        if (!fresh) {
+          const last = card?.querySelector('.port-last-sync');
+          if (last) last.textContent = 'just now';
+        }
+
+        flashCard(card, 'success');
+      } catch (err) {
+        if (err.message === 'unauthorized') return;
+        const isAbort = err.name === 'AbortError' || /aborted/i.test(err.message || '');
+        const msg = isAbort
+          ? 'Sync timeout (60s) — ลองอีกครั้ง'
+          : (err.message || 'Sync ไม่สำเร็จ');
+        showAlert('error', msg);
+        flashCard(card, 'error');
+      } finally {
+        clearTimeout(slowTimer);
+        clearTimeout(abortTimer);
+        portSyncState.delete(portId);
+        setPortSyncing(card, false);
+      }
+    }
+
+    async function loadPortStats() {
+      showPortsState('loading');
+      try {
+        const data = await apiRequest('/api/bots/ports/stats');
+        portStats = Array.isArray(data) ? data : (data?.items || []);
+        renderPorts();
+      } catch (err) {
+        if (err.message === 'unauthorized') return;
+        $('ports-error-msg').textContent = err.message || 'โหลด port stats ไม่สำเร็จ';
+        showPortsState('error');
+      }
+    }
+    $('ports-retry-btn').addEventListener('click', loadPortStats);
+
+    // ─── Initial load (run port stats + subscriptions in parallel) ─────
+    Promise.allSettled([loadPortStats(), loadSubscriptions()]);
+  </script>
+</body>
+</html>

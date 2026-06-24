@@ -1,0 +1,35 @@
+/* ============================================================
+   designMD — Spacing tokens
+   ------------------------------------------------------------
+   Base unit 8px. Powers-of-8 scale. Whitespace is structure,
+   not absence — sections breathe with 96–128px vertical air.
+   ============================================================ */
+
+:root {
+  --space-1:   8px;
+  --space-2:  16px;
+  --space-3:  24px;
+  --space-4:  32px;
+  --space-5:  48px;
+  --space-6:  64px;
+  --space-7:  96px;
+  --space-8: 128px;
+
+  /* section rhythm */
+  --section-pad-desktop: 128px;
+  --section-pad-mobile:   48px;
+
+  /* card internal padding */
+  --card-pad-desktop: 40px;
+  --card-pad-mobile:  24px;
+
+  /* page container */
+  --container-max: 1280px;
+  --gutter:        clamp(24px, 5vw, 100px); /* @kind spacing */
+
+  /* nav */
+  --nav-top-gap:   24px;   /* the pill floats — never flush at y=0 */
+  --nav-pad-y:     16px;
+  --nav-pad-x:     40px;
+  --nav-link-gap:  52px;
+}

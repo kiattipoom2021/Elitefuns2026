@@ -1,0 +1,17 @@
+/* ============================================================
+   designMD — Radius tokens
+   ------------------------------------------------------------
+   The defining gesture. The scale skips 8–12 entirely: every
+   radius is either TINY (≤6), MEDIUM-LARGE (20–40), or FULL
+   PILL (99+). The missing middle is what makes surfaces read
+   as "precise utility" OR "soft editorial" with no in-between.
+   ============================================================ */
+
+:root {
+  --radius-xs:    4px;    /* tiny decorative chips, consent micro-chips */
+  --radius-btn:   20px;   /* ★ primary & secondary body CTAs */
+  --radius-consent: 24px; /* signal / consent pills */
+  --radius-frame: 40px;   /* ★ hero media, stadium cards, H2 pill labels */
+  --radius-pill:  999px;  /* nav, carousel cards, chips, country selector */
+  --radius-circle: 50%;   /* portraits, icon buttons, satellite CTAs */
+}

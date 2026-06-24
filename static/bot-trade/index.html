@@ -1,0 +1,2448 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Bot Trade — ELITEFUNS</title>
+
+  <link rel="stylesheet" href="/design/styles.css">
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      // Safelist so JIT picks up classes generated dynamically by JS
+      safelist: [
+        'bg-accent', 'bg-warning', 'bg-danger', 'bg-info',
+        'text-accent', 'text-warning', 'text-danger', 'text-info', 'text-fg', 'text-fg-muted',
+        'border-info/40', 'border-danger/40', 'text-info', 'text-danger',
+      ],
+      theme: {
+        extend: {
+          colors: {
+            bg:       { DEFAULT: '#121110', elevated: '#1A1815', card: '#1A1815', muted: '#232019' },
+            fg:       { DEFAULT: '#F6F2EC', muted: '#C8C1B5', subtle: '#908A7E' },
+            accent:   '#10B981',
+            danger:   '#F87171',
+            warning:  '#F9A826',
+            info:     '#F9A826',
+            'border-subtle': 'rgba(255,255,255,0.09)',
+          },
+          fontFamily: {
+            sans:  ["'Sofia Sans'", 'SofiaSans', 'Arial', 'sans-serif'],
+            mono:  ["'JetBrains Mono'", 'monospace'],
+          },
+        },
+      },
+    };
+  </script>
+
+  <link rel="stylesheet" href="/design/app-shim.css">
+
+  <style>
+    /* ═══════════ Page-specific (bot-trade) ═══════════ */
+    /* Note: .nav-link, .data-table, .skeleton, .modal-backdrop, .modal-card,
+       .metric-tile/.metric-label/.metric-value, .strategy-card all live in
+       /design/app-shim.css. Only bot-trade-unique classes are below. */
+
+    /* Account card */
+    .account-card {
+      position: relative;
+      background: var(--surface-lifted);
+      border: 1px solid var(--border-soft);
+      border-radius: 14px;
+      padding: 1.25rem;
+      cursor: pointer;
+      transition: border-color 0.15s, background-color 0.15s, box-shadow 0.15s;
+    }
+    .account-card:hover:not(.is-selected) { border-color: rgba(249,168,38,0.45); }
+    .account-card.is-selected {
+      border-color: var(--accent);
+      background: rgba(249,168,38,0.08);
+      box-shadow: 0 0 0 1px rgba(249,168,38,0.40);
+    }
+    .account-card:focus-visible {
+      outline: none;
+      border-color: var(--accent);
+      box-shadow: 0 0 0 2px rgba(249,168,38,0.35);
+    }
+    .account-card .check-mark {
+      position: absolute;
+      top: 0.75rem; right: 0.75rem;
+      width: 1.25rem; height: 1.25rem;
+      border-radius: 9999px;
+      background: var(--accent);
+      color: var(--cta-text);
+      display: none;
+      align-items: center; justify-content: center;
+    }
+    .account-card.is-selected .check-mark { display: inline-flex; }
+
+    /* Override shim's `cursor: default` to make rows clickable */
+    .data-table tbody tr { cursor: pointer; transition: background-color 0.15s; }
+    .data-table tbody tr:hover { background: rgba(249,168,38,0.07); }
+    .leader-row:hover td { background: rgba(249,168,38,0.12); }
+
+    /* ── Header alignment override ──
+       app-shim.css forces `.data-table thead th { text-align: left }`.
+       Raise specificity so Tailwind utility classes win for numeric/center cols. */
+    #combo-container .data-table thead th.text-right  { text-align: right;  }
+    #combo-container .data-table thead th.text-center { text-align: center; }
+    #combo-container .data-table thead th.text-left   { text-align: left;   }
+
+    /* In-basket row indicator (orthogonal to focus) — green for "is in basket" */
+    .in-basket-row td { background: rgba(16,185,129,0.05); }
+    .in-basket-row.leader-row td {
+      background: linear-gradient(90deg, rgba(16,185,129,0.08), rgba(249,168,38,0.08));
+    }
+    .in-basket-row:hover td { background: rgba(16,185,129,0.10); }
+
+    /* Basket row */
+    .basket-row {
+      display: grid;
+      grid-template-columns: 28px minmax(0, 1fr) auto 28px 28px;
+      align-items: start;
+      gap: 0.75rem;
+      padding: 0.875rem 1.25rem;
+      transition: background-color 0.15s;
+    }
+    .basket-row:hover { background: rgba(255,255,255,0.03); }
+    .basket-row.is-loading { background: rgba(249,168,38,0.05); }
+    .basket-row.is-success { background: rgba(16,185,129,0.06); }
+    .basket-row.is-error   { background: rgba(248,113,113,0.05); }
+
+    .basket-row .row-status {
+      width: 1.25rem; height: 1.25rem;
+      border-radius: 9999px;
+      display: inline-flex; align-items: center; justify-content: center;
+      flex-shrink: 0;
+      margin-top: 0.125rem;
+    }
+
+    /* Auto-suggest field state */
+    .input-auto {
+      border-color: rgba(249,168,38,0.40) !important;
+      background: rgba(249,168,38,0.04);
+    }
+    .input-manual {
+      border-color: var(--border-soft) !important;
+    }
+    .input-disabled {
+      opacity: 0.4;
+      cursor: not-allowed;
+      text-decoration: line-through;
+    }
+    .field-label-auto {
+      font-size: 9px;
+      font-weight: 700;
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+      color: var(--accent);
+      padding: 1px 5px;
+      border-radius: 4px;
+      background: rgba(249,168,38,0.10);
+      border: 1px solid rgba(249,168,38,0.30);
+    }
+    .field-label-manual {
+      font-size: 9px;
+      font-weight: 700;
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+      color: var(--text-secondary);
+      padding: 1px 5px;
+      border-radius: 4px;
+      background: rgba(255,255,255,0.04);
+      border: 1px solid var(--border-soft);
+    }
+    .field-label-disabled {
+      font-size: 9px;
+      font-weight: 700;
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+      color: var(--text-muted);
+      padding: 1px 5px;
+      border-radius: 4px;
+      background: rgba(255,255,255,0.03);
+      border: 1px solid var(--border-soft);
+    }
+
+    /* Strategy color palette — reserved for strategy-picker / strategy-level chips.
+       Categorical palette (not semantic) so colors retained as-is for identification.
+       Keep in sync with STRATEGY_PALETTE in JS + docs/DESIGN_SYSTEM.md */
+    .strat-color-ma_cross         { background-color: #F9A826; }   /* amber — trend (brand parity) */
+    .strat-color-rsi_reversal     { background-color: #F472B6; }   /* pink — reversal */
+    .strat-color-bollinger_bounce { background-color: #A78BFA; }   /* lavender — mean reversion */
+    .strat-color-grid             { background-color: #14B8A6; }   /* teal — range */
+    .strat-color-unknown          { background-color: #908A7E; }   /* muted fallback */
+
+    .strat-text-ma_cross         { color: #F9A826; }
+    .strat-text-rsi_reversal     { color: #F472B6; }
+    .strat-text-bollinger_bounce { color: #A78BFA; }
+    .strat-text-grid             { color: #14B8A6; }
+    .strat-text-unknown          { color: #908A7E; }
+
+    /* Stacked gauge segment */
+    .gauge-segment {
+      min-width: 4px;
+      height: 100%;
+      transition: width 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+      position: relative;
+    }
+    .gauge-segment + .gauge-segment {
+      border-left: 1px solid rgba(0,0,0,0.6);
+    }
+    .gauge-segment:hover { filter: brightness(1.15); }
+
+    /* Inline help tooltip */
+    .help-icon {
+      width: 0.875rem; height: 0.875rem;
+      border-radius: 9999px;
+      background: var(--surface-raised);
+      border: 1px solid var(--border-soft);
+      color: var(--text-secondary);
+      display: inline-flex; align-items: center; justify-content: center;
+      font-size: 9px; font-weight: 700;
+      cursor: help;
+      transition: color 0.15s, border-color 0.15s;
+    }
+    .help-icon:hover { color: var(--accent); border-color: rgba(249,168,38,0.40); }
+
+    @media (max-width: 768px) {
+      .basket-row {
+        grid-template-columns: 28px minmax(0, 1fr) 28px 28px;
+        gap: 0.5rem;
+      }
+      .basket-row .row-controls {
+        grid-column: 1 / -1;
+        justify-self: stretch;
+      }
+    }
+
+    /* Step indicator */
+    .step-pill {
+      display: inline-flex; align-items: center; gap: 0.375rem;
+      padding: 0.25rem 0.625rem; border-radius: 999px;
+      font-size: 0.75rem; font-weight: 500;
+      font-family: var(--font-sans);
+    }
+    .step-pill .step-num {
+      width: 1rem; height: 1rem; border-radius: 9999px;
+      display: inline-flex; align-items: center; justify-content: center;
+      font-size: 10px; font-weight: 700;
+    }
+    .step-pill.active {
+      background: rgba(249,168,38,0.10);
+      border: 1px solid rgba(249,168,38,0.30);
+      color: var(--accent);
+    }
+    .step-pill.active .step-num { background: var(--accent); color: var(--cta-text); }
+    .step-pill.done {
+      background: rgba(16,185,129,0.10);
+      border: 1px solid rgba(16,185,129,0.30);
+      color: #10B981;
+    }
+    .step-pill.done .step-num { background: #10B981; color: var(--cta-text); }
+    .step-pill.idle {
+      background: var(--surface-raised);
+      border: 1px solid var(--border-soft);
+      color: var(--text-muted);
+    }
+    .step-pill.idle .step-num {
+      background: var(--surface-lifted); color: var(--text-muted);
+      border: 1px solid var(--border-soft);
+    }
+
+    /* Sticky footer */
+    .sticky-footer {
+      position: sticky; bottom: 0;
+      background: rgba(18,17,16,0.92);
+      backdrop-filter: blur(8px);
+      -webkit-backdrop-filter: blur(8px);
+      border-top: 1px solid var(--border-soft);
+      margin: 0 -1.5rem -1.5rem -1.5rem;
+      padding: 1rem 1.5rem;
+      z-index: 10;
+    }
+  </style>
+</head>
+<body class="theme-dark bg-bg text-fg antialiased">
+
+  <div class="flex min-h-screen">
+
+    <!-- ═════════ Sidebar ═════════ -->
+    <aside class="w-60 border-r border-border-subtle bg-bg-elevated flex flex-col flex-shrink-0">
+      <div class="px-5 py-5 border-b border-border-subtle">
+        <a href="/dashboard/" class="brand-mark">
+          <img src="/design/logo.png" alt="ELITEFUNS">
+          <span class="word">Elitefuns</span>
+        </a>
+      </div>
+      <nav class="flex-1 px-3 py-4 space-y-0.5">
+        <div class="px-2 mb-1.5 text-[10px] uppercase tracking-wider font-medium text-fg-subtle">เมนูหลัก</div>
+        <a href="/dashboard/" class="nav-link">
+          <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"/></svg>
+          Dashboard
+        </a>
+        <a href="/connect-mt5/" class="nav-link">
+          <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/><path stroke-linecap="round" stroke-linejoin="round" d="M12 3v9l6 3"/></svg>
+          พอร์ต MT5
+        </a>
+        <a href="/optimize/" class="nav-link">
+          <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M3 6h13M3 12h9m-9 6h6M17 14l4 4m0 0l-4 4m4-4H13"/></svg>
+          Optimize
+        </a>
+        <a href="/bot-trade/" class="nav-link active">
+          <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M9 3v2m6-2v2M9 19v2m6-2v2M5 9H3m2 6H3m18-6h-2m2 6h-2M7 19h10a2 2 0 002-2V7a2 2 0 00-2-2H7a2 2 0 00-2 2v10a2 2 0 002 2zM9 9h6v6H9V9z"/>
+          </svg>
+          Bot Trade
+        </a>
+        <a href="/arbitrage/" class="nav-link">
+          <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M7 16V4m0 0L3 8m4-4l4 4m6 0v12m0 0l4-4m-4 4l-4-4"/>
+          </svg>
+          Arbitrage
+        </a>
+
+        <a id="nav-admin-link" href="/admin/" class="nav-link admin-only">
+          <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"/>
+          </svg>
+          Admin
+        </a>
+      </nav>
+      <div class="p-3 border-t border-border-subtle">
+        <div class="flex items-center gap-2.5 px-2 py-2">
+          <div id="avatar" class="w-8 h-8 rounded-full bg-gradient-to-br from-info to-accent flex items-center justify-center font-semibold text-white text-xs flex-shrink-0">?</div>
+          <div class="flex-1 min-w-0">
+            <div id="user-email" class="text-fg text-xs font-medium truncate">กำลังโหลด...</div>
+            <div class="text-fg-subtle text-[10px]">Free plan</div>
+          </div>
+          <button id="logout-btn" title="ออกจากระบบ"
+            class="text-fg-muted hover:text-danger transition-colors p-1 rounded">
+            <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"/>
+            </svg>
+          </button>
+        </div>
+      </div>
+    </aside>
+
+    <!-- ═════════ Main ═════════ -->
+    <main class="flex-1 flex flex-col min-w-0">
+      <header class="h-14 border-b border-border-subtle bg-bg-elevated flex items-center justify-between px-6">
+        <div class="flex items-center gap-2 text-sm">
+          <span class="text-fg-subtle">หน้าหลัก</span>
+          <span class="text-fg-subtle">›</span>
+          <span class="text-fg font-medium">Bot Trade</span>
+        </div>
+      </header>
+
+      <div class="flex-1 p-6 overflow-auto relative">
+
+        <!-- Page header -->
+        <div class="mb-6">
+          <h1 class="text-2xl font-semibold tracking-tight">เพิ่ม Strategy เข้า Bot</h1>
+          <p class="text-fg-muted text-sm mt-1">เลือกพอร์ต MT5 → เลือก combo จาก optimizer → ตั้ง risk multiplier → ยืนยัน</p>
+        </div>
+
+        <!-- Steps indicator -->
+        <div class="flex items-center gap-2 mb-6 text-xs flex-wrap">
+          <span id="step-1-pill" class="step-pill active">
+            <span class="step-num">1</span>
+            เลือกพอร์ต MT5
+          </span>
+          <span class="text-fg-subtle">›</span>
+          <span id="step-2-pill" class="step-pill idle">
+            <span class="step-num">2</span>
+            เลือก Strategy + Combo
+          </span>
+          <span class="text-fg-subtle">›</span>
+          <span id="step-3-pill" class="step-pill idle">
+            <span class="step-num">3</span>
+            Risk + Deploy
+          </span>
+        </div>
+
+        <!-- ═════════ STEP 1 — เลือกพอร์ต MT5 ═════════ -->
+        <section class="mb-6">
+          <div class="flex items-center justify-between mb-3">
+            <div>
+              <h2 class="text-fg text-base font-semibold">STEP 1 — เลือกพอร์ต MT5</h2>
+              <p class="text-fg-muted text-xs mt-0.5">แสดงเฉพาะบัญชีที่ verified แล้วเท่านั้น</p>
+            </div>
+          </div>
+
+          <div id="accounts-host">
+            <div id="accounts-loading" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4"></div>
+
+            <div id="accounts-error" class="hidden bg-danger/5 border border-danger/30 rounded-xl px-5 py-5">
+              <div class="flex items-start gap-3">
+                <div class="w-9 h-9 rounded-lg bg-danger/10 border border-danger/30 flex items-center justify-center flex-shrink-0">
+                  <svg class="w-4 h-4 text-danger" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/>
+                  </svg>
+                </div>
+                <div class="flex-1 min-w-0">
+                  <div class="text-fg text-sm font-medium">โหลดบัญชีไม่สำเร็จ</div>
+                  <div id="accounts-error-msg" class="text-fg-muted text-xs mt-1">เกิดข้อผิดพลาด</div>
+                </div>
+                <button id="accounts-retry-btn" type="button"
+                  class="bg-bg-muted hover:bg-bg-elevated border border-border-subtle text-fg font-medium px-3 py-1.5 rounded-lg text-xs flex items-center gap-1.5 transition-colors flex-shrink-0">
+                  ลองอีกครั้ง
+                </button>
+              </div>
+            </div>
+
+            <div id="accounts-empty" class="hidden bg-bg-card border border-border-subtle rounded-xl px-6 py-12 text-center">
+              <div class="w-14 h-14 mx-auto mb-4 rounded-2xl bg-bg-muted flex items-center justify-center">
+                <svg class="w-7 h-7 text-fg-subtle" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                  <path stroke-linecap="round" stroke-linejoin="round" d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z"/>
+                </svg>
+              </div>
+              <div class="text-fg text-base font-semibold">ยังไม่มีบัญชี MT5 ที่ verified</div>
+              <div class="text-fg-muted text-sm mt-1 max-w-md mx-auto">เพิ่ม + verify บัญชี MT5 ของคุณก่อน — Bot ใช้บัญชีที่ผ่านการตรวจสอบเท่านั้น</div>
+              <a href="/connect-mt5/"
+                class="inline-flex items-center gap-2 mt-5 bg-info hover:bg-blue-500 active:bg-blue-700 text-white font-semibold px-5 py-2.5 rounded-lg text-sm transition-colors">
+                <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                  <path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4"/>
+                </svg>
+                เชื่อมต่อบัญชีแรก
+              </a>
+            </div>
+
+            <div id="accounts-grid" class="hidden grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4"></div>
+          </div>
+        </section>
+
+        <!-- ═════════ STEP 2 — เลือก Strategy + Combo (multi-select) ═════════ -->
+        <section id="step-2-section" class="hidden mb-6">
+          <div class="mb-3">
+            <h2 class="text-fg text-base font-semibold">STEP 2 — เลือก Strategy + Combo</h2>
+            <p class="text-fg-muted text-xs mt-0.5">ติ๊กเลือก combo ได้หลายตัว (ข้าม strategy ก็ได้) — ปรับ multiplier ต่อตัวใน basket ด้านล่าง</p>
+          </div>
+
+          <div class="grid grid-cols-1 lg:grid-cols-[280px_1fr] gap-5">
+            <!-- Strategy picker (left) -->
+            <aside class="space-y-2">
+              <div class="px-1 mb-1 text-[10px] uppercase tracking-wider font-medium text-fg-subtle">กลยุทธ์ทั้งหมด</div>
+
+              <div id="strategy-ma_cross" class="strategy-card active" data-code="ma_cross">
+                <div class="flex items-start justify-between">
+                  <div class="font-semibold text-fg text-sm">MA Cross</div>
+                  <span class="text-[10px] px-1.5 py-0.5 rounded bg-accent/10 text-accent border border-accent/30">พร้อมใช้</span>
+                </div>
+                <div class="text-fg-muted text-xs">เส้นค่าเฉลี่ย 2 เส้นตัดกัน</div>
+                <div class="flex gap-1 mt-1.5">
+                  <span class="text-[10px] px-1.5 py-0.5 rounded bg-bg border border-border-subtle text-fg-subtle">Trend</span>
+                  <span class="text-[10px] px-1.5 py-0.5 rounded bg-bg border border-border-subtle text-fg-subtle">Crossover</span>
+                </div>
+              </div>
+
+              <div class="strategy-card disabled">
+                <div class="flex items-start justify-between">
+                  <div class="font-semibold text-fg-muted text-sm">RSI Reversal</div>
+                  <span class="text-[10px] px-1.5 py-0.5 rounded bg-warning/10 text-warning border border-warning/30">เร็วๆ นี้</span>
+                </div>
+                <div class="text-fg-subtle text-xs">กลับตัวเมื่อ RSI overbought/oversold</div>
+              </div>
+
+              <div class="strategy-card disabled">
+                <div class="flex items-start justify-between">
+                  <div class="font-semibold text-fg-muted text-sm">Bollinger Bounce</div>
+                  <span class="text-[10px] px-1.5 py-0.5 rounded bg-warning/10 text-warning border border-warning/30">เร็วๆ นี้</span>
+                </div>
+                <div class="text-fg-subtle text-xs">เด้งกลับจากเส้น Bollinger</div>
+              </div>
+
+              <div class="strategy-card disabled">
+                <div class="flex items-start justify-between">
+                  <div class="font-semibold text-fg-muted text-sm">Grid</div>
+                  <span class="text-[10px] px-1.5 py-0.5 rounded bg-warning/10 text-warning border border-warning/30">เร็วๆ นี้</span>
+                </div>
+                <div class="text-fg-subtle text-xs">วาง order เป็นตารางช่วงราคา</div>
+              </div>
+            </aside>
+
+            <!-- Combo list (right) -->
+            <section class="space-y-4">
+              <div class="bg-bg-card border border-border-subtle rounded-xl">
+                <div class="px-5 py-4 border-b border-border-subtle">
+                  <div class="flex items-center justify-between flex-wrap gap-2">
+                    <div>
+                      <h3 class="text-fg font-semibold text-sm">Combo ที่ดีที่สุด — MA Cross</h3>
+                      <p class="text-fg-subtle text-[11px] mt-0.5">จัดเรียงตาม Profit/DD (recovery factor) · backtest 1 ปีล่าสุด</p>
+                    </div>
+                    <span id="combo-meta" class="text-fg-subtle text-xs">—</span>
+                  </div>
+                </div>
+                <div id="combo-container" class="overflow-x-auto">
+                  <!-- skeleton / table / empty / error injected here -->
+                </div>
+              </div>
+
+              <!-- Combo Focus / Preview card (read-only quick-look of focused row) -->
+              <div id="combo-detail" class="hidden bg-bg-card border border-border-subtle rounded-xl p-5">
+                <div class="flex items-start justify-between gap-3 mb-4">
+                  <div class="min-w-0">
+                    <div class="text-fg-subtle text-[11px] uppercase tracking-wider font-medium mb-1">รายละเอียด combo ที่กำลังดู</div>
+                    <div class="flex items-center gap-2 flex-wrap">
+                      <span id="detail-code" class="font-mono text-info text-base font-semibold">—</span>
+                      <span id="detail-symbol" class="text-fg-muted text-sm">—</span>
+                      <span id="detail-tf" class="text-fg-subtle text-xs px-1.5 py-0.5 rounded bg-bg-muted border border-border-subtle">—</span>
+                      <span id="detail-in-basket" class="hidden text-[10px] px-1.5 py-0.5 rounded bg-accent/10 text-accent border border-accent/30 font-medium">✓ ใน basket</span>
+                    </div>
+                  </div>
+                  <div class="flex items-center gap-2 flex-shrink-0">
+                    <button id="detail-toggle-btn" type="button"
+                      class="inline-flex items-center gap-1.5 text-xs font-medium px-3 py-1.5 rounded-lg border border-info/40 text-info hover:bg-info/10 transition-colors">
+                      <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4"/>
+                      </svg>
+                      <span id="detail-toggle-label">เพิ่มเข้า basket</span>
+                    </button>
+                    <button id="detail-close-btn" type="button"
+                      class="text-fg-subtle hover:text-fg-muted p-1" title="ปิดรายละเอียด">
+                      <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/>
+                      </svg>
+                    </button>
+                  </div>
+                </div>
+
+                <!-- Backtest stats grid -->
+                <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-2">
+                  <div class="metric-tile">
+                    <div class="metric-label">Fast / Slow</div>
+                    <div id="detail-fastslow" class="metric-value">—</div>
+                  </div>
+                  <div class="metric-tile">
+                    <div class="metric-label">SL Lookback</div>
+                    <div id="detail-sllookback" class="metric-value">—</div>
+                  </div>
+                  <div class="metric-tile">
+                    <div class="metric-label">RR Ratio</div>
+                    <div id="detail-rr" class="metric-value">—</div>
+                  </div>
+                  <div class="metric-tile">
+                    <div class="metric-label">Base Risk</div>
+                    <div id="detail-baserisk" class="metric-value">—</div>
+                  </div>
+                  <div class="metric-tile">
+                    <div class="metric-label">Net Profit</div>
+                    <div id="detail-netprofit" class="metric-value">—</div>
+                  </div>
+                  <div class="metric-tile">
+                    <div class="metric-label">Win Rate</div>
+                    <div id="detail-winrate" class="metric-value">—</div>
+                  </div>
+                  <div class="metric-tile">
+                    <div class="metric-label">Total Trades</div>
+                    <div id="detail-trades" class="metric-value">—</div>
+                  </div>
+                  <div class="metric-tile">
+                    <div class="metric-label">Max DD</div>
+                    <div id="detail-maxdd" class="metric-value">—</div>
+                  </div>
+                  <div class="metric-tile">
+                    <div class="metric-label">Profit/DD</div>
+                    <div id="detail-recovery" class="metric-value">—</div>
+                  </div>
+                  <div class="metric-tile">
+                    <div class="metric-label">Sharpe</div>
+                    <div id="detail-sharpe" class="metric-value">—</div>
+                  </div>
+                  <div class="metric-tile col-span-2">
+                    <div class="metric-label">Engine Version</div>
+                    <div id="detail-engine" class="metric-value">—</div>
+                  </div>
+                </div>
+
+                <!-- Disclaimer for approx lot -->
+                <div class="mt-3 text-fg-subtle text-[11px] flex items-start gap-1.5">
+                  <svg class="w-3.5 h-3.5 mt-0.5 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                  </svg>
+                  <span>Lot เป็นค่าประมาณ — ตอน bot ยิงจริงจะใช้ tick_size/tick_value จาก MT5 ของโบรกเกอร์</span>
+                </div>
+              </div>
+            </section>
+          </div>
+
+          <!-- ═════════ Basket panel — selected strategies ═════════ -->
+          <div id="basket-panel" class="hidden mt-5 bg-bg-card border border-border-subtle rounded-xl">
+            <div class="px-5 py-4 border-b border-border-subtle flex items-center justify-between flex-wrap gap-2">
+              <div>
+                <h3 class="text-fg font-semibold text-sm flex items-center gap-2">
+                  <svg class="w-4 h-4 text-info" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z"/>
+                  </svg>
+                  Basket — strategies ที่จะเพิ่ม
+                </h3>
+                <p id="basket-count" class="text-fg-subtle text-[11px] mt-0.5">0 ใน basket · 0 ของพอร์ตปัจจุบัน · จำกัด 5/พอร์ต</p>
+              </div>
+              <button id="basket-clear-btn" type="button"
+                class="text-fg-subtle hover:text-danger text-xs font-medium inline-flex items-center gap-1 transition-colors">
+                <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                  <path stroke-linecap="round" stroke-linejoin="round" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6M1 7h22M9 7V4a1 1 0 011-1h4a1 1 0 011 1v3"/>
+                </svg>
+                ล้าง basket
+              </button>
+            </div>
+
+            <!-- Basket rows -->
+            <div id="basket-rows" class="divide-y divide-border-subtle">
+              <!-- injected -->
+            </div>
+
+            <!-- Aggregate Safety Cut gauge (primary metric) -->
+            <div class="px-5 py-4 border-t border-border-subtle bg-bg-elevated/40 rounded-b-xl">
+              <div class="flex items-baseline justify-between mb-2">
+                <div class="flex items-center gap-2">
+                  <div>
+                    <div class="text-fg-subtle text-[10px] uppercase tracking-wider font-medium flex items-center gap-1.5">
+                      <span>Safety Cut รวม</span>
+                      <span title="ผลรวม Safety-Cut DD ของทุก strategy ใน basket ที่เปิดใช้งาน — ค่ามากสุดที่ bot ยอม drawdown ก่อนหยุดทุกตัว (worst-case ถ้าทุกตัว trigger พร้อมกัน)" class="help-icon">?</span>
+                    </div>
+                    <div class="text-fg-subtle text-[11px] mt-0.5">Σ safety_cut_dd ของ row ที่เปิดใช้งาน — ถึงค่านี้ bot หยุดยิง + ปิด positions ของ strategy นั้น</div>
+                  </div>
+                </div>
+                <div class="text-right">
+                  <div id="agg-safetycut-value" class="font-mono tabular-nums text-2xl font-semibold text-info">$0.00</div>
+                  <div id="agg-safetycut-tier" class="text-[10px] text-fg-subtle uppercase tracking-wider mt-0.5">ระดับ: ปลอดภัย</div>
+                </div>
+              </div>
+
+              <!-- Stacked segments bar (one segment per combo, color = deterministic hue by run_code) -->
+              <div id="agg-safetycut-bar" class="h-2.5 rounded-full bg-bg-muted overflow-hidden flex" role="img" aria-label="Safety Cut breakdown by combo">
+                <!-- segments inserted by JS -->
+              </div>
+              <div id="agg-safetycut-empty-msg" class="hidden text-fg-subtle text-[11px] mt-2 italic">ไม่มี Safety Cut ตั้ง — bot จะรันต่อไปไม่หยุดอัตโนมัติ</div>
+
+              <!-- Breakdown list — one row per combo (color = matching segment hue) -->
+              <div id="agg-safetycut-breakdown" class="mt-3 space-y-1.5"></div>
+
+              <!-- MaxDD context sub-line (demoted from primary metric) -->
+              <div id="agg-maxdd-subline" class="mt-3 pt-3 border-t border-border-subtle/60 flex items-center justify-between gap-3 flex-wrap text-[11px] text-fg-subtle">
+                <div class="flex items-center gap-1.5 min-w-0">
+                  <span class="uppercase tracking-wider text-[10px] font-medium">MaxDD worst-case:</span>
+                  <span id="agg-maxdd-value" class="font-mono tabular-nums text-fg-muted">$0.00</span>
+                  <span id="agg-maxdd-note" class="text-fg-subtle">—</span>
+                </div>
+                <span title="ผลรวม |backtest MaxDD| × multiplier ของทุก strategy ใน basket — สมมติ worst-case ที่ทุกตัว trigger พร้อมกัน (ค่าประมาณจาก backtest history)" class="help-icon">?</span>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <!-- ═════════ Sticky footer (STEP 3 — Deploy) ═════════ -->
+        <div id="sticky-footer" class="hidden sticky-footer">
+          <div class="flex flex-col gap-3">
+
+            <!-- Progress bar (visible only while submitting) -->
+            <div id="submit-progress" class="hidden">
+              <div class="flex items-center justify-between text-xs mb-1.5">
+                <span id="progress-label" class="text-fg-muted font-medium">กำลังเพิ่ม: 0/0</span>
+                <span id="progress-stats" class="text-fg-subtle font-mono tabular-nums">สำเร็จ 0 · ล้มเหลว 0</span>
+              </div>
+              <div class="h-1.5 rounded-full bg-bg-muted overflow-hidden">
+                <div id="progress-bar" class="h-full bg-info transition-all duration-200" style="width: 0%"></div>
+              </div>
+            </div>
+
+            <!-- Summary line + submit button -->
+            <div class="flex flex-col lg:flex-row lg:items-center gap-3 lg:gap-4">
+              <div class="flex-1 min-w-0">
+                <div class="flex flex-wrap items-center gap-x-3 gap-y-1 text-xs">
+                  <div class="flex items-center gap-1.5">
+                    <span class="text-fg-subtle">Port:</span>
+                    <span id="summary-port" class="text-fg font-medium">—</span>
+                  </div>
+                  <span class="text-fg-subtle">·</span>
+                  <div class="flex items-center gap-1.5">
+                    <span class="text-fg-subtle">Strategies ใน basket:</span>
+                    <span id="summary-basket-count" class="font-mono text-info">0</span>
+                  </div>
+                  <span class="text-fg-subtle">·</span>
+                  <div class="flex items-center gap-1.5">
+                    <span class="text-fg-subtle">Total cap:</span>
+                    <span id="summary-cap" class="font-mono text-fg">0/5</span>
+                  </div>
+                  <span class="text-fg-subtle">·</span>
+                  <div class="flex items-center gap-1.5">
+                    <span class="text-fg-subtle">MaxDD รวม:</span>
+                    <span id="summary-maxdd" class="font-mono text-fg">$0.00</span>
+                  </div>
+                </div>
+                <div id="cap-warning" class="hidden mt-2 text-warning text-[11px] flex items-center gap-1.5">
+                  <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/>
+                  </svg>
+                  <span id="cap-warning-msg">เกินขีดจำกัด 5 strategies/port — ลบของเก่าก่อน</span>
+                </div>
+              </div>
+              <button id="submit-btn" type="button" disabled
+                class="inline-flex items-center justify-center gap-2 bg-info hover:bg-blue-500 active:bg-blue-700 text-white font-semibold px-6 py-2.5 rounded-lg text-sm transition-colors disabled:opacity-50 disabled:cursor-not-allowed">
+                <span id="submit-btn-label">เลือก strategy เพื่อเริ่ม</span>
+                <svg id="submit-btn-spinner" class="hidden w-4 h-4 spin" fill="none" viewBox="0 0 24 24">
+                  <circle cx="12" cy="12" r="10" stroke="currentColor" stroke-width="3" stroke-dasharray="40 60" stroke-linecap="round" opacity="0.6"></circle>
+                </svg>
+              </button>
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </main>
+  </div>
+
+  <!-- ═════════ Confirm Correlation Modal (batched) ═════════ -->
+  <div id="correlation-modal" class="hidden modal-backdrop">
+    <div class="modal-card">
+      <div class="flex items-start gap-3 mb-3">
+        <div class="w-10 h-10 rounded-lg bg-warning/10 border border-warning/30 flex items-center justify-center flex-shrink-0">
+          <svg class="w-5 h-5 text-warning" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/>
+          </svg>
+        </div>
+        <div class="min-w-0">
+          <h3 class="text-fg text-base font-semibold">พบ Symbol ซ้ำกับ strategy ที่มีอยู่</h3>
+          <p id="correlation-msg" class="text-fg-muted text-sm mt-1">—</p>
+        </div>
+      </div>
+      <ul id="correlation-list" class="bg-bg-muted/40 border border-border-subtle rounded-lg p-3 text-xs space-y-1.5 mb-3 max-h-48 overflow-y-auto">
+        <!-- injected -->
+      </ul>
+      <div class="bg-warning/5 border border-warning/30 rounded-lg p-3 text-fg-muted text-xs mb-4">
+        Risk ของหลาย strategy บน symbol เดียวกันจะบวกกันถ้าออกสัญญาณพร้อมกัน — ยืนยันทั้งหมดเพื่อดำเนินการต่อ
+      </div>
+      <div class="flex items-center justify-end gap-2">
+        <button id="correlation-cancel-btn" type="button"
+          class="text-fg-muted hover:text-fg font-medium px-4 py-2 rounded-lg text-sm transition-colors">
+          ยกเลิก
+        </button>
+        <button id="correlation-confirm-btn" type="button"
+          class="bg-warning hover:bg-amber-500 text-bg font-semibold px-4 py-2 rounded-lg text-sm transition-colors">
+          ยืนยันทั้งหมด
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // ═════════ Auth gate ═════════
+    const token = localStorage.getItem('jwt_token');
+    if (!token) { window.location.href = '/login/'; }
+
+    const AUTH_HEADERS = {
+      'Authorization': `Bearer ${token}`,
+      'Content-Type': 'application/json',
+    };
+
+    function handleUnauth() {
+      localStorage.removeItem('jwt_token');
+      localStorage.removeItem('is_admin');
+      window.location.href = '/login/';
+    }
+
+    // ═════════ Optimistic admin reveal ═════════
+    if (localStorage.getItem('is_admin') === 'true') {
+      document.body.classList.add('user-is-admin');
+    }
+
+    // ═════════ Logout ═════════
+    document.getElementById('logout-btn').addEventListener('click', () => {
+      localStorage.removeItem('jwt_token');
+      localStorage.removeItem('is_admin');
+      window.location.href = '/';
+    });
+
+    // ═════════ Load current user ═════════
+    fetch('/auth/me', { headers: { 'Authorization': `Bearer ${token}` } })
+      .then(r => {
+        if (r.status === 401) { handleUnauth(); return; }
+        if (!r.ok) throw new Error('unauthorized');
+        return r.json();
+      })
+      .then(d => {
+        if (!d) return;
+        const email   = d.email || 'user';
+        const name    = email.split('@')[0];
+        const initial = name.charAt(0).toUpperCase();
+        document.getElementById('user-email').textContent = email;
+        document.getElementById('avatar').textContent     = initial;
+        // sync is_admin
+        const isAdmin = Boolean(d.is_admin);
+        localStorage.setItem('is_admin', String(isAdmin));
+        document.body.classList.toggle('user-is-admin', isAdmin);
+      })
+      .catch(() => handleUnauth());
+
+    // ═════════ Helpers ═════════
+    const $ = (id) => document.getElementById(id);
+
+    function escapeHtml(str) {
+      return String(str ?? '')
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#39;');
+    }
+
+    const fmtMoney = (n) => {
+      if (n === null || n === undefined || isNaN(n)) return '—';
+      const num = Number(n);
+      const sign = num < 0 ? '-' : '';
+      const abs = Math.abs(num);
+      return sign + '$' + abs.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+    };
+    const fmtPct = (n) => {
+      if (n === null || n === undefined || isNaN(n)) return '—';
+      return (n * 100).toFixed(1) + '%';
+    };
+    const fmtNum = (n, digits = 2) => {
+      if (n === null || n === undefined || isNaN(n)) return '—';
+      return Number(n).toFixed(digits);
+    };
+    const fmtInt = (n) => {
+      if (n === null || n === undefined || isNaN(n)) return '—';
+      return Math.round(n).toLocaleString('en-US');
+    };
+    const fmtRecovery = (n) => {
+      if (n === null || n === undefined || isNaN(n)) return '—';
+      return Number(n).toFixed(2) + 'x';
+    };
+    // Net Profit: bold + colored on sign; middle (≈0) stays neutral muted
+    const profitClass = (n) => {
+      if (n === null || n === undefined || isNaN(n)) return 'text-fg-muted';
+      if (n > 0) return 'text-accent font-semibold';
+      if (n < 0) return 'text-danger font-semibold';
+      return 'text-fg-muted';
+    };
+    const recoveryClass = (n) => {
+      if (n === null || n === undefined || isNaN(n)) return 'text-fg-muted';
+      if (n >= 2) return 'text-accent';
+      if (n >= 1) return 'text-fg';
+      return 'text-danger';
+    };
+    // Max Drawdown — neutral muted by default (ค่าเป็นลบทุก row, สีจะรกตา).
+    // Only flag with warning tone when truly extreme (> $2,000 = 20% of $10k initial).
+    const ddClass = (n) => ((n ?? 0) > 2000 ? 'text-warning' : 'text-fg-muted');
+    // Profit Factor — 3-tier: ≥1.5 accent · 1–1.5 neutral fg · <1 danger
+    const pfClass = (n) => {
+      if (n === null || n === undefined || isNaN(n)) return 'text-fg-muted';
+      if (!isFinite(n) || n >= 1.5) return 'text-accent';
+      if (n >= 1) return 'text-fg';
+      return 'text-danger';
+    };
+    const fmtFactor = (n) => {
+      if (n === null || n === undefined || isNaN(n)) return '—';
+      if (!isFinite(n)) return '∞';
+      return Number(n).toFixed(2);
+    };
+    // Win Rate — 3-tier: ≥55% accent · 40–55% neutral fg · <40% danger
+    // (อยู่ middle range ไม่ต้อง flag สี — เน้นเฉพาะ extreme เพื่อให้ตาราง dense อ่านสะอาด)
+    const winRateClass = (n) => {
+      if (n === null || n === undefined || isNaN(n)) return 'text-fg-muted';
+      const v = Number(n);
+      if (v >= 0.55) return 'text-accent';
+      if (v >= 0.40) return 'text-fg';
+      return 'text-danger';
+    };
+    // Bot-trade combo list is always 1Y window — pull from stats_1y, fall back
+    // to aggregate root-level fields for legacy runs that lack window stats.
+    function comboStats1y(run) {
+      const s = run?.stats_1y;
+      if (s && typeof s === 'object') return s;
+      return {
+        total_trades:    run?.total_trades    ?? null,
+        net_profit:      run?.net_profit      ?? null,
+        win_rate:        run?.win_rate        ?? null,
+        max_drawdown:    run?.max_drawdown    ?? null,
+        profit_factor:   run?.profit_factor   ?? null,
+        recovery_factor: run?.recovery_factor ?? null,
+      };
+    }
+
+    // ─── Inline SVG sparkline (no chart lib) ──────────────────────────────
+    // values: array of cumulative P/L points (number[])
+    // Returns SVG markup string. Compact size for combo list rows.
+    function renderSparkline(values, opts = {}) {
+      const { width = 80, height = 20 } = opts;
+      // Empty / null → dashed placeholder (keeps layout stable)
+      if (!Array.isArray(values) || values.length === 0) {
+        return `<svg width="${width}" height="${height}" class="inline-block align-middle" aria-hidden="true">
+                  <line x1="0" y1="${height / 2}" x2="${width}" y2="${height / 2}"
+                        stroke="rgba(255,255,255,0.08)" stroke-width="1" stroke-dasharray="2,2"/>
+                </svg>`;
+      }
+      const numericVals = values.map(v => Number(v) || 0);
+      // Make sure 0 is always within the y-domain so zero-line is meaningful
+      const min = Math.min(0, ...numericVals);
+      const max = Math.max(0, ...numericVals);
+      const range = (max - min) || 1;
+      const n = numericVals.length;
+      const stepX = n > 1 ? width / (n - 1) : 0;
+
+      const pts = numericVals.map((v, i) => {
+        const x = i * stepX;
+        const y = height - ((v - min) / range) * height;
+        const yc = Math.max(0.5, Math.min(height - 0.5, y));
+        return `${x.toFixed(1)},${yc.toFixed(1)}`;
+      }).join(' ');
+
+      const finalVal = numericVals[n - 1];
+      const lineColor = finalVal > 0 ? '#10B981' : finalVal < 0 ? '#F87171' : '#908A7E';
+      const zeroY = height - ((0 - min) / range) * height;
+      const zeroYc = Math.max(0.5, Math.min(height - 0.5, zeroY));
+
+      return `
+        <svg width="${width}" height="${height}" viewBox="0 0 ${width} ${height}" class="inline-block align-middle" aria-hidden="true">
+          <line x1="0" y1="${zeroYc.toFixed(1)}" x2="${width}" y2="${zeroYc.toFixed(1)}"
+                stroke="rgba(255,255,255,0.10)" stroke-width="1" stroke-dasharray="2,2"/>
+          <polyline points="${pts}" fill="none" stroke="${lineColor}"
+                    stroke-width="1.5" stroke-linejoin="round" stroke-linecap="round"/>
+        </svg>
+      `;
+    }
+
+    const relTime = (iso) => {
+      if (!iso) return '—';
+      const norm = /[zZ]|[+-]\d{2}:?\d{2}$/.test(iso) ? iso : iso + 'Z';
+      const t = new Date(norm).getTime();
+      if (isNaN(t)) return '—';
+      const diff = Math.floor((Date.now() - t) / 1000);
+      if (diff < 5) return 'เพิ่งนี้';
+      if (diff < 60) return diff + ' วินาทีที่แล้ว';
+      if (diff < 3600) return Math.floor(diff / 60) + ' นาทีที่แล้ว';
+      if (diff < 86400) return Math.floor(diff / 3600) + ' ชั่วโมงที่แล้ว';
+      if (diff < 86400 * 7) return Math.floor(diff / 86400) + ' วันที่แล้ว';
+      return new Date(norm).toLocaleDateString('th-TH');
+    };
+
+    function statusBadge(verified) {
+      if (verified === true) {
+        return `<span class="inline-flex items-center gap-1.5 px-2 py-0.5 rounded text-[10px] font-medium bg-accent/10 text-accent border border-accent/30">
+          <span class="w-1.5 h-1.5 bg-accent rounded-full"></span> verified
+        </span>`;
+      }
+      return `<span class="inline-flex items-center gap-1.5 px-2 py-0.5 rounded text-[10px] font-medium bg-bg-muted text-fg-subtle border border-border-subtle">
+        <span class="w-1.5 h-1.5 bg-fg-subtle rounded-full"></span> ยังไม่ verified
+      </span>`;
+    }
+
+    // ═════════ Toast ═════════
+    function showAlert(kind, msg) {
+      const palette = {
+        info:    { bg: 'bg-info/10',    fg: 'text-info',    bd: 'border-info/30' },
+        success: { bg: 'bg-accent/10',  fg: 'text-accent',  bd: 'border-accent/30' },
+        error:   { bg: 'bg-danger/10',  fg: 'text-danger',  bd: 'border-danger/30' },
+        warn:    { bg: 'bg-warning/10', fg: 'text-warning', bd: 'border-warning/30' },
+      };
+      const c = palette[kind] || palette.info;
+      const div = document.createElement('div');
+      div.className = `fixed top-4 right-4 z-[60] ${c.bg} ${c.fg} border ${c.bd} px-4 py-2.5 rounded-lg text-sm font-medium shadow-lg transition-opacity duration-300`;
+      div.textContent = msg;
+      document.body.appendChild(div);
+      setTimeout(() => { div.style.opacity = '0'; }, 2500);
+      setTimeout(() => { div.remove(); }, 2900);
+    }
+
+    // ═════════ API helper ═════════
+    async function apiRequest(path, options = {}) {
+      const res = await fetch(path, {
+        ...options,
+        headers: { ...AUTH_HEADERS, ...(options.headers || {}) },
+      });
+      if (res.status === 401) {
+        handleUnauth();
+        throw new Error('unauthorized');
+      }
+      let body = null;
+      const text = await res.text();
+      if (text) {
+        try { body = JSON.parse(text); } catch { body = { detail: text }; }
+      }
+      if (!res.ok) {
+        const msg = (body && (body.detail || body.message || body.error)) || `เกิดข้อผิดพลาด (${res.status})`;
+        const err = new Error(typeof msg === 'string' ? msg : JSON.stringify(msg));
+        err.status = res.status;
+        err.body = body;
+        throw err;
+      }
+      return body;
+    }
+
+    // ═════════ State ═════════
+    let accounts = [];                   // verified-only after filter
+    let selectedId = null;               // mt5_account_id
+    let combos = [];                     // list of backtest runs (current strategy)
+    let selectedCombo = null;            // currently focused combo (for detail panel)
+    let existingSubs = [];               // GET /api/bots/subscriptions filtered by port
+
+    // Multi-select basket: Map<run_id, BasketItem>
+    // BasketItem = { run, multiplier, status: 'idle'|'loading'|'success'|'error', error: string|null }
+    const selectedCombos = new Map();
+
+    let isSubmitting = false;            // lock UI while loop POSTs
+
+    const STRATEGY_CODE = 'ma_cross';
+    const MAX_SUBS_PER_PORT = 5;
+    const DEFAULT_MULTIPLIER = 1.0;
+    const SAFETY_CUT_FACTOR = 1.5;   // suggested = |maxdd| × multiplier × FACTOR
+
+    // ═════════ Strategy color palette ═════════
+    // Reserved for strategy-level UI (strategy picker, strategy chips). The Safety
+    // Cut gauge does NOT use this — it uses per-combo color via comboColor().
+    // Keep in sync with .strat-color-* CSS classes + docs/DESIGN_SYSTEM.md "Strategy Color Palette"
+    const STRATEGY_PALETTE = {
+      ma_cross:         { hex: '#3B82F6', label: 'MA Cross',         rationale: 'trend' },
+      rsi_reversal:     { hex: '#F59E0B', label: 'RSI Reversal',     rationale: 'reversal' },
+      bollinger_bounce: { hex: '#A855F7', label: 'Bollinger Bounce', rationale: 'mean reversion' },
+      grid:             { hex: '#14B8A6', label: 'Grid',             rationale: 'range' },
+    };
+    const STRATEGY_FALLBACK = { hex: '#64748B', label: 'Unknown', rationale: 'fallback' };
+
+    // Resolve which strategy a basket item belongs to. Run object may carry
+    // `strategy_code` directly (future) — fall back to the page-level constant.
+    // NOTE: these three helpers + STRATEGY_PALETTE are currently unreferenced in this
+    // file (the Safety Cut gauge moved to per-combo coloring). They're retained as
+    // the public API for upcoming strategy-level UI (strategy picker cards, filter
+    // chips). Do not remove without coordinating with docs/DESIGN_SYSTEM.md.
+    function resolveStrategyCode(run) {
+      return (run && run.strategy_code) ? run.strategy_code : STRATEGY_CODE;
+    }
+    function strategyMeta(code) {
+      return STRATEGY_PALETTE[code] || STRATEGY_FALLBACK;
+    }
+    function strategyClass(code) {
+      return STRATEGY_PALETTE[code] ? code : 'unknown';
+    }
+
+    // ═════════ Per-combo color generation ═════════
+    // Each basket combo (unique run_code = unique params) gets its own hue, picked
+    // deterministically from a 12-step palette spaced 30° apart. Same run_code → same
+    // color forever (add/remove/re-add is stable). Minimum hue separation = 30°, which
+    // is the practical threshold for "distinguishable on dark bg" without relying on
+    // saturation/lightness tricks. Saturation 70% + lightness 60% are tuned for the
+    // `bg-bg-card` substrate — bright enough to pop on #0F1419-ish backgrounds, but
+    // never neon-bright on hover (.gauge-segment:hover { filter: brightness(1.15) }).
+    //
+    // Why a 12-hue palette + hash %12 instead of `hash % 360`?
+    //   raw hash → 360 hues drifts arbitrarily close (e.g. hue 207 vs hue 211 = both
+    //   look like "blue"). A coarse 12-step palette guarantees neighboring picks are
+    //   at least 30° apart, which is the smallest gap an untrained eye reliably reads
+    //   as "a different color".
+    //
+    // Hue start = 15° (not 0°/red) so the first palette slot doesn't read as "danger".
+    // Keep this list in sync with docs/DESIGN_SYSTEM.md "Per-Combo Color Generation".
+    const COMBO_HUE_PALETTE = [15, 45, 75, 105, 135, 165, 195, 225, 255, 285, 315, 345];
+    const COMBO_SATURATION = 70;   // %
+    const COMBO_LIGHTNESS  = 60;   // %
+
+    // FNV-1a 32-bit string hash — fast, dependency-free, well-distributed for short
+    // run_code strings like "H1MaEU20x100lk10rr2". Returns unsigned 32-bit int.
+    function _fnv1a32(str) {
+      let h = 0x811c9dc5;
+      for (let i = 0; i < str.length; i++) {
+        h ^= str.charCodeAt(i);
+        // 32-bit multiply via Math.imul (avoids precision loss past 2^53)
+        h = Math.imul(h, 0x01000193) >>> 0;
+      }
+      return h >>> 0;
+    }
+
+    // Hash → palette index via Fibonacci hashing (Knuth's multiplicative method with
+    // the 32-bit golden-ratio constant 2654435769). Plain `hash % 12` clusters
+    // strings that share long prefixes (run_codes like H1MaEU20x100... vs H1MaEU05x200...
+    // often collide). Multiplying by 0x9E3779B1 first scrambles those prefixes across
+    // the 32-bit space, so the modulo (via float-divide for uniform distribution) lands
+    // on well-spread buckets. Empirically: 840 plausible run_codes distribute 56–86 per
+    // bucket (vs ~70 ideal). Average distinct hues for a 5-combo basket: 4.23/5 (85%).
+    function comboHueIndex(runCode) {
+      if (!runCode) return 0;
+      const h = _fnv1a32(String(runCode));
+      const scrambled = Math.imul(h, 0x9E3779B1) >>> 0;
+      return Math.floor(scrambled / (0x100000000 / COMBO_HUE_PALETTE.length));
+    }
+
+    // Return CSS hsl() string for a combo. Stable for a given run_code.
+    function comboColor(runCode) {
+      const hue = COMBO_HUE_PALETTE[comboHueIndex(runCode)];
+      return `hsl(${hue}, ${COMBO_SATURATION}%, ${COMBO_LIGHTNESS}%)`;
+    }
+
+    // Compute auto-suggested safety cut DD for a basket item
+    function suggestedSafetyCutDd(run, multiplier) {
+      if (!run) return 0;
+      const maxdd = Math.abs(Number(run.max_drawdown) || 0);
+      return +(maxdd * (Number(multiplier) || 1) * SAFETY_CUT_FACTOR).toFixed(2);
+    }
+
+    // Approximate tick values per 1 lot (USD per 1 price unit move)
+    // These are rough estimates for client preview only — actual values come from MT5 at runtime
+    const SYMBOL_TICK_VALUES = {
+      EURUSD: 100000, USDJPY: 67000, GBPUSD: 100000, USDCHF: 100000,
+      AUDUSD: 100000, USDCAD: 70000, NZDUSD: 100000, XAUUSD: 100,
+    };
+
+    // ═════════ Steps indicator ═════════
+    function updateSteps() {
+      const s1 = $('step-1-pill');
+      const s2 = $('step-2-pill');
+      const s3 = $('step-3-pill');
+
+      // Step 1 — active when no port; done when port selected
+      if (selectedId) {
+        s1.className = 'step-pill done';
+        s1.querySelector('.step-num').textContent = '✓';
+      } else {
+        s1.className = 'step-pill active';
+        s1.querySelector('.step-num').textContent = '1';
+      }
+
+      // Step 2 — idle without port; active if port no basket; done if basket has items
+      if (!selectedId) {
+        s2.className = 'step-pill idle';
+        s2.querySelector('.step-num').textContent = '2';
+      } else if (selectedCombos.size > 0) {
+        s2.className = 'step-pill done';
+        s2.querySelector('.step-num').textContent = '✓';
+      } else {
+        s2.className = 'step-pill active';
+        s2.querySelector('.step-num').textContent = '2';
+      }
+
+      // Step 3 — active when basket has at least one item
+      if (selectedCombos.size > 0) {
+        s3.className = 'step-pill active';
+      } else {
+        s3.className = 'step-pill idle';
+      }
+      s3.querySelector('.step-num').textContent = '3';
+    }
+
+    // ═════════ STEP 1 — Accounts ═════════
+    function renderAccountSkeleton() {
+      const host = $('accounts-loading');
+      const card = `
+        <div class="bg-bg-card border border-border-subtle rounded-xl p-5">
+          <div class="flex items-start justify-between gap-3 mb-3">
+            <div class="flex-1 min-w-0 space-y-2">
+              <div class="skeleton h-4 w-32"></div>
+              <div class="skeleton h-3 w-24"></div>
+              <div class="skeleton h-2.5 w-20"></div>
+            </div>
+            <div class="skeleton h-5 w-16 rounded"></div>
+          </div>
+          <div class="border-t border-border-subtle pt-3 space-y-2">
+            <div class="flex justify-between"><div class="skeleton h-3 w-16"></div><div class="skeleton h-3 w-20"></div></div>
+            <div class="flex justify-between"><div class="skeleton h-3 w-16"></div><div class="skeleton h-3 w-20"></div></div>
+            <div class="flex justify-between"><div class="skeleton h-3 w-16"></div><div class="skeleton h-3 w-12"></div></div>
+          </div>
+          <div class="mt-3 skeleton h-2.5 w-28"></div>
+        </div>
+      `;
+      host.innerHTML = card.repeat(3);
+    }
+
+    function showAccountState(which) {
+      $('accounts-loading').classList.toggle('hidden', which !== 'loading');
+      $('accounts-error').classList.toggle('hidden',   which !== 'error');
+      $('accounts-empty').classList.toggle('hidden',   which !== 'empty');
+      $('accounts-grid').classList.toggle('hidden',    which !== 'grid');
+    }
+
+    function renderAccountsGrid() {
+      const grid = $('accounts-grid');
+      grid.innerHTML = accounts.map(acc => {
+        const balance  = (acc.balance_cached !== null && acc.balance_cached !== undefined)
+                          ? fmtMoney(acc.balance_cached) : '—';
+        const equity   = (acc.equity_cached !== null && acc.equity_cached !== undefined)
+                          ? fmtMoney(acc.equity_cached) : '—';
+        const currency = acc.currency_cached || '—';
+        const broker   = acc.broker
+          ? `<div class="text-fg-subtle text-[11px] truncate">${escapeHtml(acc.broker)}</div>`
+          : '';
+        const isSelected = acc.id === selectedId ? 'is-selected' : '';
+
+        return `
+          <button type="button" class="account-card ${isSelected} text-left" data-id="${escapeHtml(acc.id)}" aria-pressed="${acc.id === selectedId}">
+            <span class="check-mark" aria-hidden="true">
+              <svg class="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="3">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/>
+              </svg>
+            </span>
+            <div class="flex items-start justify-between gap-3 mb-3 pr-6">
+              <div class="min-w-0 flex-1">
+                <div class="text-fg font-semibold text-sm truncate">${escapeHtml(acc.name || '(ไม่มีชื่อ)')}</div>
+                <div class="text-fg-muted text-xs mt-1 font-mono tabular-nums">Login: ${escapeHtml(acc.login ?? '—')}</div>
+                <div class="text-fg-muted text-xs font-mono truncate" title="${escapeHtml(acc.server || '')}">${escapeHtml(acc.server || '—')}</div>
+                ${broker}
+              </div>
+              <div class="flex-shrink-0">${statusBadge(true)}</div>
+            </div>
+            <div class="border-t border-border-subtle pt-3 space-y-1.5 text-xs">
+              <div class="flex items-center justify-between">
+                <span class="text-fg-subtle">Balance</span>
+                <span class="text-fg font-mono tabular-nums">${balance}</span>
+              </div>
+              <div class="flex items-center justify-between">
+                <span class="text-fg-subtle">Equity</span>
+                <span class="text-fg font-mono tabular-nums">${equity}</span>
+              </div>
+              <div class="flex items-center justify-between">
+                <span class="text-fg-subtle">Currency</span>
+                <span class="text-fg-muted font-mono">${escapeHtml(currency)}</span>
+              </div>
+            </div>
+            <div class="mt-3 text-fg-subtle text-[11px]" title="${escapeHtml(acc.last_check || '')}">
+              Last check: ${relTime(acc.last_check)}
+            </div>
+          </button>
+        `;
+      }).join('');
+
+      grid.querySelectorAll('.account-card').forEach(card => {
+        card.addEventListener('click', () => {
+          selectAccount(card.dataset.id);
+        });
+      });
+    }
+
+    async function selectAccount(id) {
+      if (isSubmitting) return; // do not switch ports mid-submit
+      const isSwitch = (selectedId !== null && selectedId !== id);
+      selectedId = id;
+      document.querySelectorAll('#accounts-grid .account-card').forEach(c => {
+        const match = c.dataset.id === selectedId;
+        c.classList.toggle('is-selected', match);
+        c.setAttribute('aria-pressed', match ? 'true' : 'false');
+      });
+
+      $('step-2-section').classList.remove('hidden');
+
+      if (isSwitch) {
+        // Switching ports invalidates basket (basket is per-port — cap counts differ)
+        if (selectedCombos.size > 0) {
+          selectedCombos.clear();
+          showAlert('info', 'เปลี่ยนพอร์ต — basket ถูกล้างใหม่');
+        }
+      }
+
+      if (combos.length === 0) {
+        loadCombos();
+      }
+      // Always refresh existingSubs for the (possibly new) port
+      await loadExistingSubs(id);
+
+      renderCombos();
+      renderBasket();
+      renderComboDetail();
+      updateAggregateRisk();
+      updateSteps();
+      updateStickyFooter();
+    }
+
+    async function loadAccounts() {
+      showAccountState('loading');
+      renderAccountSkeleton();
+      try {
+        const data = await apiRequest('/api/mt5/accounts');
+        const all = Array.isArray(data) ? data : (data?.items || data?.accounts || []);
+        // Filter verified === true only
+        accounts = all.filter(a => a.verified === true);
+
+        if (accounts.length === 0) {
+          selectedId = null;
+          $('step-2-section').classList.add('hidden');
+          $('sticky-footer').classList.add('hidden');
+          updateSteps();
+          showAccountState('empty');
+          return;
+        }
+
+        if (selectedId && !accounts.some(a => a.id === selectedId)) {
+          selectedId = null;
+          $('step-2-section').classList.add('hidden');
+          $('sticky-footer').classList.add('hidden');
+        }
+
+        renderAccountsGrid();
+        showAccountState('grid');
+        updateSteps();
+      } catch (err) {
+        if (err.message === 'unauthorized') return;
+        $('accounts-error-msg').textContent = err.message || 'โหลดข้อมูลไม่สำเร็จ';
+        showAccountState('error');
+      }
+    }
+
+    // ═════════ STEP 2 — Combos ═════════
+    function comboSkeletonHTML() {
+      const skelRow = `
+        <tr>
+          <td class="text-center"><div class="skeleton h-4 w-4 rounded mx-auto"></div></td>
+          <td class="text-center"><div class="skeleton h-3 w-4 mx-auto"></div></td>
+          <td class="text-left"><div class="skeleton h-3 w-44"></div></td>
+          <td class="text-right"><div class="skeleton h-3 w-16 ml-auto"></div></td>
+          <td class="text-right"><div class="skeleton h-3 w-16 ml-auto"></div></td>
+          <td class="text-right"><div class="skeleton h-3 w-10 ml-auto"></div></td>
+          <td class="text-right"><div class="skeleton h-3 w-12 ml-auto"></div></td>
+          <td class="text-right"><div class="skeleton h-3 w-10 ml-auto"></div></td>
+          <td class="text-center"><div class="skeleton h-3 w-20 mx-auto"></div></td>
+        </tr>
+      `;
+      return `
+        <table class="data-table">
+          <thead>
+            <tr>
+              <th class="text-center w-10"></th>
+              <th class="text-center w-10">#</th>
+              <th class="text-left min-w-[200px]">Code</th>
+              <th class="text-right whitespace-nowrap w-28">Net Profit</th>
+              <th class="text-right whitespace-nowrap w-28" title="ขาดทุนสะสมสูงสุด">Max Drawdown</th>
+              <th class="text-right whitespace-nowrap w-24" title="จำนวน trade ทั้งหมดใน window">Total Trades</th>
+              <th class="text-right whitespace-nowrap w-20">Win Rate</th>
+              <th class="text-right whitespace-nowrap w-24" title="Gross profit ÷ |Gross loss|">Profit Factor</th>
+              <th class="text-center w-24" title="1Y cumulative equity curve">Equity</th>
+            </tr>
+          </thead>
+          <tbody>${skelRow.repeat(5)}</tbody>
+        </table>
+      `;
+    }
+
+    function renderComboEmpty() {
+      $('combo-container').innerHTML = `
+        <div class="px-5 py-12 text-center">
+          <div class="w-12 h-12 mx-auto mb-3 rounded-xl bg-bg-muted flex items-center justify-center">
+            <svg class="w-6 h-6 text-fg-subtle" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/>
+            </svg>
+          </div>
+          <div class="text-fg-muted text-sm">ยังไม่มีผล optimize — รอแอดมินทริกเกอร์ก่อน</div>
+        </div>
+      `;
+    }
+
+    function renderComboError(message) {
+      $('combo-container').innerHTML = `
+        <div class="px-5 py-10 text-center">
+          <div class="text-danger text-sm font-medium">โหลด combo ไม่สำเร็จ</div>
+          <div class="text-fg-subtle text-xs mt-1 mb-3">${escapeHtml(message)}</div>
+          <button id="combo-retry-btn"
+            class="bg-bg-muted hover:bg-bg-elevated border border-border-subtle text-fg font-medium px-3 py-1.5 rounded-lg text-xs inline-flex items-center gap-1.5 transition-colors">
+            ลองอีกครั้ง
+          </button>
+        </div>
+      `;
+      $('combo-retry-btn')?.addEventListener('click', loadCombos);
+    }
+
+    function renderCombos() {
+      if (!combos.length) {
+        renderComboEmpty();
+        return;
+      }
+      const rows = combos.map((r, i) => {
+        const code = r.run_code || '—';
+        const isFocused = selectedCombo && selectedCombo.id === r.id;
+        const isInBasket = selectedCombos.has(r.id);
+        const rowCls = [
+          isFocused ? 'leader-row' : '',
+          isInBasket ? 'in-basket-row' : '',
+        ].filter(Boolean).join(' ');
+        const isDup = isComboAlreadySubscribed(r);
+        const checkedAttr = isInBasket ? 'checked' : '';
+        const disabledAttr = isDup ? 'disabled title="strategy นี้อยู่ในพอร์ตนี้แล้ว"' : '';
+
+        // ── Stats (1Y window with legacy aggregate fallback) ──
+        const s = comboStats1y(r);
+        const ddVal = s.max_drawdown == null ? null : Math.abs(Number(s.max_drawdown));
+
+        // ── Equity sparkline (prefer 1y; fallback 6m; else empty placeholder) ──
+        const sparkVals = Array.isArray(r.sparkline_1y) && r.sparkline_1y.length
+          ? r.sparkline_1y
+          : (Array.isArray(r.sparkline_6m) && r.sparkline_6m.length ? r.sparkline_6m : []);
+        const sparkFinal = sparkVals.length ? Number(sparkVals[sparkVals.length - 1]) : null;
+        const sparkTitle = sparkVals.length
+          ? `1Y equity curve · final ${fmtMoney(sparkFinal)}`
+          : 'ไม่มี equity curve (legacy run)';
+        const sparkSvg = renderSparkline(sparkVals, { width: 80, height: 20 });
+
+        return `
+          <tr class="${rowCls}" data-runid="${escapeHtml(r.id)}">
+            <td class="text-center" data-role="checkbox-cell">
+              <input type="checkbox" class="combo-check w-4 h-4 accent-info cursor-pointer disabled:cursor-not-allowed disabled:opacity-50"
+                data-runid="${escapeHtml(r.id)}" ${checkedAttr} ${disabledAttr} />
+            </td>
+            <td class="text-center font-mono tabular-nums text-fg-muted">${i + 1}</td>
+            <td class="text-left font-mono text-info text-xs font-semibold">${escapeHtml(code)}</td>
+            <td class="text-right font-mono tabular-nums ${profitClass(s.net_profit)}">${fmtMoney(s.net_profit)}</td>
+            <td class="text-right font-mono tabular-nums ${ddClass(ddVal)}">${fmtMoney(ddVal)}</td>
+            <td class="text-right font-mono tabular-nums text-fg">${fmtInt(s.total_trades)}</td>
+            <td class="text-right font-mono tabular-nums ${winRateClass(s.win_rate)}">${fmtPct(s.win_rate)}</td>
+            <td class="text-right font-mono tabular-nums ${pfClass(s.profit_factor)}" title="Gross profit ÷ |Gross loss|">${fmtFactor(s.profit_factor)}</td>
+            <td class="text-center" title="${escapeHtml(sparkTitle)}">${sparkSvg}</td>
+          </tr>
+        `;
+      }).join('');
+
+      $('combo-container').innerHTML = `
+        <table class="data-table">
+          <thead>
+            <tr>
+              <th class="text-center w-10"></th>
+              <th class="text-center w-10">#</th>
+              <th class="text-left min-w-[200px]">Code</th>
+              <th class="text-right whitespace-nowrap w-28">Net Profit</th>
+              <th class="text-right whitespace-nowrap w-28" title="ขาดทุนสะสมสูงสุด">Max Drawdown</th>
+              <th class="text-right whitespace-nowrap w-24" title="จำนวน trade ทั้งหมดใน window">Total Trades</th>
+              <th class="text-right whitespace-nowrap w-20">Win Rate</th>
+              <th class="text-right whitespace-nowrap w-24" title="Gross profit ÷ |Gross loss|">Profit Factor</th>
+              <th class="text-center w-24" title="1Y cumulative equity curve">Equity</th>
+            </tr>
+          </thead>
+          <tbody>${rows}</tbody>
+        </table>
+      `;
+
+      // Row click → focus detail (do NOT toggle checkbox unless click is on checkbox)
+      $('combo-container').querySelectorAll('tbody tr').forEach(tr => {
+        tr.addEventListener('click', (e) => {
+          // Ignore clicks originating inside the checkbox cell (checkbox handles itself)
+          if (e.target.closest('[data-role="checkbox-cell"]')) return;
+          const id = tr.dataset.runid;
+          const run = combos.find(c => c.id === id);
+          if (run) focusCombo(run);
+        });
+      });
+
+      // Checkbox toggle → mutate basket
+      $('combo-container').querySelectorAll('.combo-check').forEach(cb => {
+        cb.addEventListener('click', (e) => e.stopPropagation()); // don't bubble to row
+        cb.addEventListener('change', (e) => {
+          if (isSubmitting) { e.preventDefault(); cb.checked = !cb.checked; return; }
+          const id = cb.dataset.runid;
+          const run = combos.find(c => c.id === id);
+          if (!run) return;
+          if (cb.checked) {
+            addToBasket(run);
+          } else {
+            removeFromBasket(id);
+          }
+        });
+      });
+    }
+
+    async function loadCombos() {
+      $('combo-container').innerHTML = comboSkeletonHTML();
+      $('combo-meta').textContent = 'กำลังโหลด…';
+      try {
+        // PUBLIC endpoint — no Authorization header needed but apiRequest sends it anyway (harmless)
+        const res = await fetch(`/api/strategies/${STRATEGY_CODE}/runs?limit=10&sort=recovery`);
+        if (!res.ok) throw new Error(`HTTP ${res.status}`);
+        const data = await res.json();
+        combos = Array.isArray(data) ? data : (data?.items || []);
+        renderCombos();
+        $('combo-meta').textContent = combos.length
+          ? `${combos.length} combos`
+          : '0 combos';
+      } catch (err) {
+        renderComboError(err.message || String(err));
+        $('combo-meta').textContent = 'โหลดไม่สำเร็จ';
+      }
+    }
+
+    // ═════════ Combo Detail (focus) ═════════
+    function focusCombo(run) {
+      selectedCombo = run;
+      renderCombos();
+      renderComboDetail();
+      $('combo-detail').classList.remove('hidden');
+      $('combo-detail').scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+    }
+
+    function clearCombo() {
+      selectedCombo = null;
+      $('combo-detail').classList.add('hidden');
+      renderCombos();
+    }
+
+    function renderComboDetail() {
+      if (!selectedCombo) return;
+      const r = selectedCombo;
+      const fast = r.params?.fast ?? r.params?.fast_period ?? r.params?.fast_ma ?? '—';
+      const slow = r.params?.slow ?? r.params?.slow_period ?? r.params?.slow_ma ?? '—';
+      const sl_lookback = r.params?.sl_lookback ?? r.params?.lookback ?? '—';
+      const rr = r.params?.rr_ratio ?? r.params?.rr ?? '—';
+      const baseRisk = r.params?.risk_per_trade_usd ?? r.params?.base_risk ?? null;
+
+      $('detail-code').textContent     = r.run_code || '—';
+      $('detail-symbol').textContent   = r.symbol || '—';
+      $('detail-tf').textContent       = r.timeframe || '—';
+      $('detail-fastslow').textContent = `${fast} / ${slow}`;
+      $('detail-sllookback').textContent = String(sl_lookback);
+      $('detail-rr').textContent       = (typeof rr === 'number') ? `1:${rr}` : String(rr);
+      $('detail-baserisk').textContent = baseRisk !== null ? fmtMoney(baseRisk) : '—';
+      $('detail-netprofit').textContent = fmtMoney(r.net_profit);
+      $('detail-netprofit').className   = `metric-value ${profitClass(r.net_profit)}`;
+      $('detail-winrate').textContent   = fmtPct(r.win_rate);
+      $('detail-trades').textContent    = fmtInt(r.total_trades);
+      $('detail-maxdd').textContent     = fmtMoney(r.max_drawdown);
+      $('detail-maxdd').className       = `metric-value ${ddClass(r.max_drawdown)}`;
+      $('detail-recovery').textContent  = fmtRecovery(r.recovery_factor);
+      $('detail-recovery').className    = `metric-value ${recoveryClass(r.recovery_factor)}`;
+      $('detail-sharpe').textContent    = r.sharpe_ratio !== null && r.sharpe_ratio !== undefined ? fmtNum(r.sharpe_ratio) : '—';
+      $('detail-engine').textContent    = r.engine_version || '—';
+
+      // Toggle button label + "in basket" pill
+      const inBasket = selectedCombos.has(r.id);
+      const dup = isComboAlreadySubscribed(r);
+      const inBasketBadge = $('detail-in-basket');
+      const toggleBtn = $('detail-toggle-btn');
+      const toggleLbl = $('detail-toggle-label');
+
+      if (dup) {
+        inBasketBadge.classList.add('hidden');
+        toggleBtn.disabled = true;
+        toggleBtn.classList.add('opacity-50', 'cursor-not-allowed');
+        toggleLbl.textContent = 'มีอยู่แล้วในพอร์ตนี้';
+      } else if (inBasket) {
+        inBasketBadge.classList.remove('hidden');
+        toggleBtn.disabled = false;
+        toggleBtn.classList.remove('opacity-50', 'cursor-not-allowed');
+        toggleBtn.classList.remove('border-info/40', 'text-info');
+        toggleBtn.classList.add('border-danger/40', 'text-danger');
+        toggleLbl.textContent = 'เอาออกจาก basket';
+      } else {
+        inBasketBadge.classList.add('hidden');
+        toggleBtn.disabled = false;
+        toggleBtn.classList.remove('opacity-50', 'cursor-not-allowed');
+        toggleBtn.classList.remove('border-danger/40', 'text-danger');
+        toggleBtn.classList.add('border-info/40', 'text-info');
+        toggleLbl.textContent = 'เพิ่มเข้า basket';
+      }
+    }
+
+    // ═════════ Basket — multi-select state mutations ═════════
+    function isComboAlreadySubscribed(run) {
+      if (!run) return false;
+      return (existingSubs || []).some(s =>
+        s.run_code === run.run_code && s.status !== 'stopped'
+      );
+    }
+
+    function addToBasket(run) {
+      if (!run || selectedCombos.has(run.id)) return;
+      if (isComboAlreadySubscribed(run)) {
+        showAlert('warn', 'Strategy นี้อยู่ในพอร์ตนี้แล้ว');
+        return;
+      }
+      const initialMult = DEFAULT_MULTIPLIER;
+      selectedCombos.set(run.id, {
+        run,
+        multiplier: initialMult,
+        status: 'idle',
+        error: null,
+        // Safety Cut DD state (added 2026-06-09)
+        safetyCutDd: suggestedSafetyCutDd(run, initialMult),
+        safetyCutManuallyEdited: false,   // true = lock to manual, do not auto-recompute
+        safetyCutDisabled: false,         // true = send null in POST, input greyed
+        safetyCutError: null,             // inline validation error
+      });
+      onBasketChanged();
+    }
+
+    function removeFromBasket(runId) {
+      if (!selectedCombos.has(runId)) return;
+      selectedCombos.delete(runId);
+      onBasketChanged();
+    }
+
+    function clearBasket() {
+      if (selectedCombos.size === 0) return;
+      selectedCombos.clear();
+      onBasketChanged();
+    }
+
+    function setItemMultiplier(runId, value) {
+      const item = selectedCombos.get(runId);
+      if (!item) return;
+      let v = Number(value);
+      if (isNaN(v)) v = DEFAULT_MULTIPLIER;
+      v = Math.max(0.1, Math.min(10.0, v));
+      item.multiplier = v;
+      // Re-suggest safety cut only if user has not manually overridden
+      if (!item.safetyCutManuallyEdited) {
+        item.safetyCutDd = suggestedSafetyCutDd(item.run, v);
+        item.safetyCutError = null;
+      }
+      updateAggregateRisk();
+      updateStickyFooter();
+    }
+
+    // ═════════ Safety Cut DD — per-row state mutations ═════════
+    function setSafetyCutDd(runId, value, fromUser) {
+      const item = selectedCombos.get(runId);
+      if (!item || item.safetyCutDisabled) return;
+      const v = Number(value);
+      if (fromUser) {
+        item.safetyCutManuallyEdited = true;
+      }
+      item.safetyCutDd = isNaN(v) ? 0 : v;
+      // Validate: enabled + value > 0
+      item.safetyCutError = (item.safetyCutDd <= 0)
+        ? 'ค่าต้อง > 0 (หรือกดปิดถ้าไม่ต้องการใช้)'
+        : null;
+      updateAggregateRisk();
+      updateStickyFooter();
+    }
+
+    function resetSafetyCutToAuto(runId) {
+      const item = selectedCombos.get(runId);
+      if (!item) return;
+      item.safetyCutManuallyEdited = false;
+      item.safetyCutDisabled = false;
+      item.safetyCutDd = suggestedSafetyCutDd(item.run, item.multiplier);
+      item.safetyCutError = null;
+      renderBasket();
+      updateAggregateRisk();
+      updateStickyFooter();
+    }
+
+    function toggleSafetyCutDisabled(runId) {
+      const item = selectedCombos.get(runId);
+      if (!item) return;
+      item.safetyCutDisabled = !item.safetyCutDisabled;
+      if (item.safetyCutDisabled) {
+        // disabling clears any inline error
+        item.safetyCutError = null;
+      } else if (!item.safetyCutManuallyEdited) {
+        // re-enable in auto mode → recompute
+        item.safetyCutDd = suggestedSafetyCutDd(item.run, item.multiplier);
+      }
+      renderBasket();
+      updateAggregateRisk();
+      updateStickyFooter();
+    }
+
+    function onBasketChanged() {
+      renderCombos();
+      renderBasket();
+      renderComboDetail();
+      updateAggregateRisk();
+      updateSteps();
+      updateStickyFooter();
+    }
+
+    function estimateLot(run, riskUsd) {
+      // Approximate: use avg loss from backtest as proxy for loss/lot if we don't have MT5 specs
+      // loss_per_lot ≈ tick_value (rough, varies per broker)
+      // For preview, derive an "approx loss per lot" = avg_trade_loss × some factor
+      // Simpler approach: use max_drawdown / total_trades as avg-loss proxy
+      // Actually: use SYMBOL_TICK_VALUES as rough loss_per_lot at typical SL distance
+      // Even simpler heuristic: avg_loss_per_lot for typical SL on each symbol ~ tick_value * sl_distance_in_ticks
+      // We'll approximate loss_per_lot from backtest stats if available
+
+      if (!run) return null;
+      const sym = run.symbol || '';
+      const totalTrades = run.total_trades || 0;
+      const maxDd = Math.abs(run.max_drawdown || 0);
+
+      // Estimate avg loss per trade from backtest (rough)
+      let avgLossPerTrade = null;
+      if (totalTrades > 0 && maxDd > 0) {
+        // Rough: avg loss ~ maxDd / sqrt(total_trades) — captures typical losing trade
+        avgLossPerTrade = maxDd / Math.max(1, Math.sqrt(totalTrades));
+      }
+
+      // Fallback to symbol-based estimate
+      // For most FX pairs: typical SL of 30 pips = $30 loss per 0.1 lot = $300/lot
+      // For XAUUSD: typical SL of 5 USD = $50/lot at 0.01 lot? roughly $500/lot
+      const SYMBOL_LOSS_PER_LOT = {
+        EURUSD: 300, USDJPY: 250, GBPUSD: 350, USDCHF: 300,
+        AUDUSD: 300, USDCAD: 300, NZDUSD: 300, XAUUSD: 500,
+      };
+      const lossPerLotEstimate = avgLossPerTrade && avgLossPerTrade > 0
+        ? avgLossPerTrade * 5  // scale up (per-trade loss → per-lot loss, rough)
+        : (SYMBOL_LOSS_PER_LOT[sym] || 300);
+
+      if (!riskUsd || riskUsd <= 0 || lossPerLotEstimate <= 0) return { lot: 0.01, floored: true, lossPerLot: lossPerLotEstimate };
+      const lotRaw = riskUsd / lossPerLotEstimate;
+      const lotFloor = Math.floor(lotRaw / 0.01) * 0.01;
+      const lot = Math.max(0.01, lotFloor);
+      const floored = lotRaw < 0.01;
+      return { lot, floored, lossPerLot: lossPerLotEstimate, raw: lotRaw };
+    }
+
+    // ═════════ Basket renderer ═════════
+    const STATUS_ICONS = {
+      idle: `<span class="row-status bg-bg-muted text-fg-subtle" title="พร้อมส่ง">
+              <svg class="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
+                <circle cx="12" cy="12" r="6" stroke-dasharray="3 3" />
+              </svg>
+            </span>`,
+      loading: `<span class="row-status bg-info/10 text-info" title="กำลังส่ง">
+                  <svg class="w-3 h-3 spin" fill="none" viewBox="0 0 24 24">
+                    <circle cx="12" cy="12" r="8" stroke="currentColor" stroke-width="3" stroke-dasharray="30 30" stroke-linecap="round" opacity="0.7"></circle>
+                  </svg>
+                </span>`,
+      success: `<span class="row-status bg-accent/15 text-accent" title="สำเร็จ">
+                  <svg class="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="3">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/>
+                  </svg>
+                </span>`,
+      error: `<span class="row-status bg-danger/15 text-danger" title="ล้มเหลว">
+                <svg class="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="3">
+                  <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/>
+                </svg>
+              </span>`,
+    };
+
+    function renderBasket() {
+      const panel = $('basket-panel');
+      const rowsHost = $('basket-rows');
+      const countEl = $('basket-count');
+
+      if (selectedCombos.size === 0) {
+        panel.classList.add('hidden');
+        rowsHost.innerHTML = '';
+        return;
+      }
+      panel.classList.remove('hidden');
+
+      const existingCount = (existingSubs || []).filter(s => s.status !== 'stopped').length;
+      const total = existingCount + selectedCombos.size;
+      const overCap = total > MAX_SUBS_PER_PORT;
+      const capTone = overCap ? 'text-danger' : (total === MAX_SUBS_PER_PORT ? 'text-warning' : 'text-fg-muted');
+      countEl.className = `text-[11px] mt-0.5 ${capTone}`;
+      countEl.innerHTML = `${selectedCombos.size} ใน basket · ${existingCount} ของพอร์ตปัจจุบัน · รวม ${total}/${MAX_SUBS_PER_PORT}${overCap ? ' ⚠️ เกินขีดจำกัด' : ''}`;
+
+      const items = Array.from(selectedCombos.values());
+      rowsHost.innerHTML = items.map((item, idx) => {
+        const r = item.run;
+        const status = item.status || 'idle';
+        const code = r.run_code || '—';
+        const sym = r.symbol || '—';
+        const tf = r.timeframe || '—';
+        const maxdd = r.max_drawdown;
+        const maxddScaled = maxdd !== null && maxdd !== undefined ? Math.abs(maxdd) * item.multiplier : null;
+        const ddTone = maxddScaled !== null
+          ? (maxddScaled > 2000 ? 'text-danger' : maxddScaled > 500 ? 'text-warning' : 'text-fg-muted')
+          : 'text-fg-muted';
+
+        const errorBlock = item.error
+          ? `<div class="text-danger text-[11px] mt-1 flex items-start gap-1.5">
+              <svg class="w-3.5 h-3.5 flex-shrink-0 mt-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/>
+              </svg>
+              <span>${escapeHtml(item.error)}</span>
+            </div>`
+          : '';
+
+        const isLocked = isSubmitting && status !== 'error';
+
+        // Safety Cut state visualization
+        const scDisabled = item.safetyCutDisabled === true;
+        const scManual = item.safetyCutManuallyEdited === true;
+        const scError = item.safetyCutError;
+        const scValueStr = scDisabled
+          ? '—'
+          : (typeof item.safetyCutDd === 'number' ? item.safetyCutDd.toFixed(2) : '');
+
+        let scInputCls;
+        let scBadgeHtml;
+        if (scDisabled) {
+          scInputCls = 'input-disabled border-border-subtle';
+          scBadgeHtml = `<span class="field-label-disabled">ปิด</span>`;
+        } else if (scManual) {
+          scInputCls = 'input-manual';
+          scBadgeHtml = `<span class="field-label-manual">manual</span>`;
+        } else {
+          scInputCls = 'input-auto';
+          scBadgeHtml = `<span class="field-label-auto">auto</span>`;
+        }
+
+        const scErrorBlock = scError
+          ? `<div class="text-danger text-[10px] mt-1 flex items-center gap-1">
+              <svg class="w-3 h-3 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/>
+              </svg>
+              <span>${escapeHtml(scError)}</span>
+            </div>`
+          : '';
+
+        return `
+          <div class="basket-row is-${status}" data-runid="${escapeHtml(r.id)}">
+            ${STATUS_ICONS[status] || STATUS_ICONS.idle}
+            <div class="min-w-0">
+              <div class="flex items-center gap-2 flex-wrap">
+                <span class="font-mono text-info text-xs font-semibold truncate">${escapeHtml(code)}</span>
+                <span class="text-fg-muted text-xs">${escapeHtml(sym)}</span>
+                <span class="text-fg-subtle text-[10px] px-1.5 py-0.5 rounded bg-bg-muted border border-border-subtle">${escapeHtml(tf)}</span>
+              </div>
+              <div class="text-fg-subtle text-[11px] mt-0.5">
+                <span>backtest MaxDD: <span class="font-mono tabular-nums">${fmtMoney(maxdd)}</span></span>
+                <span class="mx-1">→</span>
+                <span class="font-mono tabular-nums ${ddTone}">${maxddScaled !== null ? fmtMoney(maxddScaled) : '—'} (× ${item.multiplier.toFixed(1)})</span>
+              </div>
+              ${errorBlock}
+            </div>
+
+            <!-- Controls column: multiplier (top) + safety cut (bottom) -->
+            <div class="row-controls flex flex-col gap-2 items-end">
+
+              <!-- Multiplier row -->
+              <div class="flex items-center gap-1.5">
+                <span class="text-fg-subtle text-[10px] uppercase tracking-wider font-medium w-10 text-right">Mult</span>
+                <input type="number" min="0.1" max="10" step="0.1"
+                  value="${item.multiplier.toFixed(1)}"
+                  data-runid="${escapeHtml(r.id)}"
+                  ${isLocked ? 'disabled' : ''}
+                  class="basket-mult-input w-20 bg-bg border border-border-subtle rounded-lg px-2.5 py-1.5 text-fg font-mono tabular-nums text-xs focus:outline-none focus:border-info disabled:opacity-60 disabled:cursor-not-allowed" />
+                <span class="text-fg-subtle text-xs w-3">×</span>
+                <div class="hidden md:flex gap-0.5">
+                  ${[0.5, 1, 2, 3, 5].map(m => `
+                    <button type="button" data-runid="${escapeHtml(r.id)}" data-mult="${m}"
+                      ${isLocked ? 'disabled' : ''}
+                      class="basket-quick-btn text-[10px] px-1.5 py-1 rounded border border-border-subtle text-fg-muted hover:bg-bg-muted hover:text-fg transition-colors disabled:opacity-50 disabled:cursor-not-allowed">
+                      ${m}×
+                    </button>
+                  `).join('')}
+                </div>
+              </div>
+
+              <!-- Safety Cut DD row -->
+              <div class="flex flex-col items-end">
+                <div class="flex items-center gap-1.5">
+                  <span class="text-fg-subtle text-[10px] uppercase tracking-wider font-medium w-10 text-right flex items-center justify-end gap-1">
+                    Cut
+                    <span class="help-icon" title="Safety-Cut DD ($) — ถ้า DD รวมของ strategy นี้ถึงค่านี้ bot จะหยุดยิง + ปิด positions ของ strategy นี้ทันที. ค่าเริ่มต้น auto = |backtest MaxDD| × multiplier × ${SAFETY_CUT_FACTOR}">?</span>
+                  </span>
+                  <input type="number" min="0" step="0.01" inputmode="decimal"
+                    placeholder="เช่น 500"
+                    value="${escapeHtml(scValueStr)}"
+                    data-runid="${escapeHtml(r.id)}"
+                    ${(isLocked || scDisabled) ? 'disabled' : ''}
+                    class="basket-safety-input w-20 bg-bg border rounded-lg px-2.5 py-1.5 text-fg font-mono tabular-nums text-xs focus:outline-none focus:border-info disabled:cursor-not-allowed ${scInputCls}" />
+                  <span class="text-fg-subtle text-xs w-3">$</span>
+                  ${scBadgeHtml}
+                  <button type="button" class="basket-safety-reset-btn text-fg-subtle hover:text-info p-1 transition-colors disabled:opacity-30 disabled:cursor-not-allowed"
+                    ${isLocked ? 'disabled' : ''}
+                    title="reset to auto (|maxdd| × mult × ${SAFETY_CUT_FACTOR})"
+                    data-runid="${escapeHtml(r.id)}">
+                    <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                      <path stroke-linecap="round" stroke-linejoin="round" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/>
+                    </svg>
+                  </button>
+                  <button type="button" class="basket-safety-toggle-btn p-1 transition-colors disabled:opacity-30 disabled:cursor-not-allowed ${scDisabled ? 'text-warning hover:text-amber-400' : 'text-fg-subtle hover:text-warning'}"
+                    ${isLocked ? 'disabled' : ''}
+                    title="${scDisabled ? 'เปิดใช้ safety cut' : 'ปิด safety cut (ส่ง null)'}"
+                    data-runid="${escapeHtml(r.id)}">
+                    <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                      ${scDisabled
+                        ? '<path stroke-linecap="round" stroke-linejoin="round" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"/>'
+                        : '<path stroke-linecap="round" stroke-linejoin="round" d="M18.364 18.364A9 9 0 005.636 5.636m12.728 12.728A9 9 0 015.636 5.636m12.728 12.728L5.636 5.636"/>'}
+                    </svg>
+                  </button>
+                </div>
+                ${scErrorBlock}
+              </div>
+            </div>
+
+            <button type="button" class="basket-focus-btn text-fg-subtle hover:text-info p-1 transition-colors" title="ดูรายละเอียด" data-runid="${escapeHtml(r.id)}">
+              <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
+                <path stroke-linecap="round" stroke-linejoin="round" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/>
+              </svg>
+            </button>
+            <button type="button" class="basket-remove-btn text-fg-subtle hover:text-danger p-1 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+              ${isLocked ? 'disabled' : ''} title="เอาออก" data-runid="${escapeHtml(r.id)}">
+              <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/>
+              </svg>
+            </button>
+          </div>
+        `;
+      }).join('');
+
+      // Wire up basket-row event handlers
+      rowsHost.querySelectorAll('.basket-mult-input').forEach(inp => {
+        inp.addEventListener('input', (e) => {
+          const id = inp.dataset.runid;
+          setItemMultiplier(id, parseFloat(e.target.value));
+        });
+        inp.addEventListener('change', (e) => {
+          let v = parseFloat(e.target.value);
+          if (isNaN(v) || v < 0.1) v = 0.1;
+          if (v > 10) v = 10;
+          e.target.value = v.toFixed(1);
+          setItemMultiplier(inp.dataset.runid, v);
+          // re-render to update displayed MaxDD scaled in row text
+          renderBasket();
+        });
+      });
+      rowsHost.querySelectorAll('.basket-quick-btn').forEach(btn => {
+        btn.addEventListener('click', () => {
+          if (isSubmitting) return;
+          const id = btn.dataset.runid;
+          const m = parseFloat(btn.dataset.mult);
+          if (!isNaN(m)) {
+            setItemMultiplier(id, m);
+            renderBasket();
+          }
+        });
+      });
+      rowsHost.querySelectorAll('.basket-remove-btn').forEach(btn => {
+        btn.addEventListener('click', () => {
+          if (isSubmitting) return;
+          removeFromBasket(btn.dataset.runid);
+        });
+      });
+      rowsHost.querySelectorAll('.basket-focus-btn').forEach(btn => {
+        btn.addEventListener('click', () => {
+          const id = btn.dataset.runid;
+          const run = combos.find(c => c.id === id);
+          if (run) focusCombo(run);
+        });
+      });
+
+      // Safety cut input (manual edits → lock manual mode)
+      rowsHost.querySelectorAll('.basket-safety-input').forEach(inp => {
+        inp.addEventListener('input', (e) => {
+          if (isSubmitting) return;
+          const id = inp.dataset.runid;
+          setSafetyCutDd(id, parseFloat(e.target.value), /*fromUser*/ true);
+          // light-touch update: refresh badge state immediately so user sees "manual" pill
+          const item = selectedCombos.get(id);
+          if (item) {
+            // swap classes inline (avoid full re-render that would steal focus)
+            inp.classList.remove('input-auto');
+            inp.classList.add('input-manual');
+            const row = inp.closest('.basket-row');
+            const badge = row?.querySelector('.field-label-auto');
+            if (badge) {
+              badge.className = 'field-label-manual';
+              badge.textContent = 'manual';
+            }
+          }
+        });
+        inp.addEventListener('blur', () => {
+          // on blur: re-render to refresh inline error + breakdown formatting
+          renderBasket();
+        });
+      });
+
+      rowsHost.querySelectorAll('.basket-safety-reset-btn').forEach(btn => {
+        btn.addEventListener('click', () => {
+          if (isSubmitting) return;
+          resetSafetyCutToAuto(btn.dataset.runid);
+        });
+      });
+
+      rowsHost.querySelectorAll('.basket-safety-toggle-btn').forEach(btn => {
+        btn.addEventListener('click', () => {
+          if (isSubmitting) return;
+          toggleSafetyCutDisabled(btn.dataset.runid);
+        });
+      });
+    }
+
+    // ═════════ Aggregate metrics ═════════
+    // MaxDD: worst-case = Σ |backtest_maxdd| × multiplier (kept as context info, no longer primary)
+    function aggregatedMaxDd() {
+      let sum = 0;
+      let counted = 0;
+      for (const item of selectedCombos.values()) {
+        const r = item.run;
+        if (r.max_drawdown !== null && r.max_drawdown !== undefined && !isNaN(r.max_drawdown)) {
+          sum += Math.abs(r.max_drawdown) * item.multiplier;
+          counted++;
+        }
+      }
+      return { sum, counted };
+    }
+
+    // Safety Cut: Σ safety_cut_dd across basket — skip disabled rows.
+    // Returns one entry per enabled combo, sorted by value desc (largest segment first).
+    // Color is no longer driven by strategy_code — it's resolved per-row via comboColor(run_code).
+    function aggregatedSafetyCut() {
+      let sum = 0;
+      let enabled = 0;
+      let disabled = 0;
+      const combos = [];   // [{ runId, runCode, symbol, tf, value }] enabled only
+
+      for (const [runId, item] of selectedCombos.entries()) {
+        if (item.safetyCutDisabled) { disabled++; continue; }
+        const v = Number(item.safetyCutDd) || 0;
+        if (v <= 0) continue;
+        sum += v;
+        enabled++;
+        const r = item.run || {};
+        combos.push({
+          runId,
+          runCode: r.run_code || '',
+          symbol: r.symbol || '',
+          tf: r.timeframe || '',
+          value: v,
+        });
+      }
+
+      // Sort by value desc — largest segment renders first (left), breakdown lists biggest first.
+      combos.sort((a, b) => b.value - a.value);
+      return { sum, enabled, disabled, total: selectedCombos.size, combos };
+    }
+
+    function updateAggregateRisk() {
+      const sc = aggregatedSafetyCut();
+      const valueEl = $('agg-safetycut-value');
+      const tierEl  = $('agg-safetycut-tier');
+      const barEl   = $('agg-safetycut-bar');
+      const emptyMsg = $('agg-safetycut-empty-msg');
+      const bdEl    = $('agg-safetycut-breakdown');
+
+      // ── Primary value + tier color ──
+      // Tier thresholds match the previous MaxDD heuristic so users keep the same mental model.
+      let tone, tierLabel;
+      if (sc.enabled === 0) {
+        tone = 'fg-subtle';
+        tierLabel = sc.total === 0 ? '—' : 'ไม่ตั้ง';
+      } else if (sc.sum > 2000) { tone = 'danger';  tierLabel = 'สูงมาก'; }
+      else if (sc.sum > 500)    { tone = 'warning'; tierLabel = 'ต้องระวัง'; }
+      else                      { tone = 'info';    tierLabel = 'ปลอดภัย'; }
+
+      valueEl.textContent = sc.enabled === 0 && sc.total > 0 ? 'ไม่ตั้ง' : fmtMoney(sc.sum);
+      valueEl.className = `font-mono tabular-nums text-2xl font-semibold text-${tone}`;
+      tierEl.textContent = `ระดับ: ${tierLabel}`;
+      tierEl.className = `text-[10px] uppercase tracking-wider mt-0.5 text-${tone}`;
+
+      // ── Stacked segments bar (one segment per combo, hue derived from run_code) ──
+      barEl.innerHTML = '';
+      if (sc.combos.length === 0) {
+        // Empty state — bar shows muted background only
+        emptyMsg.classList.toggle('hidden', sc.total === 0);
+        emptyMsg.textContent = sc.total === 0
+          ? 'ยังไม่ได้เลือก strategy'
+          : 'ไม่มี Safety Cut ตั้ง — bot จะรันต่อไปไม่หยุดอัตโนมัติ';
+        emptyMsg.classList.remove('hidden');
+      } else {
+        emptyMsg.classList.add('hidden');
+
+        // Bar total visualization: same heuristic as old MaxDD gauge so users keep "fullness" cue.
+        // 0-500 → 0-40%, 500-2000 → 40-80%, 2000+ → 80-100%
+        let totalPct = 0;
+        if (sc.sum <= 500) totalPct = (sc.sum / 500) * 40;
+        else if (sc.sum <= 2000) totalPct = 40 + ((sc.sum - 500) / 1500) * 40;
+        else totalPct = Math.min(100, 80 + ((sc.sum - 2000) / 2000) * 20);
+        totalPct = Math.max(2, totalPct);
+
+        // Each segment width = proportional share of totalPct
+        const frag = document.createDocumentFragment();
+        for (const c of sc.combos) {
+          const share = c.value / sc.sum;
+          const segPct = (totalPct * share).toFixed(2);
+          const color = comboColor(c.runCode);
+          const sym = c.symbol || '—';
+          const tf  = c.tf || '—';
+          const code = c.runCode || '—';
+          const div = document.createElement('div');
+          div.className = 'gauge-segment';
+          div.style.width = `${segPct}%`;
+          div.style.backgroundColor = color;
+          div.title = `${code} · ${sym} ${tf} → ${fmtMoney(c.value)}`;
+          div.setAttribute('aria-label', `${code} ${sym} ${tf} ${fmtMoney(c.value)}`);
+          frag.appendChild(div);
+        }
+        barEl.appendChild(frag);
+      }
+
+      // ── Vertical breakdown list — one row per combo ──
+      bdEl.innerHTML = '';
+      if (sc.combos.length === 0) {
+        // No content row when nothing enabled — caption in empty-msg handles communication
+      } else {
+        const rowsHtml = sc.combos.map(c => {
+          const color = comboColor(c.runCode);
+          const sym = c.symbol || '—';
+          const tf  = c.tf || '—';
+          const code = c.runCode || '—';
+          return `
+            <div class="flex items-center justify-between gap-3 text-[12px]">
+              <div class="flex items-center gap-2 min-w-0">
+                <span class="inline-block w-2 h-2 rounded-full flex-shrink-0" style="background-color: ${color}"></span>
+                <span class="font-mono text-fg truncate" title="${escapeHtml(code)}">${escapeHtml(code)}</span>
+              </div>
+              <div class="flex items-center gap-2 flex-shrink-0">
+                <span class="text-fg-subtle text-[10px] tabular-nums w-24 text-right">${escapeHtml(sym)} ${escapeHtml(tf)}</span>
+                <span class="font-mono tabular-nums text-fg w-20 text-right">${fmtMoney(c.value)}</span>
+              </div>
+            </div>`;
+        }).join('');
+
+        const totalHtml = `
+          <div class="flex items-center justify-end gap-2 pt-1.5 mt-1.5 border-t border-border-subtle/60 text-[12px]">
+            <span class="text-fg-subtle text-[10px] uppercase tracking-wider">total</span>
+            <span class="font-mono tabular-nums font-semibold text-${tone}">${fmtMoney(sc.sum)}</span>
+          </div>`;
+
+        bdEl.innerHTML = rowsHtml + totalHtml;
+      }
+
+      // ── MaxDD sub-line (demoted to context info) ──
+      const { sum: mddSum, counted: mddN } = aggregatedMaxDd();
+      const mddEl = $('agg-maxdd-value');
+      const mddNoteEl = $('agg-maxdd-note');
+      if (mddEl) {
+        mddEl.textContent = fmtMoney(mddSum);
+        if (mddNoteEl) {
+          mddNoteEl.textContent = mddN === 0
+            ? '— (ไม่มีข้อมูล backtest)'
+            : `(จาก backtest × multiplier × ${mddN} ${mddN === 1 ? 'strategy' : 'strategies'})`;
+        }
+      }
+    }
+
+    // ═════════ Existing subs (cap + correlation check) ═════════
+    async function loadExistingSubs(portId) {
+      try {
+        const data = await apiRequest(`/api/bots/subscriptions?mt5_account_id=${encodeURIComponent(portId)}`);
+        existingSubs = Array.isArray(data) ? data : (data?.items || []);
+      } catch (err) {
+        console.warn('[bot-trade] loadExistingSubs failed — assuming 0 subs for this port:', err?.message);
+        existingSubs = [];
+      }
+      // Re-validate basket — drop items that are now duplicates
+      let mutated = false;
+      for (const id of Array.from(selectedCombos.keys())) {
+        const item = selectedCombos.get(id);
+        if (isComboAlreadySubscribed(item.run)) {
+          selectedCombos.delete(id);
+          mutated = true;
+        }
+      }
+      if (mutated) {
+        showAlert('warn', 'บาง combo ใน basket ถูกตัดออกเพราะมีอยู่ในพอร์ตนี้แล้ว');
+      }
+      renderCombos();
+      renderBasket();
+      renderComboDetail();
+      updateAggregateRisk();
+      updateStickyFooter();
+    }
+
+    // ═════════ Sticky footer summary + submit gating ═════════
+    function updateStickyFooter() {
+      if (!selectedId) {
+        $('sticky-footer').classList.add('hidden');
+        return;
+      }
+      // Show footer once port selected (so user can see cap counter even before basket fills)
+      $('sticky-footer').classList.remove('hidden');
+
+      const acc = accounts.find(a => a.id === selectedId);
+      $('summary-port').textContent  = acc ? `${acc.name} (login ${acc.login})` : '—';
+
+      const basketSize = selectedCombos.size;
+      const existingCount = (existingSubs || []).filter(s => s.status !== 'stopped').length;
+      const total = existingCount + basketSize;
+      const overCap = total > MAX_SUBS_PER_PORT;
+
+      $('summary-basket-count').textContent = String(basketSize);
+
+      const capEl = $('summary-cap');
+      capEl.textContent = `${total}/${MAX_SUBS_PER_PORT}`;
+      capEl.className = `font-mono ${overCap ? 'text-danger' : total === MAX_SUBS_PER_PORT ? 'text-warning' : 'text-fg'}`;
+
+      const { sum } = aggregatedMaxDd();
+      const ddTone = sum > 2000 ? 'text-danger' : sum > 500 ? 'text-warning' : 'text-fg';
+      const ddEl = $('summary-maxdd');
+      ddEl.textContent = fmtMoney(sum);
+      ddEl.className = `font-mono ${ddTone}`;
+
+      // Submit gating
+      const submitBtn = $('submit-btn');
+      const lbl = $('submit-btn-label');
+      const capWarn = $('cap-warning');
+      const capMsg = $('cap-warning-msg');
+
+      if (isSubmitting) {
+        // Locked during loop — labels/spinner handled by the submit flow
+        return;
+      }
+
+      capWarn.classList.add('hidden');
+
+      // Determine button state based on rules
+      if (basketSize === 0) {
+        submitBtn.disabled = true;
+        lbl.textContent = 'เลือก strategy เพื่อเริ่ม';
+      } else if (overCap) {
+        submitBtn.disabled = true;
+        lbl.textContent = `เกินขีดจำกัด ${MAX_SUBS_PER_PORT}/พอร์ต`;
+        capWarn.classList.remove('hidden');
+        capMsg.textContent = `รวม ${total} > ${MAX_SUBS_PER_PORT} — ลด basket ${total - MAX_SUBS_PER_PORT} ตัว หรือลบ strategy เก่าออกก่อน`;
+      } else {
+        const failedCount = countByStatus('error');
+        const successCount = countByStatus('success');
+        if (failedCount > 0) {
+          // Any failed items → retry mode
+          submitBtn.disabled = false;
+          lbl.textContent = `ลองอีกครั้งสำหรับที่ล้มเหลว (${failedCount})`;
+        } else if (successCount > 0 && successCount < basketSize) {
+          // Some succeeded, others still idle (user added more after success) → submit only pending
+          submitBtn.disabled = false;
+          const pending = basketSize - successCount;
+          lbl.textContent = `เพิ่ม ${pending} strategy ที่เหลือ`;
+        } else {
+          submitBtn.disabled = false;
+          lbl.textContent = `เพิ่มทั้งหมด ${basketSize} strategies`;
+        }
+      }
+    }
+
+    function countByStatus(status) {
+      let n = 0;
+      for (const item of selectedCombos.values()) if (item.status === status) n++;
+      return n;
+    }
+
+    // ═════════ Correlation (batched) ═════════
+    function findCorrelations() {
+      // Collect all basket items whose symbol clashes with existing subs OR with another basket item
+      const existingSymbols = new Set(
+        (existingSubs || [])
+          .filter(s => s.status !== 'stopped')
+          .map(s => s.symbol)
+      );
+      const basketSymbolCounts = new Map();
+      for (const item of selectedCombos.values()) {
+        basketSymbolCounts.set(item.run.symbol, (basketSymbolCounts.get(item.run.symbol) || 0) + 1);
+      }
+      const dups = [];
+      for (const item of selectedCombos.values()) {
+        const sym = item.run.symbol;
+        const inExisting = existingSymbols.has(sym);
+        const inBasketDup = (basketSymbolCounts.get(sym) || 0) > 1;
+        if (inExisting || inBasketDup) {
+          dups.push({
+            code: item.run.run_code,
+            symbol: sym,
+            reason: inExisting ? 'มีในพอร์ตอยู่แล้ว' : 'ซ้ำกับ combo อื่นใน basket',
+          });
+        }
+      }
+      return dups;
+    }
+
+    function confirmCorrelations(dups) {
+      return new Promise(resolve => {
+        const modal = $('correlation-modal');
+        const list = $('correlation-list');
+        $('correlation-msg').textContent = `รวมพบ ${dups.length} strategy ที่ symbol ซ้ำ — ยืนยันทั้งหมด?`;
+        list.innerHTML = dups.map(d => `
+          <li class="flex items-center gap-2">
+            <span class="font-mono text-info text-[11px]">${escapeHtml(d.code)}</span>
+            <span class="text-fg-muted text-[11px]">${escapeHtml(d.symbol)}</span>
+            <span class="text-fg-subtle text-[10px] ml-auto">${escapeHtml(d.reason)}</span>
+          </li>
+        `).join('');
+        modal.classList.remove('hidden');
+
+        const cancel = $('correlation-cancel-btn');
+        const confirm = $('correlation-confirm-btn');
+        const cleanup = () => {
+          modal.classList.add('hidden');
+          cancel.removeEventListener('click', onCancel);
+          confirm.removeEventListener('click', onConfirm);
+        };
+        const onCancel = () => { cleanup(); resolve(false); };
+        const onConfirm = () => { cleanup(); resolve(true); };
+        cancel.addEventListener('click', onCancel);
+        confirm.addEventListener('click', onConfirm);
+      });
+    }
+
+    // ═════════ Submit — sequential POST loop ═════════
+    async function submitBasket() {
+      if (selectedCombos.size === 0 || !selectedId) return;
+      if (isSubmitting) return;
+
+      // Determine target items — retry mode if any 'error' exist alongside 'success'
+      const hasMixedResult = countByStatus('error') > 0 && countByStatus('success') > 0;
+      const targetIds = [];
+      for (const [id, item] of selectedCombos.entries()) {
+        if (hasMixedResult) {
+          // retry only failed ones
+          if (item.status === 'error') targetIds.push(id);
+        } else {
+          // fresh run — process everything except success (in case user added more after partial)
+          if (item.status !== 'success') targetIds.push(id);
+        }
+      }
+      if (targetIds.length === 0) return;
+
+      // Cap check
+      const existingCount = (existingSubs || []).filter(s => s.status !== 'stopped').length;
+      const totalAfter = existingCount + selectedCombos.size;
+      if (totalAfter > MAX_SUBS_PER_PORT) {
+        showAlert('error', `เกินขีดจำกัด ${MAX_SUBS_PER_PORT} strategies/port`);
+        return;
+      }
+
+      // Safety-cut validation: target rows that are enabled must have value > 0
+      const invalidRows = [];
+      for (const id of targetIds) {
+        const item = selectedCombos.get(id);
+        if (!item) continue;
+        if (item.safetyCutDisabled) continue;
+        const v = Number(item.safetyCutDd);
+        if (!isFinite(v) || v <= 0) {
+          item.safetyCutError = 'ค่าต้อง > 0 (หรือกดปิดถ้าไม่ต้องการใช้)';
+          invalidRows.push(item.run.run_code);
+        }
+      }
+      if (invalidRows.length > 0) {
+        renderBasket();
+        showAlert('error', `Safety Cut ของ ${invalidRows.length} strategy ไม่ถูกต้อง — กรอกค่า > 0 หรือกด ⊘ ปิด`);
+        return;
+      }
+
+      // Correlation check (only when this is a fresh run; on retry we already passed)
+      if (!hasMixedResult) {
+        const dups = findCorrelations();
+        if (dups.length > 0) {
+          const ok = await confirmCorrelations(dups);
+          if (!ok) return;
+        }
+      }
+
+      // Reset target items to loading state
+      for (const id of targetIds) {
+        const item = selectedCombos.get(id);
+        if (item) { item.status = 'idle'; item.error = null; }
+      }
+
+      // Lock UI
+      isSubmitting = true;
+      const submitBtn = $('submit-btn');
+      const submitLbl = $('submit-btn-label');
+      const submitSpinner = $('submit-btn-spinner');
+      const progressEl = $('submit-progress');
+      const progressBar = $('progress-bar');
+      const progressLabel = $('progress-label');
+      const progressStats = $('progress-stats');
+
+      submitBtn.disabled = true;
+      submitSpinner.classList.remove('hidden');
+      progressEl.classList.remove('hidden');
+      progressBar.className = 'h-full bg-info transition-all duration-200';
+      progressBar.style.width = '0%';
+      renderBasket();
+
+      let done = 0, succeeded = 0, failed = 0;
+      const total = targetIds.length;
+
+      const updateProgressBar = () => {
+        const pct = total > 0 ? (done / total) * 100 : 0;
+        progressBar.style.width = `${pct.toFixed(1)}%`;
+        progressLabel.textContent = `กำลังเพิ่ม: ${done}/${total}`;
+        progressStats.innerHTML = `<span class="text-accent">สำเร็จ ${succeeded}</span> · <span class="text-danger">ล้มเหลว ${failed}</span>`;
+        submitLbl.textContent = `กำลังเพิ่ม ${done}/${total}…`;
+      };
+      updateProgressBar();
+
+      for (const id of targetIds) {
+        const item = selectedCombos.get(id);
+        if (!item) { done++; continue; }
+        item.status = 'loading';
+        item.error = null;
+        renderBasket();
+
+        try {
+          await apiRequest('/api/bots/subscriptions', {
+            method: 'POST',
+            body: JSON.stringify({
+              mt5_account_id: selectedId,
+              backtest_run_id: item.run.id,
+              risk_multiplier: item.multiplier,
+              safety_cut_dd: item.safetyCutDisabled ? null : Number(item.safetyCutDd),
+            }),
+          });
+          item.status = 'success';
+          item.error = null;
+          succeeded++;
+        } catch (err) {
+          item.status = 'error';
+          item.error = err.message || 'เพิ่ม strategy ไม่สำเร็จ';
+          failed++;
+        }
+        done++;
+        updateProgressBar();
+        renderBasket();
+      }
+
+      // Loop complete
+      isSubmitting = false;
+      submitSpinner.classList.add('hidden');
+
+      if (failed === 0) {
+        progressBar.className = 'h-full bg-accent transition-all duration-200';
+        progressBar.style.width = '100%';
+        showAlert('success', `เพิ่ม ${succeeded}/${total} strategies สำเร็จ`);
+        setTimeout(() => { window.location.href = '/dashboard/'; }, 800);
+      } else if (succeeded === 0) {
+        progressBar.className = 'h-full bg-danger transition-all duration-200';
+        progressBar.style.width = '100%';
+        showAlert('error', `เพิ่มไม่สำเร็จ ${failed}/${total} — ดูข้อความข้อผิดพลาดในแต่ละแถว`);
+        // Reload existing subs in case some did go through despite error
+        await loadExistingSubs(selectedId);
+        updateStickyFooter();
+      } else {
+        progressBar.className = 'h-full bg-warning transition-all duration-200';
+        progressBar.style.width = '100%';
+        showAlert('warn', `เพิ่มสำเร็จ ${succeeded}/${total} — ดูรายละเอียดที่ล้มเหลวข้างล่าง`);
+        // Refresh existingSubs because the successful ones now exist
+        await loadExistingSubs(selectedId);
+        updateStickyFooter();
+      }
+    }
+
+    // ═════════ Wire-up ═════════
+    $('accounts-retry-btn').addEventListener('click', loadAccounts);
+
+    $('detail-close-btn').addEventListener('click', clearCombo);
+
+    $('detail-toggle-btn').addEventListener('click', () => {
+      if (!selectedCombo || isSubmitting) return;
+      if (selectedCombos.has(selectedCombo.id)) {
+        removeFromBasket(selectedCombo.id);
+      } else {
+        addToBasket(selectedCombo);
+      }
+    });
+
+    $('basket-clear-btn').addEventListener('click', () => {
+      if (isSubmitting) return;
+      clearBasket();
+    });
+
+    $('submit-btn').addEventListener('click', submitBasket);
+
+    // initial load
+    loadAccounts();
+
+    // refresh "Last check" relative time every 30s
+    setInterval(() => {
+      if (accounts.length > 0 && !$('accounts-grid').classList.contains('hidden')) {
+        renderAccountsGrid();
+      }
+    }, 30000);
+  </script>
+</body>
+</html>

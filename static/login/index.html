@@ -1,0 +1,460 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>เข้าสู่ระบบ — ELITEFUNS</title>
+
+  <link rel="stylesheet" href="/design/styles.css">
+
+  <style>
+    html, body { margin: 0; }
+    body {
+      min-height: 100vh;
+      background:
+        radial-gradient(120% 60% at 50% -10%, rgba(249,168,38,0.10), transparent 55%),
+        var(--surface-canvas);
+      color: var(--text-primary);
+      display: flex;
+      flex-direction: column;
+      font-family: var(--font-sans);
+    }
+    a { color: inherit; }
+
+    .page { max-width: 1280px; margin: 0 auto; padding: 0 24px; width: 100%; box-sizing: border-box; }
+
+    /* ============ NAV (mirrors index.html) ============ */
+    .nav {
+      display: flex; align-items: center;
+      padding: 20px 0;
+    }
+    .brand { display: inline-flex; align-items: center; gap: 11px; text-decoration: none; flex: none; }
+    .brand img { height: 26px; width: auto; display: block; }
+    .brand .word {
+      font-family: var(--font-display); font-weight: 700; font-size: 18px;
+      letter-spacing: 1px; text-transform: uppercase;
+      color: var(--text-primary); line-height: 1;
+    }
+    .nav .back {
+      margin-left: auto;
+      color: var(--text-secondary); text-decoration: none;
+      font-size: 15px; font-weight: 450;
+      display: inline-flex; align-items: center; gap: 6px;
+      transition: color .18s ease;
+    }
+    .nav .back:hover { color: var(--text-primary); }
+
+    /* ============ MAIN ============ */
+    main {
+      flex: 1;
+      display: flex; align-items: center; justify-content: center;
+      padding: 32px 24px 64px;
+    }
+    .wrap { width: 100%; max-width: 440px; }
+
+    /* ============ HEADING ============ */
+    .page-head { text-align: center; margin-bottom: 28px; }
+    .page-head h1 {
+      margin: 0 0 10px;
+      font-family: var(--font-display);
+      font-weight: 500;
+      font-size: clamp(30px, 4vw, 40px);
+      line-height: 1.05;
+      letter-spacing: -0.02em;
+      color: var(--text-primary);
+    }
+    .page-head p {
+      margin: 0;
+      color: var(--text-secondary);
+      font-size: 16px;
+      font-weight: 450;
+    }
+
+    /* ============ CARD ============ */
+    .card {
+      background: var(--surface-lifted);
+      border: 1.5px solid var(--border-soft);
+      border-radius: 28px;
+      box-shadow: var(--elev-2);
+      padding: 36px 36px 32px;
+    }
+
+    /* ============ TAB TOGGLE ============ */
+    .tabs {
+      display: grid; grid-template-columns: 1fr 1fr;
+      gap: 4px; padding: 4px;
+      background: var(--surface-raised);
+      border: 1.5px solid var(--border-ink);
+      border-radius: var(--radius-pill, 999px);
+      margin-bottom: 26px;
+    }
+    .tab {
+      appearance: none; border: 0; cursor: pointer;
+      padding: 11px 16px;
+      border-radius: var(--radius-pill, 999px);
+      background: transparent;
+      color: var(--text-muted);
+      font-family: var(--font-sans);
+      font-size: 14px;
+      font-weight: 500;
+      letter-spacing: -0.1px;
+      transition: background-color .18s ease, color .18s ease;
+    }
+    .tab:hover { color: var(--text-secondary); }
+    .tab.active {
+      background: var(--surface-lifted);
+      color: var(--text-primary);
+      font-weight: 600;
+      box-shadow: 0 1px 2px rgba(0,0,0,0.25), inset 0 0 0 1px var(--border-soft);
+    }
+
+    /* ============ ALERT ============ */
+    .alert {
+      display: none;
+      margin-bottom: 18px;
+      padding: 12px 14px;
+      border-radius: 14px;
+      font-size: 13.5px;
+      font-weight: 500;
+      border: 1px solid transparent;
+      align-items: flex-start;
+      gap: 8px;
+    }
+    .alert.show { display: flex; }
+    .alert svg { flex-shrink: 0; margin-top: 1px; width: 16px; height: 16px; }
+    .alert.success {
+      background: var(--surface-tint);
+      border-color: rgba(249,168,38,0.30);
+      color: var(--accent);
+    }
+    .alert.error {
+      background: rgba(239, 68, 68, 0.10);
+      border-color: rgba(239, 68, 68, 0.35);
+      color: #F87171;
+    }
+
+    /* ============ FORM ============ */
+    .form { display: flex; flex-direction: column; gap: 18px; }
+    .field { display: flex; flex-direction: column; gap: 8px; }
+    .field-head { display: flex; align-items: center; justify-content: space-between; }
+    .field label {
+      font-family: var(--font-sans);
+      font-weight: var(--fw-bold, 700);
+      font-size: 13px;
+      letter-spacing: 0.04em;
+      text-transform: uppercase;
+      color: var(--text-secondary);
+      padding-left: 2px;
+    }
+    .show-pw {
+      appearance: none; border: 0; background: transparent; cursor: pointer;
+      color: var(--text-muted);
+      font-family: var(--font-sans);
+      font-size: 12px;
+      font-weight: 500;
+      letter-spacing: 0.02em;
+      padding: 0 2px;
+      transition: color .18s ease;
+    }
+    .show-pw:hover { color: var(--text-secondary); }
+
+    .ctrl {
+      width: 100%;
+      box-sizing: border-box;
+      background: var(--surface-raised);
+      border: 1.5px solid var(--border-ink);
+      border-radius: 16px;
+      color: var(--text-primary);
+      font-family: var(--font-sans);
+      font-size: 16px;
+      font-weight: 450;
+      letter-spacing: -0.2px;
+      padding: 17px 20px;
+      outline: none;
+      transition: border-color .18s ease;
+    }
+    .ctrl:focus { border-color: var(--accent); }
+    .ctrl::placeholder { color: var(--text-whisper); }
+
+    /* ============ SUBMIT BUTTON (amber primary) ============ */
+    .submit-btn {
+      appearance: none; border: 0; cursor: pointer;
+      width: 100%;
+      margin-top: 6px;
+      padding: 17px 20px;
+      border-radius: var(--radius-pill, 999px);
+      background: var(--cta-bg);
+      color: var(--cta-text);
+      font-family: var(--font-sans);
+      font-size: 16px;
+      font-weight: 600;
+      letter-spacing: -0.1px;
+      display: inline-flex; align-items: center; justify-content: center; gap: 10px;
+      transition: background-color .18s ease, transform .12s ease, opacity .18s ease;
+    }
+    .submit-btn:hover:not(:disabled) { background: var(--accent-hover); }
+    .submit-btn:active:not(:disabled) { transform: translateY(1px); }
+    .submit-btn:disabled { opacity: 0.65; cursor: not-allowed; }
+    .submit-btn .spinner {
+      width: 16px; height: 16px;
+      animation: spin 0.9s linear infinite;
+      display: none;
+    }
+    .submit-btn .spinner.show { display: inline-block; }
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    /* ============ SWITCH PROMPT ============ */
+    .switch {
+      margin-top: 22px;
+      padding-top: 20px;
+      border-top: 1px solid var(--divider-on-ink);
+      text-align: center;
+      font-size: 13px;
+      color: var(--text-muted);
+    }
+    .switch-link {
+      appearance: none; border: 0; background: transparent; cursor: pointer;
+      color: var(--accent);
+      font-family: var(--font-sans);
+      font-size: 13px;
+      font-weight: 600;
+      margin-left: 4px;
+      padding: 0;
+      transition: color .18s ease;
+    }
+    .switch-link:hover { color: var(--accent-hover); }
+
+    /* ============ SECURITY NOTE ============ */
+    .security {
+      margin: 22px 0 0;
+      text-align: center;
+      font-size: 12.5px;
+      color: var(--text-muted);
+      display: flex; align-items: center; justify-content: center; gap: 6px;
+    }
+    .security svg { width: 13px; height: 13px; }
+
+    @media (max-width: 560px) {
+      .card { padding: 28px 22px 26px; border-radius: 22px; }
+    }
+  </style>
+</head>
+<body class="theme-dark">
+
+  <!-- NAV -->
+  <div class="page">
+    <nav class="nav">
+      <a class="brand" href="/">
+        <img src="/design/logo.png" alt="ELITEFUNS">
+        <span class="word">Elitefuns</span>
+      </a>
+      <a class="back" href="/">
+        <svg fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" width="16" height="16">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M10 19l-7-7m0 0l7-7m-7 7h18"/>
+        </svg>
+        กลับหน้าแรก
+      </a>
+    </nav>
+  </div>
+
+  <!-- MAIN -->
+  <main>
+    <div class="wrap">
+
+      <header class="page-head">
+        <h1 id="form-title">เข้าสู่ระบบ</h1>
+        <p id="form-subtitle">ใช้บัญชีของคุณเพื่อจัดการ trading bot</p>
+      </header>
+
+      <div class="card">
+
+        <!-- Tabs -->
+        <div class="tabs" role="tablist">
+          <button id="tab-login" class="tab active" type="button" role="tab">เข้าสู่ระบบ</button>
+          <button id="tab-register" class="tab" type="button" role="tab">สมัครสมาชิก</button>
+        </div>
+
+        <!-- Alert -->
+        <div id="alert" class="alert" role="alert"></div>
+
+        <!-- Form -->
+        <form id="auth-form" class="form" novalidate>
+          <div class="field">
+            <label for="email">อีเมล</label>
+            <input id="email" class="ctrl" type="email" required autocomplete="email" placeholder="you@example.com" />
+          </div>
+
+          <div class="field">
+            <div class="field-head">
+              <label for="password">รหัสผ่าน</label>
+              <button type="button" id="show-pw" class="show-pw">แสดง</button>
+            </div>
+            <input id="password" class="ctrl" type="password" required minlength="6" autocomplete="current-password" placeholder="อย่างน้อย 6 ตัวอักษร" />
+          </div>
+
+          <button id="submit-btn" class="submit-btn" type="submit">
+            <span id="submit-label">เข้าสู่ระบบ</span>
+            <svg id="submit-spinner" class="spinner" viewBox="0 0 24 24" fill="none">
+              <circle cx="12" cy="12" r="10" stroke="currentColor" stroke-width="3" opacity="0.25"/>
+              <path d="M4 12a8 8 0 018-8" stroke="currentColor" stroke-width="3" stroke-linecap="round"/>
+            </svg>
+          </button>
+        </form>
+
+        <!-- Switch -->
+        <div class="switch">
+          <span id="switch-prompt">ยังไม่มีบัญชี?</span>
+          <button id="switch-link" type="button" class="switch-link">สมัครสมาชิก</button>
+        </div>
+      </div>
+
+      <!-- Security note -->
+      <p class="security">
+        <svg fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"/>
+        </svg>
+        เซสชั่นเข้ารหัสด้วย JWT · หมดอายุใน 24 ชั่วโมง
+      </p>
+    </div>
+  </main>
+
+  <script>
+    // ─── State ──────────────────────────────────────────────────────────
+    let isRegister = false;
+
+    // ─── Element refs ───────────────────────────────────────────────────
+    const tabLogin    = document.getElementById('tab-login');
+    const tabRegister = document.getElementById('tab-register');
+    const switchLink  = document.getElementById('switch-link');
+    const switchPrompt= document.getElementById('switch-prompt');
+    const formTitle   = document.getElementById('form-title');
+    const formSubtitle= document.getElementById('form-subtitle');
+    const submitLabel = document.getElementById('submit-label');
+    const submitBtn   = document.getElementById('submit-btn');
+    const spinner     = document.getElementById('submit-spinner');
+    const form        = document.getElementById('auth-form');
+    const emailInput  = document.getElementById('email');
+    const pwInput     = document.getElementById('password');
+    const showPwBtn   = document.getElementById('show-pw');
+    const alertBox    = document.getElementById('alert');
+
+    // ─── Mode switching ─────────────────────────────────────────────────
+    function setMode(register) {
+      isRegister = register;
+
+      tabLogin.classList.toggle('active', !register);
+      tabRegister.classList.toggle('active', register);
+
+      formTitle.textContent     = register ? 'สมัครสมาชิก'                       : 'เข้าสู่ระบบ';
+      formSubtitle.textContent  = register ? 'สร้างบัญชีใหม่ เริ่มใช้งานฟรี'      : 'ใช้บัญชีของคุณเพื่อจัดการ trading bot';
+      submitLabel.textContent   = register ? 'สร้างบัญชี'                        : 'เข้าสู่ระบบ';
+      switchPrompt.textContent  = register ? 'มีบัญชีแล้ว?'                      : 'ยังไม่มีบัญชี?';
+      switchLink.textContent    = register ? 'เข้าสู่ระบบ'                       : 'สมัครสมาชิก';
+      pwInput.autocomplete      = register ? 'new-password'                     : 'current-password';
+
+      // URL hint
+      const url = new URL(window.location);
+      if (register) url.searchParams.set('mode', 'register');
+      else          url.searchParams.delete('mode');
+      window.history.replaceState({}, '', url);
+
+      hideAlert();
+    }
+
+    tabLogin.addEventListener('click',    () => setMode(false));
+    tabRegister.addEventListener('click', () => setMode(true));
+    switchLink.addEventListener('click',  () => setMode(!isRegister));
+
+    // ─── Show/hide password ─────────────────────────────────────────────
+    showPwBtn.addEventListener('click', () => {
+      const showing = pwInput.type === 'text';
+      pwInput.type = showing ? 'password' : 'text';
+      showPwBtn.textContent = showing ? 'แสดง' : 'ซ่อน';
+    });
+
+    // ─── Alert helpers ──────────────────────────────────────────────────
+    function showAlert(msg, kind = 'error') {
+      alertBox.className = `alert show ${kind === 'error' ? 'error' : 'success'}`;
+      const iconPath = kind === 'error'
+        ? 'M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z'
+        : 'M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z';
+      alertBox.innerHTML = `
+        <svg fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+          <path stroke-linecap="round" stroke-linejoin="round" d="${iconPath}"/>
+        </svg>
+        <span>${msg}</span>`;
+    }
+    function hideAlert() { alertBox.className = 'alert'; alertBox.innerHTML = ''; }
+
+    // ─── Submit ─────────────────────────────────────────────────────────
+    form.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      hideAlert();
+
+      const email    = emailInput.value.trim();
+      const password = pwInput.value;
+      if (!email || !password) return;
+
+      submitBtn.disabled = true;
+      spinner.classList.add('show');
+      submitLabel.textContent = isRegister ? 'กำลังสร้างบัญชี...' : 'กำลังเข้าสู่ระบบ...';
+
+      try {
+        let res;
+        if (isRegister) {
+          res = await fetch('/auth/register', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ email, password }),
+          });
+        } else {
+          // OAuth2PasswordRequestForm → form-encoded
+          const fd = new FormData();
+          fd.append('username', email);
+          fd.append('password', password);
+          res = await fetch('/auth/login', { method: 'POST', body: fd });
+        }
+
+        const data = await res.json();
+        if (!res.ok) throw new Error(data.detail || 'เกิดข้อผิดพลาด');
+
+        localStorage.setItem('jwt_token', data.access_token);
+        // เก็บ is_admin flag — ใช้ตรวจการแสดง admin nav link + admin page gate
+        localStorage.setItem('is_admin', String(Boolean(data.is_admin)));
+        showAlert(isRegister ? 'สมัครสำเร็จ — กำลังเข้าสู่ระบบ' : 'เข้าสู่ระบบสำเร็จ', 'success');
+        setTimeout(() => window.location.href = '/dashboard/', 800);
+      } catch (err) {
+        showAlert(err.message);
+      } finally {
+        submitBtn.disabled = false;
+        spinner.classList.remove('show');
+        submitLabel.textContent = isRegister ? 'สร้างบัญชี' : 'เข้าสู่ระบบ';
+      }
+    });
+
+    // ─── Already logged in? → redirect ──────────────────────────────────
+    if (localStorage.getItem('jwt_token')) {
+      // verify token validity
+      fetch('/auth/me', {
+        headers: { 'Authorization': `Bearer ${localStorage.getItem('jwt_token')}` },
+      }).then(r => {
+        if (r.ok) {
+          // sync is_admin จาก server เผื่อ flag ใน localStorage เพี้ยน
+          r.json().then(d => {
+            localStorage.setItem('is_admin', String(Boolean(d && d.is_admin)));
+            window.location.href = '/dashboard/';
+          }).catch(() => { window.location.href = '/dashboard/'; });
+        } else {
+          localStorage.removeItem('jwt_token');
+          localStorage.removeItem('is_admin');
+        }
+      }).catch(() => {});
+    }
+
+    // ─── Apply ?mode=register on load ───────────────────────────────────
+    if (new URLSearchParams(window.location.search).get('mode') === 'register') {
+      setMode(true);
+    }
+  </script>
+</body>
+</html>

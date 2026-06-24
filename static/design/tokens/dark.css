@@ -1,0 +1,69 @@
+/* ============================================================
+   designMD / ELITEFUNS — Dark theme
+   ------------------------------------------------------------
+   A warm near-black surface set. The single yellow accent
+   becomes the hero CTA (amber pill on dark) — the same role
+   the orange CTA plays in the reference, kept on-brand.
+
+   Apply with <body class="theme-dark"> (or any wrapper).
+   Components read the semantic aliases, so they re-skin for
+   free — no per-component dark code.
+   ============================================================ */
+
+.theme-dark {
+  /* — warm dark surfaces — */
+  --surface-canvas:  #121110;  /* page background — warm near-black */
+  --surface-lifted:  #1A1815;  /* one step up — cards, sections */
+  --surface-raised:  #232019;  /* nav pill, secondary buttons */
+  --surface-bone:    #1A1815;
+  --surface-ink:     #0B0A09;  /* deepest — footer */
+  --surface-tint:    #2A2014;  /* amber-tinted dark surface */
+
+  /* — text on dark — */
+  --text-primary:    #F6F2EC;
+  --text-secondary:  #C8C1B5;
+  --text-muted:      #908A7E;
+  --text-whisper:    #5E584F;
+  --text-on-ink:     #F6F2EC;
+  --text-on-yellow:  #1A1206;
+  --text-inverse:    #121110;
+  --text-link:       #8FB0FF;
+
+  /* — accent (slightly brighter so it sings on black) — */
+  --accent:          #F9A826;
+  --accent-hover:    #FFB840;
+  --accent-deep:     #C2700A;
+  --accent-arc:      #F9A826;
+  --accent-dot:      #F9A826;
+
+  /* — primary CTA flips to amber pill w/ dark text (ref parity) — */
+  --cta-bg:          #F9A826;
+  --cta-text:        #1A1206;
+  --cta-border:      #F9A826;
+
+  /* — signal stays amber — */
+  --signal-bg:       #F9A826;
+  --signal-text:     #1A1206;
+
+  /* — borders / dividers on dark — */
+  --border-ink:      rgba(255, 255, 255, 0.16);
+  --border-soft:     rgba(255, 255, 255, 0.09);
+  --border-on-ink:   rgba(255, 255, 255, 0.22);
+  --divider-on-ink:  rgba(255, 255, 255, 0.10);
+
+  /* — ghost watermark goes barely-there white — */
+  --ghost-text:      rgba(255, 255, 255, 0.045);
+
+  /* — coin / metal ramp (hero visual) — */
+  --metal-hi:    #FDEFC9;
+  --metal-1:     #F7CE78;
+  --metal-2:     #EFA225;
+  --metal-3:     #B06C0C;
+  --metal-lo:    #5E3704;
+
+  /* warm glow used behind hero focal point */
+  --glow:        rgba(249, 168, 38, 0.18);
+
+  background: var(--surface-canvas);
+  color: var(--text-primary);
+}

@@ -1,0 +1,21 @@
+/* ============================================================
+   designMD — Elevation tokens
+   ------------------------------------------------------------
+   Shadows are atmospheric cushioning, not directional light.
+   Large spreads, ≤10% opacity. 95% of surfaces sit flat on
+   the canvas (level 0). Borders — not shadows — do functional
+   delineation. No hard, tight, dark drop shadows anywhere.
+   ============================================================ */
+
+:root {
+  --elev-0: none;
+  --elev-1: rgba(0, 0, 0, 0.04) 0px 4px 24px 0px;     /* floating nav pill */
+  --elev-2: rgba(0, 0, 0, 0.08) 0px 24px 48px 0px;    /* hero frames, cards */
+  --elev-3: rgba(0, 0, 0, 0.25) 0px 70px 110px 0px;   /* rare feature tile */
+
+  /* motion — soft, editorial, never bouncy */
+  --ease-soft: cubic-bezier(0.22, 0.61, 0.36, 1); /* @kind other */
+  --dur-quick: 160ms; /* @kind other */
+  --dur-base:  240ms; /* @kind other */
+  --dur-slow:  420ms; /* @kind other */
+}

@@ -1,0 +1,47 @@
+# Secrets — ห้าม commit
+.env
+*.env
+!.env.example
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+.venv/
+venv/
+env/
+ENV/
+
+# Local SQLite (dev only — production ใช้ Railway PostgreSQL)
+*.db
+*.db-journal
+*.sqlite
+*.sqlite3
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log
+logs/
+
+# Build / dist
+build/
+dist/
+*.egg-info/
+
+# Local one-off scripts / data
+backup_*.sql
+sweep_result.json
+
+# Migrations executed already (keep templates if any)
+# (scripts/ ทั้ง folder ปล่อยให้ commit ได้ — เป็น migration history)
