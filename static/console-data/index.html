@@ -1,0 +1,201 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Console Data — ELITEFUNS</title>
+
+  <link rel="stylesheet" href="/design/styles.css">
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            bg:       { DEFAULT: '#121110', elevated: '#1A1815', card: '#1A1815', muted: '#232019' },
+            fg:       { DEFAULT: '#F6F2EC', muted: '#C8C1B5', subtle: '#908A7E' },
+            accent:   '#10B981',
+            danger:   '#F87171',
+            warning:  '#F9A826',
+            info:     '#F9A826',
+            'border-subtle': 'rgba(255,255,255,0.09)',
+          },
+          fontFamily: {
+            sans:  ["'Sofia Sans'", 'SofiaSans', 'Arial', 'sans-serif'],
+            mono:  ["'JetBrains Mono'", 'monospace'],
+          },
+        },
+      },
+    };
+  </script>
+
+  <link rel="stylesheet" href="/design/app-shim.css">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/gridstack@10.3.1/dist/gridstack.min.css">
+  <link rel="stylesheet" href="/console-data/style.css">
+</head>
+<body class="theme-dark bg-bg text-fg antialiased">
+
+<div class="flex min-h-screen">
+
+  <!-- ═════════ Sidebar ═════════ -->
+  <aside class="w-60 border-r border-border-subtle bg-bg-elevated flex flex-col flex-shrink-0">
+    <div class="px-5 py-5 border-b border-border-subtle">
+      <a href="/dashboard/" class="brand-mark">
+        <img src="/design/logo.png" alt="ELITEFUNS">
+        <span class="word">Elitefuns</span>
+      </a>
+    </div>
+
+    <nav class="flex-1 px-3 py-4 space-y-0.5">
+      <div class="px-2 mb-1.5 text-[10px] uppercase tracking-wider font-medium text-fg-subtle">เมนูหลัก</div>
+
+      <a href="/dashboard/" class="nav-link">
+        <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"/></svg>
+        Dashboard
+      </a>
+
+      <a href="/connect-mt5/" class="nav-link">
+        <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/><path stroke-linecap="round" stroke-linejoin="round" d="M12 3v9l6 3"/></svg>
+        พอร์ต MT5
+      </a>
+
+      <a href="/optimize/" class="nav-link">
+        <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M3 6h13M3 12h9m-9 6h6M17 14l4 4m0 0l-4 4m4-4H13"/></svg>
+        Optimize
+      </a>
+
+      <a href="/bot-trade/" class="nav-link">
+        <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M9 3v2m6-2v2M9 19v2m6-2v2M5 9H3m2 6H3m18-6h-2m2 6h-2M7 19h10a2 2 0 002-2V7a2 2 0 00-2-2H7a2 2 0 00-2 2v10a2 2 0 002 2zM9 9h6v6H9V9z"/></svg>
+        Bot Trade
+      </a>
+
+      <a href="/arbitrage/" class="nav-link">
+        <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M7 16V4m0 0L3 8m4-4l4 4m6 0v12m0 0l4-4m-4 4l-4-4"/>
+        </svg>
+        Arbitrage
+      </a>
+
+      <a href="/console-data/" class="nav-link active">
+        <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M4 5a1 1 0 011-1h4a1 1 0 011 1v4a1 1 0 01-1 1H5a1 1 0 01-1-1V5zm10 0a1 1 0 011-1h4a1 1 0 011 1v4a1 1 0 01-1 1h-4a1 1 0 01-1-1V5zM4 15a1 1 0 011-1h4a1 1 0 011 1v4a1 1 0 01-1 1H5a1 1 0 01-1-1v-4zm10 0a1 1 0 011-1h4a1 1 0 011 1v4a1 1 0 01-1 1h-4a1 1 0 01-1-1v-4z"/></svg>
+        Console Data
+      </a>
+
+      <a id="nav-admin-link" href="/admin/" class="nav-link admin-only">
+        <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"/>
+        </svg>
+        Admin
+      </a>
+    </nav>
+
+    <div class="p-3 border-t border-border-subtle">
+      <div class="flex items-center gap-2.5 px-2 py-2">
+        <div id="avatar" class="w-8 h-8 rounded-full bg-info flex items-center justify-center font-semibold text-xs flex-shrink-0" style="color: var(--cta-text);">?</div>
+        <div class="flex-1 min-w-0">
+          <div id="user-email" class="text-fg text-xs font-medium truncate">กำลังโหลด...</div>
+          <div class="text-fg-subtle text-[10px]">Free plan</div>
+        </div>
+        <button id="logout-btn" title="ออกจากระบบ"
+          class="text-fg-muted hover:text-danger transition-colors p-1 rounded">
+          <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"/>
+          </svg>
+        </button>
+      </div>
+    </div>
+  </aside>
+
+  <!-- ═════════ Main ═════════ -->
+  <main class="flex-1 p-6">
+    <div class="flex items-center justify-between mb-6">
+      <div>
+        <h1 class="text-2xl font-semibold">Console Data</h1>
+        <p class="text-fg-subtle text-sm mt-1">Customizable widget grid — drag, resize, configure</p>
+      </div>
+      <div class="flex gap-2">
+        <button id="btn-add-widget" class="px-4 py-2 rounded-lg bg-warning text-bg font-medium hover:opacity-90 transition">+ Add Widget</button>
+        <button id="btn-reset" class="px-4 py-2 rounded-lg border border-border-subtle text-fg-muted hover:text-danger hover:border-danger transition">Reset</button>
+      </div>
+    </div>
+
+    <!-- Empty state -->
+    <div id="empty-state" class="hidden text-center py-20 border-2 border-dashed border-border-subtle rounded-xl">
+      <div class="text-5xl mb-3">📊</div>
+      <h2 class="text-lg font-medium mb-2">ยังไม่มี widget</h2>
+      <p class="text-fg-subtle text-sm mb-4">เริ่มต้นด้วยการเพิ่ม widget ตัวแรก</p>
+      <button class="add-widget-trigger px-4 py-2 rounded-lg bg-warning text-bg font-medium">+ Add your first widget</button>
+    </div>
+
+    <!-- Grid -->
+    <div class="grid-stack" id="widget-grid"></div>
+  </main>
+</div>
+
+<!-- ═════════ Add Widget Modal ═════════ -->
+<div id="modal-add-widget" class="hidden fixed inset-0 bg-black/60 z-50 flex items-center justify-center" role="dialog" aria-modal="true">
+  <div class="bg-bg-card border border-border-subtle rounded-xl p-6 max-w-2xl w-full mx-4">
+    <div class="flex items-center justify-between mb-4">
+      <h2 class="text-lg font-semibold">เพิ่ม Widget</h2>
+      <button class="modal-close text-fg-muted hover:text-fg text-2xl leading-none">×</button>
+    </div>
+    <p class="text-fg-subtle text-sm mb-5">เลือกประเภท widget ที่ต้องการเพิ่มในกริด</p>
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-3">
+      <button class="widget-picker p-4 rounded-lg border border-border-subtle hover:border-warning text-left transition" data-type="currency-strength">
+        <div class="text-2xl mb-2">💪</div>
+        <div class="font-medium mb-1">Currency Strength</div>
+        <div class="text-fg-subtle text-xs">G8 ROC ranking — H1/D1</div>
+      </button>
+      <button class="widget-picker p-4 rounded-lg border border-border-subtle hover:border-warning text-left transition" data-type="market-snapshot">
+        <div class="text-2xl mb-2">📈</div>
+        <div class="font-medium mb-1">Market Snapshot</div>
+        <div class="text-fg-subtle text-xs">Last + Spread + ATR + Change%</div>
+      </button>
+      <button class="widget-picker p-4 rounded-lg border border-border-subtle hover:border-warning text-left transition" data-type="news-calendar">
+        <div class="text-2xl mb-2">📰</div>
+        <div class="font-medium mb-1">News Calendar</div>
+        <div class="text-fg-subtle text-xs">Next 24h FX events</div>
+      </button>
+      <button class="widget-picker p-4 rounded-lg border border-border-subtle hover:border-warning text-left transition" data-type="pair-cluster">
+        <div class="text-2xl mb-2">🔗</div>
+        <div class="font-medium mb-1">Pair Cluster</div>
+        <div class="text-fg-subtle text-xs">K-means group ตาม return shape</div>
+      </button>
+      <button class="widget-picker p-4 rounded-lg border border-border-subtle hover:border-warning text-left transition" data-type="trend-matrix">
+        <div class="text-2xl mb-2">🌡️</div>
+        <div class="font-medium mb-1">Trend Strength Matrix</div>
+        <div class="text-fg-subtle text-xs">G8 pairs × SMA 4-quadrant scatter</div>
+      </button>
+      <button class="widget-picker p-4 rounded-lg border border-border-subtle hover:border-warning text-left transition" data-type="set100-template">
+        <div class="text-2xl mb-2">🏆</div>
+        <div class="font-medium mb-1">SET100 Trend Template</div>
+        <div class="text-fg-subtle text-xs">Minervini's 8 criteria + RS + volume filter</div>
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- ═════════ Widget Template ═════════ -->
+<template id="widget-shell">
+  <div class="widget-card">
+    <header class="widget-header">
+      <div class="flex items-center gap-2 flex-1 min-w-0">
+        <span class="widget-icon"></span>
+        <h3 class="widget-title font-medium text-sm truncate"></h3>
+      </div>
+      <div class="widget-toolbar flex items-center gap-1"></div>
+      <button class="widget-menu text-fg-muted hover:text-fg p-1 rounded" title="ตัวเลือก">⋯</button>
+    </header>
+    <div class="widget-body p-3"></div>
+  </div>
+</template>
+
+<script src="https://cdn.jsdelivr.net/npm/gridstack@10.3.1/dist/gridstack-all.js"></script>
+<script src="/console-data/app.js"></script>
+</body>
+</html>

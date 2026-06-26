@@ -10,3 +10,6 @@ cryptography==43.0.3
 httpx==0.27.2
 email-validator==2.2.0
 psycopg2-binary==2.9.10    # PostgreSQL driver (prebuilt wheels — ไม่ต้อง compile)
+tvdatafeed-enhanced==2.2.1    # TradingView OHLC (anonymous mode) — for Console Data widgets
+apscheduler==3.10.4           # background scheduler for TV cache (hourly H1 + daily D1)
+scikit-learn==1.7.2           # K-means clustering for Pair Cluster widget

@@ -18,6 +18,8 @@ import models.subscription  # noqa: F401
 import models.order  # noqa: F401
 import models.arb_scan  # noqa: F401
 import models.mt5_trade  # noqa: F401
+import models.tv_ohlc  # noqa: F401
+import models.user_dashboard  # noqa: F401
 
 from models.strategy import Strategy  # noqa: E402
 from models.backtest_run import BacktestRun  # noqa: E402
@@ -68,7 +70,7 @@ _seed_strategies()
 _backfill_run_codes()
 
 # Register routers
-from routers import auth, mt5, admin, optimize_public, bots, internal, arbitrage, ports  # noqa: E402
+from routers import auth, mt5, admin, optimize_public, bots, internal, arbitrage, ports, widgets, dashboards  # noqa: E402
 
 app = FastAPI(title="MT5 Bot Platform", version="0.1.0")
 app.include_router(auth.router)
@@ -79,11 +81,38 @@ app.include_router(bots.router)
 app.include_router(ports.router)
 app.include_router(internal.router)
 app.include_router(arbitrage.router)
+app.include_router(widgets.router)
+app.include_router(dashboards.router)
 
 
 @app.get("/health")
 def health():
     return {"status": "ok"}
+
+
+# ─── TV cache scheduler (Console Data widgets) ─────────────────────
+import threading
+from services import tv_scheduler
+
+
+@app.on_event("startup")
+def _start_tv_scheduler() -> None:
+    try:
+        tv_scheduler.start()
+        # initial fill ทำใน thread ต่าง — กัน startup ค้าง (~60s)
+        threading.Thread(
+            target=tv_scheduler.initial_fill_if_empty, daemon=True
+        ).start()
+    except Exception:
+        logging.exception("TV scheduler start failed — widgets จะไม่มีข้อมูลจนกว่าจะ restart")
+
+
+@app.on_event("shutdown")
+def _stop_tv_scheduler() -> None:
+    try:
+        tv_scheduler.stop()
+    except Exception:
+        logging.exception("TV scheduler stop failed (non-fatal)")
 
 
 # Static files (เสิร์ฟ frontend) — mount หลัง router เพื่อไม่ให้ทับ /auth, /health
