@@ -236,3 +236,36 @@ async def admin_trigger_bot_cycle(
                             signals_detected, orders_sent, ...}}
     """
     return await vps_client.trigger_bot_cycle()
+
+
+@router.post("/tv-cache/refresh")
+def admin_trigger_tv_refresh(
+    job: str = "all",
+    _admin: User = Depends(require_admin),
+) -> dict:
+    """Trigger TV cache refresh ทันที (ไม่ต้องรอ cron).
+
+    Args:
+      job: "h1" | "d1" | "set100" | "all"
+        - "h1"     → 11 G8 pairs × H1 (~30s)
+        - "d1"     → 11 G8 pairs × D1 (~30s)
+        - "set100" → 100 SET stocks × D1 (~5-7 นาที)
+        - "all"    → ทั้ง 3 sequential (~6-8 นาที)
+
+    เรียกหลัง deploy ครั้งแรกเพื่อ initial fill — widgets จะมีข้อมูลทันที
+    """
+    from services import tv_scheduler
+
+    job = job.lower().strip()
+    if job not in ("h1", "d1", "set100", "all"):
+        raise HTTPException(400, f"invalid job: {job}")
+
+    results = {}
+    if job in ("h1", "all"):
+        results["h1"] = tv_scheduler.refresh_all("H1")
+    if job in ("d1", "all"):
+        results["d1"] = tv_scheduler.refresh_all("D1")
+    if job in ("set100", "all"):
+        results["set100"] = tv_scheduler.refresh_set100()
+
+    return {"ok": True, "results": results}

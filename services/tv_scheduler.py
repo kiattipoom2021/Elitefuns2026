@@ -260,10 +260,22 @@ def initial_fill_if_empty() -> None:
     เรียกหลัง start() บน startup event
     """
     with SessionLocal() as session:
-        count = session.scalar(select(TVOhlc.id).limit(1))
-        if count is not None:
-            logger.info("TV cache มีข้อมูลแล้ว — skip initial fill")
-            return
-    logger.info("TV cache ว่าง — initial fill H1 + D1")
-    refresh_all("H1")
-    refresh_all("D1")
+        any_row = session.scalar(select(TVOhlc.id).limit(1))
+        # check แยกระหว่าง forex (มี/ไม่มี EURUSD) vs SET100 (มี/ไม่มี AOT)
+        has_forex = session.scalar(
+            select(TVOhlc.id).where(TVOhlc.symbol == "EURUSD").limit(1)
+        )
+        has_set100 = session.scalar(
+            select(TVOhlc.id).where(TVOhlc.symbol == "AOT").limit(1)
+        )
+
+    if not has_forex:
+        logger.info("Forex cache ว่าง — initial fill H1 + D1")
+        refresh_all("H1")
+        refresh_all("D1")
+    if not has_set100:
+        logger.info("SET100 cache ว่าง — initial fill (5-7 นาที)")
+        refresh_set100()
+
+    if any_row and has_forex and has_set100:
+        logger.info("TV cache ครบแล้ว — skip initial fill")
