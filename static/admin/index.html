@@ -954,7 +954,12 @@
         const data = await res.json().catch(() => ({}));
         if (!res.ok) throw new Error(data.detail || `HTTP ${res.status}`);
 
-        const cards = Object.entries(data.results || {}).map(([k, v]) => {
+        // แยก meta keys (_underscore prefix) ออกจาก job results
+        const entries = Object.entries(data.results || {});
+        const jobs = entries.filter(([k]) => !k.startsWith('_'));
+        const lastError = data.results?._tv_last_error;
+
+        const cards = jobs.map(([k, v]) => {
           const okClass = v.ok > 0 ? 'text-accent' : 'text-fg-muted';
           const failClass = v.fail > 0 ? 'text-danger' : 'text-fg-subtle';
           return `<div class="bg-bg-muted rounded-lg px-3 py-2">
@@ -966,10 +971,24 @@
             </div>
           </div>`;
         }).join('');
+
+        const totalOk = jobs.reduce((s, [, v]) => s + (v.ok || 0), 0);
+        const isError = totalOk === 0;
+        const bannerClass = isError ? 'bg-danger/5 border-danger/30' : 'bg-accent/5 border-accent/30';
+        const titleClass = isError ? 'text-danger' : 'text-accent';
+        const title = isError ? '✗ ทุก job fetch ไม่สำเร็จ' : '✓ Refresh เสร็จ';
+        const errorBlock = lastError
+          ? `<div class="mt-2 p-2 bg-danger/10 rounded text-xs font-mono text-danger break-all">
+               <div class="text-[10px] text-fg-subtle uppercase mb-1">tvDatafeed error</div>
+               ${lastError}
+             </div>`
+          : '';
+
         result.innerHTML = `
-          <div class="bg-accent/5 border border-accent/30 rounded-lg px-4 py-3">
-            <div class="text-accent text-sm font-medium mb-2">✓ Refresh เสร็จ</div>
+          <div class="border rounded-lg px-4 py-3 ${bannerClass}">
+            <div class="text-sm font-medium mb-2 ${titleClass}">${title}</div>
             <div class="grid grid-cols-2 sm:grid-cols-3 gap-2">${cards}</div>
+            ${errorBlock}
           </div>`;
       } catch (err) {
         result.innerHTML = `
