@@ -281,6 +281,38 @@
       <div id="cycle-result" class="hidden"></div>
     </section>
 
+    <!-- ═════════ Section A3 — TV Cache Refresh (Console Data widgets) ═════════ -->
+    <section class="bg-bg-card border border-border-subtle rounded-xl p-5 mb-6">
+      <div class="flex items-start justify-between gap-3 flex-wrap mb-3">
+        <div>
+          <h2 class="text-fg font-semibold text-sm mb-1">TV Cache Refresh</h2>
+          <div class="text-fg-subtle text-[11px]">
+            ดึง OHLC จาก TradingView ใส่ DB cache — ใช้สำหรับ Console Data widgets.
+            ปกติ scheduler ดึงอัตโนมัติ (H1 ทุกชม. · D1 และ SET100 รายวัน) — กดปุ่มเพื่อ trigger ทันที
+          </div>
+        </div>
+      </div>
+      <div class="flex flex-wrap gap-2">
+        <button class="tv-refresh-btn bg-bg-muted hover:bg-bg-elevated border border-border-subtle text-fg font-medium px-3 py-2 rounded-lg text-sm transition-colors disabled:opacity-60"
+                data-job="h1" title="11 G8 pairs × H1 (~30 วินาที)">
+          ⟳ Forex H1
+        </button>
+        <button class="tv-refresh-btn bg-bg-muted hover:bg-bg-elevated border border-border-subtle text-fg font-medium px-3 py-2 rounded-lg text-sm transition-colors disabled:opacity-60"
+                data-job="d1" title="11 G8 pairs × D1 (~30 วินาที)">
+          ⟳ Forex D1
+        </button>
+        <button class="tv-refresh-btn bg-bg-muted hover:bg-bg-elevated border border-border-subtle text-fg font-medium px-3 py-2 rounded-lg text-sm transition-colors disabled:opacity-60"
+                data-job="set100" title="100 SET stocks × D1 (~5-7 นาที)">
+          ⟳ SET100
+        </button>
+        <button class="tv-refresh-btn bg-info/10 hover:bg-info/20 border border-info/40 text-info font-semibold px-3 py-2 rounded-lg text-sm transition-colors disabled:opacity-60"
+                data-job="all" title="ทุก job sequential (~6-8 นาที)">
+          ⟳ All
+        </button>
+      </div>
+      <div id="tv-refresh-result" class="hidden mt-3"></div>
+    </section>
+
     <!-- ═════════ Section B — Result preview (last submission) ═════════ -->
     <section id="result-preview" class="bg-bg-card border border-border-subtle rounded-xl mb-6 hidden">
       <div class="px-5 py-4 border-b border-border-subtle flex items-center justify-between">
@@ -392,6 +424,7 @@
       majors: '/api/admin/majors',
       runOptimize: '/api/admin/optimize/run',
       triggerCycle: '/api/admin/bot/trigger-cycle',
+      tvCacheRefresh: (job) => `/api/admin/tv-cache/refresh?job=${job}`,
       recentRuns: (code, limit) => `/api/strategies/${code}/runs?limit=${limit}&sort=run_at`,
     };
 
@@ -898,6 +931,58 @@
       }
     }
 
+    // ─── TV Cache Refresh ───────────────────────────────────────────────
+    async function triggerTvRefresh(btn) {
+      const job = btn.dataset.job;
+      const result = el('tv-refresh-result');
+      const allBtns = document.querySelectorAll('.tv-refresh-btn');
+      const origText = btn.textContent;
+      const eta = { h1: '~30 วินาที', d1: '~30 วินาที', set100: '~5-7 นาที', all: '~6-8 นาที' }[job] || '';
+
+      allBtns.forEach(b => b.disabled = true);
+      btn.textContent = `กำลังดึง ${job.toUpperCase()}...`;
+      result.classList.remove('hidden');
+      result.innerHTML = `
+        <div class="bg-info/5 border border-info/30 rounded-lg px-4 py-3 text-sm">
+          <span class="text-info font-medium">กำลังรัน job=${job}</span>
+          <span class="text-fg-muted ml-2">${eta} — อย่าปิดหน้าจอ</span>
+        </div>`;
+
+      try {
+        const res = await fetch(API.tvCacheRefresh(job), { method: 'POST', headers: AUTH_HEADERS });
+        if (res.status === 401 || res.status === 403) { clearAuthAndRedirect('/dashboard/'); return; }
+        const data = await res.json().catch(() => ({}));
+        if (!res.ok) throw new Error(data.detail || `HTTP ${res.status}`);
+
+        const cards = Object.entries(data.results || {}).map(([k, v]) => {
+          const okClass = v.ok > 0 ? 'text-accent' : 'text-fg-muted';
+          const failClass = v.fail > 0 ? 'text-danger' : 'text-fg-subtle';
+          return `<div class="bg-bg-muted rounded-lg px-3 py-2">
+            <div class="text-xs font-mono uppercase text-fg-subtle mb-1">${k}</div>
+            <div class="font-mono text-xs">
+              <span class="${okClass}">ok ${v.ok}</span>
+              · <span class="${failClass}">fail ${v.fail}</span>
+              · <span class="text-fg-muted">${v.duration_s}s</span>
+            </div>
+          </div>`;
+        }).join('');
+        result.innerHTML = `
+          <div class="bg-accent/5 border border-accent/30 rounded-lg px-4 py-3">
+            <div class="text-accent text-sm font-medium mb-2">✓ Refresh เสร็จ</div>
+            <div class="grid grid-cols-2 sm:grid-cols-3 gap-2">${cards}</div>
+          </div>`;
+      } catch (err) {
+        result.innerHTML = `
+          <div class="bg-danger/5 border border-danger/30 rounded-lg px-4 py-3 text-sm">
+            <span class="text-danger font-medium">รันไม่สำเร็จ:</span>
+            <span class="text-fg-muted ml-1">${err.message}</span>
+          </div>`;
+      } finally {
+        allBtns.forEach(b => b.disabled = false);
+        btn.textContent = origText;
+      }
+    }
+
     // ─── Manual Bot Cycle ───────────────────────────────────────────────
     async function triggerCycle() {
       const btn = el('cycle-btn');
@@ -1063,6 +1148,7 @@
     // ─── Wire up ────────────────────────────────────────────────────────
     el('run-btn').addEventListener('click', runOptimize);
     el('cycle-btn').addEventListener('click', triggerCycle);
+    document.querySelectorAll('.tv-refresh-btn').forEach(b => b.addEventListener('click', () => triggerTvRefresh(b)));
     el('recent-refresh-btn').addEventListener('click', loadRecent);
     el('add-account-form').addEventListener('submit', handleAddAccount);
 
