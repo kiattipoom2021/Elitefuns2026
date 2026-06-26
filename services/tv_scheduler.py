@@ -56,10 +56,11 @@ SET100_BARS = 260
 # ─── Lazy tvDatafeed (เหมือนใน tvdata.py) ────────────────────────────
 _tv = None
 _tv_failed = False
+_tv_last_error: str = ""
 
 
 def _get_tv():
-    global _tv, _tv_failed
+    global _tv, _tv_failed, _tv_last_error
     if _tv_failed:
         return None
     if _tv is not None:
@@ -69,11 +70,25 @@ def _get_tv():
         _tv = TvDatafeed()
         _tv._Interval = Interval
         logger.info("TV scheduler: tvDatafeed initialized")
+        _tv_last_error = ""
         return _tv
     except Exception as exc:
-        logger.error("TV scheduler init failed: %s", exc)
+        msg = f"{type(exc).__name__}: {exc}"
+        logger.exception("TV scheduler init failed")
+        _tv_last_error = msg
         _tv_failed = True
         return None
+
+
+def reset_tv() -> dict:
+    """Reset cached tvDatafeed handle + failure flag. ใช้ตอน fix issue ภายนอก
+    แล้วอยากลองใหม่โดยไม่ restart uvicorn"""
+    global _tv, _tv_failed, _tv_last_error
+    prev_err = _tv_last_error
+    _tv = None
+    _tv_failed = False
+    _tv_last_error = ""
+    return {"reset": True, "previous_error": prev_err}
 
 
 def _tf_to_interval(tf: str):

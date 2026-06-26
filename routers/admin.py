@@ -260,6 +260,9 @@ def admin_trigger_tv_refresh(
     if job not in ("h1", "d1", "set100", "all"):
         raise HTTPException(400, f"invalid job: {job}")
 
+    # auto-reset failed flag — ให้แต่ละ trigger ลอง init ใหม่
+    tv_scheduler.reset_tv()
+
     results = {}
     if job in ("h1", "all"):
         results["h1"] = tv_scheduler.refresh_all("H1")
@@ -268,4 +271,16 @@ def admin_trigger_tv_refresh(
     if job in ("set100", "all"):
         results["set100"] = tv_scheduler.refresh_set100()
 
+    # ถ้าทุก job fail ทั้งหมด → surface tvDatafeed error
+    total_ok = sum(r.get("ok", 0) for r in results.values())
+    if total_ok == 0:
+        results["_tv_last_error"] = tv_scheduler._tv_last_error or "unknown — ดู Railway logs"
+
     return {"ok": True, "results": results}
+
+
+@router.post("/tv-cache/reset")
+def admin_reset_tv(_admin: User = Depends(require_admin)) -> dict:
+    """Reset cached tvDatafeed instance (สำหรับ debug)"""
+    from services import tv_scheduler
+    return tv_scheduler.reset_tv()
