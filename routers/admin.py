@@ -254,7 +254,7 @@ def admin_trigger_tv_refresh(
 
     เรียกหลัง deploy ครั้งแรกเพื่อ initial fill — widgets จะมีข้อมูลทันที
     """
-    from services import tv_scheduler
+    from services import tv_scheduler, tvdata
 
     job = job.lower().strip()
     if job not in ("h1", "d1", "set100", "all"):
@@ -271,8 +271,18 @@ def admin_trigger_tv_refresh(
     if job in ("set100", "all"):
         results["set100"] = tv_scheduler.refresh_set100()
 
+    # เคลียร์ widget caches ทั้งหมด — กัน widget serve stale หลังดึงข้อมูลใหม่
+    with tvdata._cluster_lock:
+        tvdata._cluster_cache.clear()
+    with tvdata._set100_lock:
+        tvdata._set100_cache.clear()
+    results["_caches_cleared"] = ["pair_cluster", "set100_template"]
+
     # ถ้าทุก job fail ทั้งหมด → surface tvDatafeed error
-    total_ok = sum(r.get("ok", 0) for r in results.values())
+    total_ok = sum(
+        r.get("ok", 0) for r in results.values()
+        if isinstance(r, dict)
+    )
     if total_ok == 0:
         results["_tv_last_error"] = tv_scheduler._tv_last_error or "unknown — ดู Railway logs"
 
