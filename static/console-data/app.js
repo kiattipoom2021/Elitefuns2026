@@ -389,19 +389,19 @@
         total_scanned: 92,
         passing_count: 13,
         passing: [
-          { symbol: 'GUNKUL', sparkline: trendUp(1.5, 60, 0.04, 0.018), details: { close: 4.26, pct_from_low_52w: 225.2, pct_from_high_52w: -0.9, rs_rank: 100.0 } },
-          { symbol: 'HANA',   sparkline: trendUp(20, 60, 0.03, 0.011),  details: { close: 36.75, pct_from_low_52w: 143.4, pct_from_high_52w: -12.5, rs_rank: 96.7 } },
-          { symbol: 'KKP',    sparkline: trendUp(60, 60, 0.02, 0.009),  details: { close: 99.50, pct_from_low_52w: 128.7, pct_from_high_52w: -1.5, rs_rank: 94.6 } },
-          { symbol: 'BAY',    sparkline: trendUp(28, 60, 0.02, 0.006),  details: { close: 38.50, pct_from_low_52w: 86.0, pct_from_high_52w: -3.1, rs_rank: 93.5 } },
-          { symbol: 'SCGP',   sparkline: trendUp(20, 60, 0.02, 0.006),  details: { close: 27.25, pct_from_low_52w: 82.9, pct_from_high_52w: -5.2, rs_rank: 91.3 } },
-          { symbol: 'AOT',    sparkline: trendUp(35, 60, 0.025, 0.01),  details: { close: 62.25, pct_from_low_52w: 132.7, pct_from_high_52w: -0.4, rs_rank: 89.1 } },
-          { symbol: 'WHA',    sparkline: trendUp(3.5, 60, 0.025, 0.006),details: { close: 5.05, pct_from_low_52w: 80.4, pct_from_high_52w: -3.8, rs_rank: 88.0 } },
-          { symbol: 'BA',     sparkline: trendUp(13, 60, 0.025, 0.006), details: { close: 18.20, pct_from_low_52w: 71.7, pct_from_high_52w: -3.7, rs_rank: 84.8 } },
-          { symbol: 'ERW',    sparkline: trendUp(2.2, 60, 0.03, 0.006), details: { close: 3.14, pct_from_low_52w: 75.4, pct_from_high_52w: -5.4, rs_rank: 83.7 } },
-          { symbol: 'TOP',    sparkline: trendUp(35, 60, 0.025, 0.005), details: { close: 46.50, pct_from_low_52w: 78.8, pct_from_high_52w: -18.1, rs_rank: 78.3 } },
-          { symbol: 'TCAP',   sparkline: trendUp(48, 60, 0.02, 0.005),  details: { close: 65.50, pct_from_low_52w: 48.0, pct_from_high_52w: -1.1, rs_rank: 76.1 } },
-          { symbol: 'KBANK',  sparkline: trendUp(160, 60, 0.018, 0.005),details: { close: 214.0, pct_from_low_52w: 45.6, pct_from_high_52w: -0.5, rs_rank: 75.0 } },
-          { symbol: 'CPN',    sparkline: trendUp(45, 60, 0.02, 0.006),  details: { close: 66.50, pct_from_low_52w: 62.2, pct_from_high_52w: -5.7, rs_rank: 71.7 } },
+          { symbol: 'GUNKUL', sparkline: trendUp(1.5, 60, 0.04, 0.018), details: { close: 4.26, low_52w: 1.31, high_52w: 4.30, pct_from_low_52w: 225.2, pct_from_high_52w: -0.9, rs_rank: 100.0 } },
+          { symbol: 'HANA',   sparkline: trendUp(20, 60, 0.03, 0.011),  details: { close: 36.75, low_52w: 15.10, high_52w: 42.00, pct_from_low_52w: 143.4, pct_from_high_52w: -12.5, rs_rank: 96.7 } },
+          { symbol: 'KKP',    sparkline: trendUp(60, 60, 0.02, 0.009),  details: { close: 99.5, low_52w: 43.51, high_52w: 101.02, pct_from_low_52w: 128.7, pct_from_high_52w: -1.5, rs_rank: 94.6 } },
+          { symbol: 'BAY',    sparkline: trendUp(28, 60, 0.02, 0.006),  details: { close: 38.5, low_52w: 20.70, high_52w: 39.73, pct_from_low_52w: 86.0, pct_from_high_52w: -3.1, rs_rank: 93.5 } },
+          { symbol: 'SCGP',   sparkline: trendUp(20, 60, 0.02, 0.006),  details: { close: 27.25, low_52w: 14.90, high_52w: 28.74, pct_from_low_52w: 82.9, pct_from_high_52w: -5.2, rs_rank: 91.3 } },
+          { symbol: 'AOT',    sparkline: trendUp(35, 60, 0.025, 0.01),  details: { close: 62.25, low_52w: 26.75, high_52w: 62.50, pct_from_low_52w: 132.7, pct_from_high_52w: -0.4, rs_rank: 89.1 } },
+          { symbol: 'WHA',    sparkline: trendUp(3.5, 60, 0.025, 0.006),details: { close: 5.05, low_52w: 2.80, high_52w: 5.25, pct_from_low_52w: 80.4, pct_from_high_52w: -3.8, rs_rank: 88.0 } },
+          { symbol: 'BA',     sparkline: trendUp(13, 60, 0.025, 0.006), details: { close: 18.2, low_52w: 10.60, high_52w: 18.90, pct_from_low_52w: 71.7, pct_from_high_52w: -3.7, rs_rank: 84.8 } },
+          { symbol: 'ERW',    sparkline: trendUp(2.2, 60, 0.03, 0.006), details: { close: 3.14, low_52w: 1.79, high_52w: 3.32, pct_from_low_52w: 75.4, pct_from_high_52w: -5.4, rs_rank: 83.7 } },
+          { symbol: 'TOP',    sparkline: trendUp(35, 60, 0.025, 0.005), details: { close: 46.5, low_52w: 26.01, high_52w: 56.78, pct_from_low_52w: 78.8, pct_from_high_52w: -18.1, rs_rank: 78.3 } },
+          { symbol: 'TCAP',   sparkline: trendUp(48, 60, 0.02, 0.005),  details: { close: 65.5, low_52w: 44.26, high_52w: 66.23, pct_from_low_52w: 48.0, pct_from_high_52w: -1.1, rs_rank: 76.1 } },
+          { symbol: 'KBANK',  sparkline: trendUp(160, 60, 0.018, 0.005),details: { close: 214.0, low_52w: 146.98, high_52w: 215.08, pct_from_low_52w: 45.6, pct_from_high_52w: -0.5, rs_rank: 75.0 } },
+          { symbol: 'CPN',    sparkline: trendUp(45, 60, 0.02, 0.006),  details: { close: 66.5, low_52w: 41.00, high_52w: 70.52, pct_from_low_52w: 62.2, pct_from_high_52w: -5.7, rs_rank: 71.7 } },
         ],
       };
     }
@@ -536,7 +536,7 @@
   }
 
   // SET100 Trend Template (Minervini)
-  function sparklineSVG(values, width = 80, height = 22) {
+  function sparklineSVG(values, width = 100, height = 32) {
     if (!values || values.length < 2) return '';
     const min = Math.min(...values);
     const max = Math.max(...values);
@@ -557,6 +557,28 @@
     </svg>`;
   }
 
+  // 52-week range bar: gradient track + amber dot showing current position
+  function range52wSVG(low, high, close, width = 140, height = 26) {
+    if (!low || !high || low >= high) return '';
+    const p = Math.max(0, Math.min(1, (close - low) / (high - low)));
+    const dotX = p * width;
+    const lowPct = ((close / low) - 1) * 100;
+    const highPct = ((close / high) - 1) * 100;
+    return `<svg viewBox="0 0 ${width} ${height}" width="${width}" height="${height}" class="st-range">
+      <defs>
+        <linearGradient id="stRangeGrad" x1="0" x2="1" y1="0" y2="0">
+          <stop offset="0" stop-color="rgba(248,113,113,0.45)"/>
+          <stop offset="0.5" stop-color="rgba(255,255,255,0.14)"/>
+          <stop offset="1" stop-color="rgba(16,185,129,0.55)"/>
+        </linearGradient>
+      </defs>
+      <rect x="0" y="9" width="${width}" height="6" rx="3" fill="url(#stRangeGrad)"/>
+      <circle cx="${dotX.toFixed(1)}" cy="12" r="5" fill="var(--warning, #F9A826)" stroke="var(--surface-lifted, #1A1815)" stroke-width="1.5"/>
+      <text x="2" y="24" class="st-range-lbl st-range-lbl-low">${lowPct >= 0 ? '+' : ''}${lowPct.toFixed(1)}%</text>
+      <text x="${width - 2}" y="24" class="st-range-lbl st-range-lbl-high" text-anchor="end">${highPct.toFixed(1)}%</text>
+    </svg>`;
+  }
+
   async function loadSet100Template(body) {
     body.innerHTML = '<div class="skeleton" style="height: 60%; margin: 8px;"></div>';
     try {
@@ -565,21 +587,34 @@
 
       const passRows = passing.map(p => {
         const d = p.details;
+        const spark = p.sparkline || [];
+        // % change รายวัน (last vs prev) จาก sparkline
+        const chg = spark.length >= 2
+          ? ((spark[spark.length - 1] / spark[spark.length - 2]) - 1) * 100
+          : 0;
+        const chgClass = chg >= 0 ? 'pos' : 'neg';
+        const chgSign = chg >= 0 ? '+' : '';
         const rs = d.rs_rank !== null ? fmt(d.rs_rank, 1) : '—';
-        const lowPct = d.pct_from_low_52w;
-        const highPct = d.pct_from_high_52w;
         return `<tr class="st-pass">
-          <td class="st-sym">${p.symbol}</td>
-          <td class="st-spark-cell">${sparklineSVG(p.sparkline)}</td>
-          <td>${fmt(d.close, 2)}</td>
-          <td class="${lowPct >= 0 ? 'pos' : 'neg'}">${lowPct >= 0 ? '+' : ''}${fmt(lowPct, 1)}%</td>
-          <td class="${highPct >= 0 ? 'pos' : 'neg'}">${fmt(highPct, 1)}%</td>
-          <td>${rs}</td>
+          <td class="st-sym">
+            <div class="st-sym-code">${p.symbol}</div>
+            <div class="st-sym-sub">RS ${rs}</div>
+          </td>
+          <td class="st-last">${fmt(d.close, 2)}</td>
+          <td class="st-chg">
+            <span class="st-chg-badge ${chgClass}">${chgSign}${fmt(chg, 2)}%</span>
+          </td>
+          <td class="st-spark-cell">${sparklineSVG(spark)}</td>
+          <td class="st-range-cell">${range52wSVG(d.low_52w, d.high_52w, d.close)}</td>
         </tr>`;
       }).join('');
 
       const head = `<thead><tr>
-        <th>Symbol</th><th>60d</th><th>Close</th><th>52wL</th><th>52wH</th><th>RS</th>
+        <th class="st-th-sym">Symbol</th>
+        <th class="st-th-last">Last</th>
+        <th class="st-th-chg">% Chg</th>
+        <th class="st-th-chart">Chart</th>
+        <th class="st-th-range">52W Range</th>
       </tr></thead>`;
 
       const updated = new Date(data.computed_at).toLocaleTimeString();

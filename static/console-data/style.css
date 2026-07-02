@@ -309,14 +309,91 @@
 }
 .st-pass:hover { background: rgba(16,185,129,0.06); }
 .st-near:hover { background: rgba(249,168,38,0.06); }
+/* Table layout — Symbol · Last · Chg · Chart · Range */
+.st-th-sym  { text-align: left  !important; }
+.st-th-last { width: 60px; }
+.st-th-chg  { width: 66px; }
+.st-th-chart{ width: 110px; }
+.st-th-range{ width: 150px; }
+
+.st-table td {
+  vertical-align: middle;
+  padding: 8px 6px;
+}
+.st-table tbody tr {
+  border-bottom: 1px solid rgba(255,255,255,0.04);
+}
+
+/* Symbol cell — 2 lines */
+.st-sym {
+  text-align: left !important;
+  font-family: var(--font-sans, sans-serif) !important;
+  padding-left: 4px !important;
+}
+.st-sym-code {
+  font-weight: 700;
+  font-size: 12px;
+  color: var(--text-primary, #F6F2EC);
+  letter-spacing: 0.01em;
+}
+.st-sym-sub {
+  font-size: 10px;
+  color: var(--text-muted, #908A7E);
+  font-family: var(--font-mono, monospace);
+  margin-top: 1px;
+}
+
+/* Last price */
+.st-last {
+  font-family: var(--font-mono, monospace);
+  font-variant-numeric: tabular-nums;
+  color: var(--text-primary, #F6F2EC);
+  font-size: 12px;
+  text-align: right !important;
+}
+
+/* Chg badge */
+.st-chg { text-align: right !important; }
+.st-chg-badge {
+  display: inline-block;
+  padding: 2px 8px;
+  border-radius: 4px;
+  font-family: var(--font-mono, monospace);
+  font-variant-numeric: tabular-nums;
+  font-size: 11px;
+  font-weight: 600;
+  min-width: 52px;
+  text-align: center;
+}
+.st-chg-badge.pos {
+  background: rgba(16,185,129,0.18);
+  color: var(--accent, #10B981);
+}
+.st-chg-badge.neg {
+  background: rgba(248,113,113,0.18);
+  color: var(--danger, #F87171);
+}
+
+/* Chart column */
 .st-spark-cell {
-  padding: 2px 4px !important;
-  width: 90px;
+  padding: 2px 6px !important;
   vertical-align: middle;
 }
-.st-spark {
-  display: block;
+.st-spark { display: block; }
+
+/* 52W Range column */
+.st-range-cell {
+  padding: 2px 6px !important;
+  vertical-align: middle;
 }
+.st-range { display: block; }
+.st-range-lbl {
+  font-family: var(--font-mono, monospace);
+  font-size: 9px;
+  font-weight: 500;
+}
+.st-range-lbl-low  { fill: var(--danger, #F87171); }
+.st-range-lbl-high { fill: var(--accent, #10B981); }
 
 /* 4-quadrant SVG scatter */
 .tm-svg {
