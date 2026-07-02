@@ -261,8 +261,25 @@ def set100_template(min_score: int = 8) -> dict:
             return entry[1]
 
     from datetime import datetime, timezone
+    from sqlalchemy import func, select as sa_select
     from services.set100_universe import SET100_STOCKS
     from services.trend_template import check_trend_template, compute_rs_rank
+
+    # แหล่งข้อมูล: dry เก็บ metadata จาก tv_ohlc (fetched_at ล่าสุด + bar timestamp ล่าสุด)
+    latest_fetched = None
+    latest_bar_ts = None
+    with SessionLocal() as session:
+        row = session.execute(
+            sa_select(
+                func.max(TVOhlc.fetched_at),
+                func.max(TVOhlc.ts),
+            ).where(
+                TVOhlc.tf == "D1",
+                TVOhlc.symbol.in_(SET100_STOCKS),
+            )
+        ).one_or_none()
+        if row:
+            latest_fetched, latest_bar_ts = row
 
     # โหลด closes ของทุกหุ้นเพื่อคำนวณ RS rank
     closes_map: dict[str, list[float]] = {}
@@ -298,6 +315,16 @@ def set100_template(min_score: int = 8) -> dict:
         "total_scanned": len(all_results),
         "passing_count": len(passing),
         "passing": passing[:50],
+        # ─── Data provenance (แสดงใน widget footer) ──────────────────
+        "data_source": {
+            "name": "TradingView (anonymous)",
+            "exchange": "SET",
+            "tf": "D1",
+            "universe_size": len(SET100_STOCKS),
+            "cached_symbols": len(bars_map),
+            "latest_fetched_at": latest_fetched.isoformat() + "Z" if latest_fetched else None,
+            "latest_bar_ts": latest_bar_ts.isoformat() + "Z" if latest_bar_ts else None,
+        },
     }
     with _set100_lock:
         _set100_cache[cache_key] = (time.time(), result)

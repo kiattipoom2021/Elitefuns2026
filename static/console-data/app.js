@@ -617,15 +617,61 @@
         <th class="st-th-range">52W Range</th>
       </tr></thead>`;
 
-      const updated = new Date(data.computed_at).toLocaleTimeString();
+      const computed = new Date(data.computed_at).toLocaleTimeString();
+      const src = data.data_source || {};
+
+      // helper: ago in Thai-friendly units
+      const agoStr = (isoStr) => {
+        if (!isoStr) return '—';
+        const t = new Date(isoStr).getTime();
+        if (Number.isNaN(t)) return '—';
+        const secs = Math.max(0, Math.floor((Date.now() - t) / 1000));
+        if (secs < 60) return `${secs}วิ ที่แล้ว`;
+        const mins = Math.floor(secs / 60);
+        if (mins < 60) return `${mins} นาทีที่แล้ว`;
+        const hrs = Math.floor(mins / 60);
+        if (hrs < 24) return `${hrs} ชม.ที่แล้ว`;
+        return `${Math.floor(hrs / 24)} วันที่แล้ว`;
+      };
+
+      const barDate = src.latest_bar_ts
+        ? new Date(src.latest_bar_ts).toLocaleDateString('th-TH', { day: '2-digit', month: 'short' })
+        : '—';
+
+      const footer = `
+        <div class="st-source">
+          <div class="st-src-line">
+            <span class="st-src-label">📡 แหล่งข้อมูล</span>
+            <span class="st-src-val">${src.name || 'TradingView'} · ${src.exchange || 'SET'}:D1</span>
+          </div>
+          <div class="st-src-line">
+            <span class="st-src-label">🗄 tv_ohlc cache</span>
+            <span class="st-src-val">${src.cached_symbols ?? '?'}/${src.universe_size ?? '?'} symbols</span>
+          </div>
+          <div class="st-src-line">
+            <span class="st-src-label">🕐 แท่งล่าสุด</span>
+            <span class="st-src-val">${barDate} <span class="text-fg-subtle">(${agoStr(src.latest_bar_ts)})</span></span>
+          </div>
+          <div class="st-src-line">
+            <span class="st-src-label">⟳ ดึงล่าสุด</span>
+            <span class="st-src-val">${agoStr(src.latest_fetched_at)}</span>
+          </div>
+          <div class="st-src-line">
+            <span class="st-src-label">⚙ คำนวณ</span>
+            <span class="st-src-val">${computed} (widget cache 1ชม.)</span>
+          </div>
+        </div>
+      `;
+
       body.innerHTML = `
         <div class="st-summary">
           <span><strong>${data.passing_count}</strong>/${data.total_scanned} ผ่าน Minervini</span>
-          <span class="text-fg-subtle text-[10px]">${updated}</span>
+          <span class="text-fg-subtle text-[10px]">คำนวณ ${computed}</span>
         </div>
         ${passing.length ? `
           <table class="st-table">${head}<tbody>${passRows}</tbody></table>
         ` : '<div class="text-fg-subtle text-xs p-2">ยังไม่มีหุ้นผ่าน — รอ scheduler</div>'}
+        ${footer}
       `;
     } catch (e) {
       renderError(body, `โหลดล้มเหลว: ${e.message}`);
