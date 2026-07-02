@@ -74,11 +74,8 @@ def get_market_snapshot(
     if len(raw_list) > 10:
         raise HTTPException(400, "symbols เกิน 10 ตัว")
 
-    snapshots = tvdata.market_snapshot(raw_list)
-    return {
-        "updated_at": datetime.now(timezone.utc).isoformat(),
-        "snapshots": snapshots,
-    }
+    # market_snapshot() คืน dict {snapshots, data_source, updated_at} — ส่งต่อทั้งก้อน
+    return tvdata.market_snapshot(raw_list)
 
 
 # ─── News Calendar (FX Factory XML) ──────────────────────────────────

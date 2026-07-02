@@ -352,27 +352,49 @@
 
     if (path.endsWith('/market-snapshot')) {
       const syms = (u.searchParams.get('symbols') || '').split(',').map(s => s.trim().toUpperCase()).filter(Boolean);
+      // synthetic ~60-bar sparkline going up or down
+      const gen = (start, up = true, n = 60) => {
+        const drift = up ? 0.004 : -0.003;
+        const arr = [start];
+        for (let i = 1; i < n; i++) {
+          arr.push(arr[i - 1] * (1 + drift + (Math.random() - 0.5) * 0.012));
+        }
+        return arr.map(v => +v.toFixed(5));
+      };
       const baseMap = {
-        EURUSD: { last: 1.13754, atr: 0.00088, chg: -0.025 },
-        GBPUSD: { last: 1.27412, atr: 0.00132, chg: +0.084 },
-        USDJPY: { last: 152.870, atr: 0.247,   chg: -0.143 },
-        XAUUSD: { last: 4024.59, atr: 18.45,   chg: +0.409 },
-        US500:  { last: 6128.42, atr: 22.31,   chg: +0.211 },
-        BTCUSD: { last: 60172.0, atr: 621.31,  chg: +0.521 },
-        ETHUSD: { last: 3245.18, atr: 41.62,   chg: -0.178 },
+        EURUSD: { last: 1.13754, chg: -0.025, low: 1.0850, high: 1.1490, up: true },
+        GBPUSD: { last: 1.27412, chg: +0.084, low: 1.2205, high: 1.2860, up: true },
+        USDJPY: { last: 152.870, chg: -0.143, low: 143.20, high: 156.30, up: true },
+        XAUUSD: { last: 4024.59, chg: +0.409, low: 2320.5, high: 4050.0, up: true },
+        US500:  { last: 6128.42, chg: +0.211, low: 4830.0, high: 6180.0, up: true },
+        BTCUSD: { last: 60172.0, chg: +0.521, low: 39400.,  high: 73800., up: true },
+        ETHUSD: { last: 3245.18, chg: -0.178, low: 2180.0, high: 4090.0, up: false },
       };
       const snapshots = syms.map(s => {
-        const base = baseMap[s];
-        if (!base) return { symbol: s, last: null, spread_pips: null, atr_14: null, change_pct: null, error: 'no_data' };
+        const b = baseMap[s];
+        if (!b) return { symbol: s, error: 'no_data' };
         return {
           symbol: s,
-          last: base.last,
-          spread_pips: +(base.atr / 10).toFixed(2),
-          atr_14: base.atr,
-          change_pct: base.chg,
+          last: b.last,
+          change_pct: b.chg,
+          sparkline: gen(b.low * 1.05, b.up),
+          range_low: b.low,
+          range_high: b.high,
+          range_bars: 200,
         };
       });
-      return { updated_at: now, snapshots };
+      return {
+        updated_at: now,
+        snapshots,
+        data_source: {
+          name: 'TradingView (anonymous)',
+          tf: 'D1',
+          requested: syms.length,
+          cached_symbols: snapshots.filter(s => !s.error).length,
+          latest_fetched_at: new Date(Date.now() - 15 * 60 * 1000).toISOString(),
+          latest_bar_ts: new Date(Date.now() - 6 * 60 * 60 * 1000).toISOString(),
+        },
+      };
     }
 
     if (path.endsWith('/set100-template')) {
@@ -508,28 +530,88 @@
     }
   }
 
-  // Market Snapshot
+  // Market Snapshot — layout เดียวกับ SET100 (Symbol · Last · %Chg · Chart · Range)
   async function loadMarketSnapshot(body, cfg) {
     try {
       const data = await apiGet(`/api/widgets/market-snapshot?symbols=${encodeURIComponent(cfg.symbols)}`);
-      const rows = data.snapshots.map(s => {
-        const chgClass = (s.change_pct ?? 0) >= 0 ? 'pos' : 'neg';
-        const chgSign = (s.change_pct ?? 0) >= 0 ? '+' : '';
-        return `<tr>
-          <td>${s.symbol}</td>
-          <td>${fmt(s.last, 5)}</td>
-          <td>${fmt(s.spread_pips, 2)}</td>
-          <td>${fmt(s.atr_14, 5)}</td>
-          <td class="${chgClass}">${chgSign}${fmt(s.change_pct, 2)}%</td>
+      const snaps = data.snapshots || [];
+      const src = data.data_source || {};
+
+      const rows = snaps.map(s => {
+        if (s.error) {
+          return `<tr class="st-pass">
+            <td class="st-sym"><div class="st-sym-code">${s.symbol}</div><div class="st-sym-sub text-danger">no data</div></td>
+            <td class="st-last">—</td>
+            <td class="st-chg"><span class="st-chg-badge">—</span></td>
+            <td class="st-spark-cell">—</td>
+            <td class="st-range-cell">—</td>
+          </tr>`;
+        }
+        const chg = s.change_pct ?? 0;
+        const chgClass = chg >= 0 ? 'pos' : 'neg';
+        const chgSign = chg >= 0 ? '+' : '';
+        const rangeLabel = s.range_bars ? `${Math.round(s.range_bars / 5)}w` : 'Range';
+        return `<tr class="st-pass">
+          <td class="st-sym">
+            <div class="st-sym-code">${s.symbol}</div>
+            <div class="st-sym-sub">${rangeLabel} range</div>
+          </td>
+          <td class="st-last">${fmt(s.last, 5)}</td>
+          <td class="st-chg">
+            <span class="st-chg-badge ${chgClass}">${chgSign}${fmt(chg, 2)}%</span>
+          </td>
+          <td class="st-spark-cell">${sparklineSVG(s.sparkline || [])}</td>
+          <td class="st-range-cell">${range52wSVG(s.range_low, s.range_high, s.last)}</td>
         </tr>`;
       }).join('');
+
+      const agoStr = (isoStr) => {
+        if (!isoStr) return '—';
+        const t = new Date(isoStr).getTime();
+        if (Number.isNaN(t)) return '—';
+        const secs = Math.max(0, Math.floor((Date.now() - t) / 1000));
+        if (secs < 60) return `${secs}วิ ที่แล้ว`;
+        const mins = Math.floor(secs / 60);
+        if (mins < 60) return `${mins} นาทีที่แล้ว`;
+        const hrs = Math.floor(mins / 60);
+        if (hrs < 24) return `${hrs} ชม.ที่แล้ว`;
+        return `${Math.floor(hrs / 24)} วันที่แล้ว`;
+      };
+
+      const head = `<thead><tr>
+        <th class="st-th-sym">Symbol</th>
+        <th class="st-th-last">Last</th>
+        <th class="st-th-chg">% Chg</th>
+        <th class="st-th-chart">Chart</th>
+        <th class="st-th-range">Range</th>
+      </tr></thead>`;
+
       const updated = new Date(data.updated_at).toLocaleTimeString();
+      const footer = `
+        <div class="st-source">
+          <div class="st-src-line">
+            <span class="st-src-label">📡 แหล่งข้อมูล</span>
+            <span class="st-src-val">${src.name || 'TradingView'} · ${src.tf || 'D1'}</span>
+          </div>
+          <div class="st-src-line">
+            <span class="st-src-label">🗄 tv_ohlc cache</span>
+            <span class="st-src-val">${src.cached_symbols ?? 0}/${src.requested ?? 0} symbols</span>
+          </div>
+          <div class="st-src-line">
+            <span class="st-src-label">⟳ ดึงล่าสุด</span>
+            <span class="st-src-val">${agoStr(src.latest_fetched_at)}</span>
+          </div>
+          <div class="st-src-line">
+            <span class="st-src-label">⚙ คำนวณ</span>
+            <span class="st-src-val">${updated}</span>
+          </div>
+        </div>
+      `;
+
       body.innerHTML = `
-        <table class="ms-table">
-          <thead><tr><th>Symbol</th><th>Last</th><th>Spread</th><th>ATR(14)</th><th>Chg%</th></tr></thead>
-          <tbody>${rows}</tbody>
-        </table>
-        <div class="text-fg-subtle text-[10px] mt-2">Updated ${updated}</div>`;
+        <table class="st-table">${head}<tbody>${rows}</tbody></table>
+        ${footer}
+      `;
     } catch (e) {
       renderError(body, `โหลดล้มเหลว: ${e.message}`);
     }

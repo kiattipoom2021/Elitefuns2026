@@ -494,31 +494,75 @@ def pair_cluster(tf: str = "H1", k: int = 3, bars: int = 100) -> dict:
     })
 
 
-def market_snapshot(symbols: list[str]) -> list[dict]:
-    """Return [{symbol, last, spread_pips, atr_14, change_pct}] อ่านจาก DB (H1)."""
-    out = []
+def market_snapshot(symbols: list[str]) -> dict:
+    """Return { snapshots: [...], data_source: {...} } ใช้ D1 (มี ≥60 แท่ง sparkline + range).
+
+    Per symbol: last, change_pct (D→D), sparkline (60 closes ล่าสุด),
+                range_low/high (ต่ำสุด/สูงสุดใน bars ที่ cache),
+                range_bars (จำนวน bars ใช้คำนวณ range — ให้ frontend คำนวณ label เอง)
+    """
+    from datetime import datetime, timezone
+    from sqlalchemy import func, select as sa_select
+
+    resolved = [_resolve_symbol(s)[0] for s in symbols[:10]]
+
+    # data provenance
+    latest_fetched = None
+    latest_bar_ts = None
+    if resolved:
+        with SessionLocal() as session:
+            row = session.execute(
+                sa_select(
+                    func.max(TVOhlc.fetched_at),
+                    func.max(TVOhlc.ts),
+                ).where(
+                    TVOhlc.tf == "D1",
+                    TVOhlc.symbol.in_(resolved),
+                )
+            ).one_or_none()
+            if row:
+                latest_fetched, latest_bar_ts = row
+
+    snapshots = []
     for raw in symbols[:10]:
-        bars = get_ohlc(raw, "H1", n_bars=30)
+        bars = get_ohlc(raw, "D1", n_bars=200)
         if not bars:
-            out.append({
+            snapshots.append({
                 "symbol": raw.upper(),
                 "last": None,
-                "spread_pips": None,
-                "atr_14": None,
                 "change_pct": None,
+                "sparkline": [],
+                "range_low": None,
+                "range_high": None,
+                "range_bars": 0,
                 "error": "no_data_in_cache",
             })
             continue
-        last_close = bars[-1]["close"]
-        prev_close = bars[-2]["close"] if len(bars) >= 2 else last_close
+        closes = [b["close"] for b in bars]
+        highs = [b["high"] for b in bars]
+        lows = [b["low"] for b in bars]
+        last_close = closes[-1]
+        prev_close = closes[-2] if len(closes) >= 2 else last_close
         change_pct = ((last_close - prev_close) / prev_close * 100.0) if prev_close else 0.0
-        atr_14 = _atr(bars, 14)
-        spread_est = (atr_14 / 10.0) if atr_14 else None
-        out.append({
+        snapshots.append({
             "symbol": raw.upper(),
             "last": round(last_close, 5),
-            "spread_pips": round(spread_est, 2) if spread_est is not None else None,
-            "atr_14": round(atr_14, 5) if atr_14 is not None else None,
             "change_pct": round(change_pct, 3),
+            "sparkline": [round(c, 5) for c in closes[-60:]],
+            "range_low": round(min(lows), 5),
+            "range_high": round(max(highs), 5),
+            "range_bars": len(bars),
         })
-    return out
+
+    return {
+        "snapshots": snapshots,
+        "updated_at": datetime.now(timezone.utc).isoformat(),
+        "data_source": {
+            "name": "TradingView (anonymous)",
+            "tf": "D1",
+            "requested": len(symbols[:10]),
+            "cached_symbols": sum(1 for s in snapshots if not s.get("error")),
+            "latest_fetched_at": latest_fetched.isoformat() + "Z" if latest_fetched else None,
+            "latest_bar_ts": latest_bar_ts.isoformat() + "Z" if latest_bar_ts else None,
+        },
+    }
